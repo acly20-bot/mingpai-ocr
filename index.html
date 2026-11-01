@@ -14,7 +14,7 @@
 
 .crop-rotate{margin-top:10px;padding:9px 10px;background:#f6f8fb;border:1px solid #e0e6ef;border-radius:10px}.crop-rotate-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.crop-rotate-label{font-size:13px;color:#445168;font-weight:650}.crop-rotate-value{font-variant-numeric:tabular-nums;color:#1769e0;font-weight:700;min-width:54px;text-align:right}.crop-rotate input[type=range]{width:100%;accent-color:#1769e0}.crop-rotate-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.crop-rotate-buttons .btn{padding:8px 10px;flex:1;min-width:90px}
 </style>
-<script type="module" crossorigin src="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU.js?v=1.148.2"></script>
+<script type="module" crossorigin src="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU.js?v=1.149"></script>
 </head>
 <body>
 <header><h1>设备铭牌智能识别</h1></header>
@@ -34,7 +34,7 @@
     <div class="quickpaste" id="quickPastePanel" hidden>
       <label for="pasteOcrText">直接粘贴铭牌/OCR文字，新建一条待审核记录</label>
       <textarea id="pasteOcrText" placeholder="粘贴信息或其他 OCR 结果"></textarea>
-      <div class="controls"><button class="btn" id="pasteOcrBtn">解析并加入待审核</button><button class="btn secondary" id="clonePreviousBtn">取上一条值</button><button class="btn light" id="clearPasteBtn">清空</button><button class="btn light" id="closePasteBtn">收起</button></div>
+      <div class="controls"><button class="btn" id="pasteOcrBtn">解析并加入待审核</button><button class="btn secondary" id="clonePreviousBtn">取已勾选值 / 上一条值</button><button class="btn light" id="clearPasteBtn">清空</button><button class="btn light" id="closePasteBtn">收起</button></div>
     </div>
     <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
     <input id="galleryInput" type="file" accept="image/*" multiple hidden>
@@ -74,21 +74,21 @@
     <div class="advanced-block">
       <div class="sectiontitle">模型缓存与网页更新</div>
       <div class="goodnote" id="modelCacheStatus">Paddle模型缓存：正在检查……</div>
-      <div class="controls compact-tools"><button class="btn light" id="preloadPaddleBtn" type="button">提前加载 Paddle 模型</button><button class="btn secondary" id="reloadLatestBtn" type="button">检查更新 / 重新加载最新版</button><button class="btn light" id="redownloadPaddleModelsBtn" type="button">重新下载模型</button></div>
-      <div class="hint">“提前加载”仅初始化本机已缓存模型；“重新下载模型”仅用于模型缓存异常时强制更新。Paddle 模型首次下载后会保存到当前浏览器的 Cache Storage，网页小版本更新不会重复下载。</div>
+      <div class="controls compact-tools"><button class="btn secondary" id="reloadLatestBtn" type="button">检查更新 / 重新加载最新版</button><button class="btn light" id="redownloadPaddleModelsBtn" type="button">重新下载模型</button></div>
+      <div class="hint">“重新下载模型”仅用于模型缓存异常时强制更新。Paddle 模型首次下载后会保存到当前浏览器的 Cache Storage，网页小版本更新不会重复下载。</div>
     </div>
 
     <div class="advanced-block">
       <div class="sectiontitle">飞书自动同步</div>
       <div class="goodnote">同步服务：腾讯云 SCF（广州）。确认记录后自动同步。</div>
       <div class="row" style="margin-top:9px;align-items:end"><div class="field" style="flex:2"><label for="syncSharedKey">共享访问密钥</label><input id="syncSharedKey" type="password" autocomplete="off" placeholder="新手机 / 新浏览器首次填写"></div><button class="btn secondary" id="saveSyncConfigBtn">保存密钥</button></div>
-      <div class="controls"><button class="btn light" id="setupTencentBtn">验证飞书连接</button><button class="btn light" id="refreshKnowledgeBtn">刷新共享知识库</button><button class="btn secondary" id="syncAllBtn">重试未同步记录</button></div>
+      <div class="controls"><button class="btn light" id="setupTencentBtn">验证飞书连接</button><button class="btn light" id="refreshKnowledgeBtn">强制刷新知识库</button><button class="btn secondary" id="syncAllBtn" hidden>重试未同步记录</button></div>
       <div class="hint" id="knowledgeStatus">共享知识库：等待加载</div>
     </div>
     <input type="file" id="retryInput" accept="image/*" hidden>
   </details>
 
-  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.148.2</strong></div>
+  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.149</strong></div>
 </div>
 
 <div class="cropmodal" id="cropModal" hidden>
