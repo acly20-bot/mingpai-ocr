@@ -24,8 +24,8 @@
 @media(max-width:520px){
   :root{--v150-green:#079b7e;--v150-deep:#006b65;--v150-green2:#11b78f;--v150-soft:#e8faf6;--v150-blue:#eaf4ff}
   body{background:#f4f8f8;padding-bottom:60px}
-  .brand-header{background:#078b72;padding:13px 14px 14px;position:relative;box-shadow:0 7px 18px rgba(0,105,90,.16)}
-  .brand-inner{gap:10px}.brand-inner h1{font-size:21px;font-weight:800}.brand-mark,.brand-divider{display:block}
+  .brand-header{background:#078b72;padding:8px 12px 9px;position:relative;box-shadow:0 5px 14px rgba(0,105,90,.16)}
+  .brand-inner{gap:8px}.brand-inner h1{font-size:17px;font-weight:800}.brand-mark,.brand-divider{display:block}.brand-mark{transform:scale(.72);transform-origin:center}.brand-divider{height:24px}
   .wrap{padding:7px}.panel{border-color:#dce9e7;box-shadow:0 5px 16px rgba(22,86,78,.07);border-radius:14px}
   .btn{box-shadow:0 2px 6px rgba(17,71,65,.06)}
   .primary-actions .btn:first-child{background:#079b7e;color:#fff;box-shadow:0 5px 12px rgba(0,153,125,.2)}
@@ -36,7 +36,7 @@
   #queueFailedPill{background:#fff0f0;color:#b42318}
   #advancedSettings summary strong{font-size:15px}.advanced-block{border-top-color:#e3eeec}
   .goodnote{background:#eaf8f2;color:#23644f}
-  .mobile-dock{position:fixed;display:grid;grid-template-columns:repeat(4,1fr);left:0;right:0;bottom:0;z-index:7000;background:#006b65;color:#fff;padding:3px max(6px,env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));box-shadow:0 -4px 14px rgba(0,57,64,.18);border-radius:13px 13px 0 0;min-height:50px}
+  .mobile-dock{position:fixed;display:grid;grid-template-columns:repeat(4,1fr);left:0;right:0;bottom:0;z-index:7000;background:#004f4a;color:#fff;padding:3px max(6px,env(safe-area-inset-right)) calc(3px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));box-shadow:0 -4px 14px rgba(0,57,64,.18);border-radius:13px 13px 0 0;min-height:50px}
   .dock-btn{appearance:none;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:inherit;font-size:10px;font-weight:700;min-width:0;padding:2px 1px;cursor:pointer}
   .dock-icon{font-size:21px;line-height:1}.dock-home{background:#079b7e;border-radius:11px;margin:0 4px}.dock-camera{position:relative;margin-top:-14px}.dock-camera-ring{width:52px;height:52px;border-radius:50%;background:#079b7e;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,160,130,.32);display:grid;place-items:center;line-height:1;margin-bottom:0;position:relative}.dock-camera-ring:before{content:"";width:24px;height:17px;border:2px solid #fff;border-radius:4px;position:absolute;left:12px;top:19px}.dock-camera-ring:after{content:"";width:6px;height:6px;border:2px solid #fff;border-radius:50%;position:absolute;left:20px;top:22px}.dock-camera-ring i{position:absolute;width:10px;height:4px;background:#fff;border-radius:2px 2px 0 0;left:20px;top:16px}.dock-camera span:last-child{font-size:10px}
   .foot{padding-bottom:12px}
@@ -46,11 +46,11 @@
 
 /* v1.150 revision: unified green controls */
 #clearAllLocalBtn{background:#079b7e!important;color:#fff!important;border-color:#079b7e!important;box-shadow:0 2px 7px rgba(0,153,125,.16)!important}
-#pasteOcrBtn,#csvTopBtn{background:#079b7e!important;color:#fff!important}
+#pasteOcrBtn,#csvTopBtn{background:#079b7e!important;color:#fff!important}.retry-failed-all{padding:4px 8px!important;border-radius:999px!important;font-size:11px!important;flex:0 0 auto!important;white-space:nowrap}
 #countAll.filter-active,#countAll{background:#079b7e;color:#fff;box-shadow:none;font-weight:750}
 
 </style>
-<script type="module" crossorigin src="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU.js?v=1.150"></script>
+<script type="module" crossorigin src="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU.js?v=1.151"></script>
 </head>
 <body>
 <header class="brand-header"><div class="brand-inner"><div class="brand-mark" aria-hidden="true"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><span class="tag-lines"><i></i><i></i><i></i></span></div><span class="brand-divider"></span><h1>设备铭牌智能识别</h1></div></header>
@@ -70,7 +70,7 @@
     <div class="quickpaste" id="quickPastePanel" hidden>
       <label for="pasteOcrText">直接粘贴铭牌/OCR文字，新建一条待审核记录</label>
       <textarea id="pasteOcrText" placeholder="粘贴信息或其他 OCR 结果"></textarea>
-      <div class="controls"><button class="btn" id="pasteOcrBtn">解析并加入待审核</button><button class="btn secondary" id="clonePreviousBtn">取已勾选值 / 上一条值</button><button class="btn light" id="clearPasteBtn">清空</button><button class="btn light" id="closePasteBtn">收起</button></div>
+      <div class="controls"><button class="btn" id="pasteOcrBtn">解析并加入待审核</button><button class="btn secondary" id="clonePreviousBtn">取前一条值</button><button class="btn light" id="clearPasteBtn">清空</button><button class="btn light" id="closePasteBtn">收起</button></div>
     </div>
     <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
     <input id="galleryInput" type="file" accept="image/*" multiple hidden>
@@ -83,7 +83,7 @@
       <div class="field search-field"><label for="searchBox">搜索</label><input id="searchBox" type="text" placeholder="名称 / 厂家 / 型号 / 编号"></div>
       <button class="btn secondary toolbar-download" id="csvTopBtn">下载数据</button>
     </div>
-    <div class="topstat"><span class="pill" id="countAll" data-quick-filter="all">总记录：0</span><span class="pill" id="countPending" data-quick-filter="pending">待审核：0</span><span class="pill" id="countOk" data-quick-filter="confirmed">已确认：0</span><span class="pill" id="countSyncPending" data-quick-filter="sync-pending">待同步：0</span><span class="pill" id="selectedCount">已选：0</span><span class="pill" id="queuePill">队列：识别中 0 / 等待 0</span><span class="pill queue-failed" id="queueFailedPill" data-quick-filter="failed">失败：0</span></div>
+    <div class="topstat"><span class="pill" id="countAll" data-quick-filter="all">总记录：0</span><span class="pill" id="countPending" data-quick-filter="pending">待审核：0</span><span class="pill" id="countOk" data-quick-filter="confirmed">已确认：0</span><span class="pill" id="countSyncPending" data-quick-filter="sync-pending">待同步：0</span><span class="pill" id="selectedCount">已选：0</span><span class="pill" id="queuePill">队列：识别中 0 / 等待 0</span><span class="pill queue-failed" id="queueFailedPill" data-quick-filter="failed">失败：0</span><button type="button" class="btn secondary retry-failed-all" id="retryFailedAllBtn">批量重识别</button></div>
     <div class="bulkbar"><button class="btn light" id="selectPageBtn">本页全选</button><button class="btn light" id="clearSelectionBtn">取消选择</button><button class="btn danger" id="deleteSelectedBtn">删除所选</button><button class="btn danger" id="deleteSyncedBtn">清理已同步</button></div>
   </section>
 
@@ -124,7 +124,7 @@
     <input type="file" id="retryInput" accept="image/*" hidden>
   </details>
 
-  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.150</strong></div>
+  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.151</strong></div>
 </div>
 
 <nav class="mobile-dock" id="mobileDock" aria-label="手机快捷操作">
@@ -192,7 +192,7 @@ setTimeout(function(){
   if(home) home.addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
   if(down) down.addEventListener('click',function(){ document.getElementById('csvTopBtn')?.click(); });
   if(cam) cam.addEventListener('click',function(){ document.getElementById('cameraBtn')?.click(); });
-  if(add) add.addEventListener('click',function(){ document.getElementById('pasteQuickBtn')?.click(); setTimeout(function(){ document.getElementById('quickPastePanel')?.scrollIntoView({behavior:'smooth',block:'center'}); },80); });
+  if(add) add.addEventListener('click',function(){ var panel=document.getElementById('quickPastePanel'); if(panel&&panel.hidden) document.getElementById('pasteQuickBtn')?.click(); setTimeout(function(){ document.getElementById('quickPastePanel')?.scrollIntoView({behavior:'smooth',block:'center'}); document.getElementById('pasteOcrText')?.focus(); },80); });
 })();
 </script>
 
