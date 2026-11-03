@@ -50,7 +50,7 @@
 #countAll.filter-active,#countAll{background:#079b7e;color:#fff;box-shadow:none;font-weight:750}
 
 </style>
-<script type="module" crossorigin src="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU.js?v=1.151.1"></script>
+<script type="module" crossorigin src="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU.js?v=1.152"></script>
 </head>
 <body>
 <header class="brand-header"><div class="brand-inner"><div class="brand-mark" aria-hidden="true"><span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span><span class="tag-lines"><i></i><i></i><i></i></span></div><span class="brand-divider"></span><h1>设备铭牌智能识别</h1></div></header>
@@ -79,11 +79,11 @@
 
   <section class="panel">
     <div class="row toolbar-row">
-      <div class="field status-field"><label for="statusFilter" class="statuslabel">状态 <span class="pill mini-net" id="networkPill">资源：加载中</span></label><select id="statusFilter"><option value="all">全部记录</option><option value="pending">待审核</option><option value="confirmed">已确认</option><option value="sync-pending">待同步</option><option value="failed">识别失败</option></select></div>
+      <div class="field status-field"><label for="statusFilter" class="statuslabel">状态 <span class="pill mini-net" id="networkPill">资源：加载中</span></label><select id="statusFilter"><option value="all">全部记录</option><option value="pending">待审核</option><option value="confirmed">已确认</option><option value="sync-pending">待同步</option><option value="failed">识别失败</option><option value="selected">已勾选</option></select></div>
       <div class="field search-field"><label for="searchBox">搜索</label><input id="searchBox" type="text" placeholder="名称 / 厂家 / 型号 / 编号"></div>
       <button class="btn secondary toolbar-download" id="csvTopBtn">下载数据</button>
     </div>
-    <div class="topstat"><span class="pill" id="countAll" data-quick-filter="all">总记录：0</span><span class="pill" id="countPending" data-quick-filter="pending">待审核：0</span><span class="pill" id="countOk" data-quick-filter="confirmed">已确认：0</span><span class="pill" id="countSyncPending" data-quick-filter="sync-pending">待同步：0</span><span class="pill" id="selectedCount">已选：0</span><span class="pill" id="queuePill">队列：识别中 0 / 等待 0</span><span class="pill queue-failed" id="queueFailedPill" data-quick-filter="failed">失败：0</span><button type="button" class="btn secondary retry-failed-all" id="retryFailedAllBtn">批量重识别</button></div>
+    <div class="topstat"><span class="pill" id="countAll" data-quick-filter="all">总记录：0</span><span class="pill" id="countPending" data-quick-filter="pending">待审核：0</span><span class="pill" id="countOk" data-quick-filter="confirmed">已确认：0</span><span class="pill" id="countSyncPending" data-quick-filter="sync-pending">待同步：0</span><span class="pill" id="selectedCount" data-quick-filter="selected">已选：0</span><span class="pill" id="queuePill">队列：识别中 0 / 等待 0</span><span class="pill queue-failed" id="queueFailedPill" data-quick-filter="failed">失败：0</span><button type="button" class="btn secondary retry-failed-all" id="retryFailedAllBtn">批量重识别</button></div>
     <div class="bulkbar"><button class="btn light" id="selectPageBtn">本页全选</button><button class="btn light" id="clearSelectionBtn">取消选择</button><button class="btn danger" id="deleteSelectedBtn">删除所选</button><button class="btn danger" id="deleteSyncedBtn">清理已同步</button></div>
   </section>
 
@@ -124,7 +124,7 @@
     <input type="file" id="retryInput" accept="image/*" hidden>
   </details>
 
-  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.151.1</strong></div>
+  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.152</strong></div>
 </div>
 
 <nav class="mobile-dock" id="mobileDock" aria-label="手机快捷操作">
