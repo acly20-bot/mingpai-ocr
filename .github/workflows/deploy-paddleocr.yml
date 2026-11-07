@@ -32,6 +32,11 @@ jobs:
         run: |
           mkdir -p app
           unzip -oq github-pages-cos-models.zip -d app
+      - name: Add UI comparison previews
+        run: |
+          if [ -d ui-compare ]; then
+            cp -R ui-compare app/ui-compare
+          fi
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
