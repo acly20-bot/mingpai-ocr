@@ -52,9 +52,9 @@ frame.addEventListener('load',()=>{
   #fieldStats .toolbar-row{display:none!important}
   #fieldStats .topstat{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px!important;margin:0!important}
   #fieldStats .pill,#fieldStats .retry-failed-all{
-    min-height:32px!important;padding:5px 6px!important;border-radius:7px!important;
+    min-height:26px!important;padding:2px 5px!important;border-radius:7px!important;
     display:flex!important;align-items:center!important;justify-content:center!important;
-    line-height:1.15!important;text-align:center!important;
+    line-height:1.05!important;text-align:center!important;
     background:#f2f4f3!important;color:#8a938e!important;border:1px solid #e6ebe8!important;box-shadow:none!important
   }
   #fieldStats .pill.field-has-data.field-pending,
@@ -77,14 +77,16 @@ frame.addEventListener('load',()=>{
 
   /* 设备记录标题 + 下载数据 */
   #fieldRecords{padding:8px!important}
-  .field-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
-  .field-head h2{margin:0}
+  .field-head{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .field-head h2{margin:0;white-space:nowrap}
+  .field-head .field-network{display:flex;align-items:center}
+  .field-head #networkPill{margin:0!important;white-space:nowrap!important}
+  .field-head .toolbar-download{margin-left:auto!important}
   .field-head .toolbar-download .btn{background:#00a88f!important;color:#fff!important;border-color:#00a88f!important;border-radius:8px!important;min-height:36px!important;padding:7px 12px!important;font-weight:700!important}
-  .field-tools{display:grid!important;grid-template-columns:132px minmax(0,1fr);gap:6px!important;align-items:end!important;padding:5px!important;background:#f7faf8!important;border:1px solid #e5ebe7!important;border-radius:8px!important;margin:0 0 5px!important}
-  .field-tools .field{min-width:0!important}
-  .field-tools .field:first-child,.field-tools #filterStatus{width:132px!important}
-  .field-tools label{margin-bottom:2px!important}
-  .field-tools input,.field-tools select{height:36px!important;padding:6px 8px!important;border-radius:7px!important;background:#fff!important;border-color:#dce3df!important}
+  .field-tools{display:grid!important;grid-template-columns:auto 132px auto minmax(0,1fr);gap:6px!important;align-items:center!important;padding:5px!important;background:#f7faf8!important;border:1px solid #e5ebe7!important;border-radius:8px!important;margin:0 0 5px!important}
+  .field-tools .field-tool-label{white-space:nowrap;color:#65736c}
+  .field-tools #filterStatus{width:132px!important}
+  .field-tools input,.field-tools select{height:36px!important;padding:6px 8px!important;border-radius:7px!important;background:#fff!important;border-color:#dce3df!important;min-width:0!important;width:100%!important}
   #fieldRecords .pages{margin:4px 0!important}
   #fieldRecords .pages .btn{min-height:32px!important;padding:5px 9px!important;border-radius:7px!important;background:#f5f7f6!important;color:#647169!important;border-color:#e3e8e5!important}
   #fieldRecords #recordList .card{border:1px solid #e3e9e6!important;border-radius:9px!important;padding:7px!important;margin:5px 0!important;box-shadow:none!important}
@@ -110,12 +112,12 @@ frame.addEventListener('load',()=>{
     #fieldWork .primary-actions .btn{min-height:36px!important;padding:6px 6px!important}
     #progress{padding:6px 7px!important;margin-top:4px!important}
     #fieldStats .topstat{grid-template-columns:repeat(4,1fr)!important;gap:3px!important}
-    #fieldStats .pill,#fieldStats .retry-failed-all{min-height:30px!important;padding:4px 3px!important}
+    #fieldStats .pill,#fieldStats .retry-failed-all{min-height:25px!important;padding:2px 3px!important}
     .field-bulk .bulkbar{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:4px!important}
     .field-bulk .btn{min-width:0!important;padding:5px 3px!important}
     .field-head{margin-bottom:4px!important}
-    .field-tools{grid-template-columns:120px minmax(0,1fr)!important;gap:5px!important;padding:4px!important}
-    .field-tools .field:first-child,.field-tools #filterStatus{width:120px!important}
+    .field-tools{grid-template-columns:auto 112px auto minmax(0,1fr)!important;gap:4px!important;padding:4px!important}
+    .field-tools #filterStatus{width:112px!important}
     .field-tools input,.field-tools select{height:34px!important;padding:5px 6px!important}
     #fieldRecords .pages{margin:3px 0!important}
     #fieldRecords .pages .btn{min-height:30px!important}
@@ -159,15 +161,41 @@ frame.addEventListener('load',()=>{
   head.innerHTML='<h2>设备记录</h2>';
   records.prepend(head);
 
-  // 搜索/筛选移入设备记录顶部
-  const toolbar=stats.querySelector('.toolbar-row');
-  if(toolbar){
-    toolbar.className='field-tools';
-    const p=records.querySelector('.pages');
-    records.insertBefore(toolbar,p);
+  // 网络状态移到“设备记录”后面
+  const network=d.getElementById('networkPill');
+  if(network){
+    const nh=d.createElement('div');
+    nh.className='field-network';
+    nh.appendChild(network);
+    head.appendChild(nh);
   }
 
-  // 下载数据移到设备记录标题右侧
+  // 状态 / 全部记录 / 搜索 / 输入框保持同一行
+  const toolbar=stats.querySelector('.toolbar-row');
+  if(toolbar){
+    const select=toolbar.querySelector('select');
+    const search=toolbar.querySelector('input[type="search"], input[type="text"]');
+    const tools=d.createElement('div');
+    tools.className='field-tools';
+
+    const sl=d.createElement('span');
+    sl.className='field-tool-label';
+    sl.textContent='状态';
+    tools.appendChild(sl);
+    if(select) tools.appendChild(select);
+
+    const ql=d.createElement('span');
+    ql.className='field-tool-label';
+    ql.textContent='搜索';
+    tools.appendChild(ql);
+    if(search) tools.appendChild(search);
+
+    const p=records.querySelector('.pages');
+    records.insertBefore(tools,p);
+    toolbar.remove();
+  }
+
+  // 下载数据移到设备记录标题最右侧
   const csv=d.getElementById('csvTopBtn');
   if(csv){
     const holder=d.createElement('div');
@@ -215,6 +243,11 @@ frame.addEventListener('load',()=>{
     return Math.max(...m.map(Number));
   }
   function paint(){
+    const queueLabel=d.getElementById('queuePill');
+    if(queueLabel){
+      const cleaned=(queueLabel.textContent||'').replace(/^队列\s*[：:]\s*/,'');
+      if(cleaned!==queueLabel.textContent) queueLabel.textContent=cleaned;
+    }
     Object.keys(semanticMap).forEach(id=>{
       const el=d.getElementById(id);if(!el)return;
       const n=numFrom(el);
