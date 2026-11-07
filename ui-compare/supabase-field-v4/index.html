@@ -373,17 +373,48 @@ frame.addEventListener('load',()=>{
   // Clear button uses same danger style; retain 取消选择.
   [...d.querySelectorAll('button,.btn')].forEach(btn=>{if((btn.textContent||'').trim()==='清空')btn.classList.add('field-clear-danger')});
 
-  // Custom export: confirmed records + temperature/humidity
-  function csvCell(v){return '"'+String(v??'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"'}
+  // Custom XLSX export: confirmed records + temperature/humidity
+  function xmlEscape(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}return(c^0xffffffff)>>>0}
+  function u16(n){return new Uint8Array([n&255,(n>>>8)&255])}
+  function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255])}
+  function cat(parts){const len=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length}return out}
+  function zipStored(files){
+    const enc=new TextEncoder(),locals=[],centrals=[];let offset=0;
+    for(const [name,text] of files){
+      const nb=enc.encode(name),data=enc.encode(text),crc=crc32(data);
+      const local=cat([u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nb.length),u16(0),nb,data]);
+      locals.push(local);
+      const central=cat([u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),nb]);
+      centrals.push(central);offset+=local.length;
+    }
+    const centralSize=centrals.reduce((n,p)=>n+p.length,0);
+    const end=cat([u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(centralSize),u32(offset),u16(0)]);
+    return cat([...locals,...centrals,end]);
+  }
+  function makeXlsx(rows){
+    const cell=(v)=>'<c t="inlineStr"><is><t xml:space="preserve">'+xmlEscape(v)+'</t></is></c>';
+    const sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+
+      rows.map((r,i)=>'<row r="'+(i+1)+'">'+r.map(cell).join('')+'</row>').join('')+
+      '</sheetData></worksheet>';
+    const files=[
+      ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],
+      ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+      ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="已确认记录" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+      ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'],
+      ['xl/worksheets/sheet1.xml',sheet]
+    ];
+    return new Blob([zipStored(files)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
   async function exportWithEnvironment(ev){
     ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
     const rows=(await allRecords()).filter(r=>r.status==='confirmed').sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
     if(!rows.length){alert('没有已确认的记录。请先审核并确认记录。');return}
     const head=['单位名称','科室','检定日期','检定员','设备名称','生产厂家','型号','出厂编号','温度（℃）','相对湿度（%RH）','备注','状态','铭牌文本'];
     const body=rows.map(r=>[r.unitName||r.batch||'',r.dept||'',r.date||'',r.operatorName||'',r.name||'',r.manufacturer||'',r.model||'',r.code||'',r.temperature??'',r.humidity??'',r.remark||'',r.status==='confirmed'?'已确认':'待审核',r.raw||'']);
-    const text='\uFEFF'+[head,...body].map(row=>row.map(csvCell).join(',')).join('\r\n');
-    const blob=new Blob([text],{type:'text/csv;charset=utf-8'});
-    const a=d.createElement('a');a.href=URL.createObjectURL(blob);const day=new Date().toISOString().slice(0,10);a.download=`设备铭牌已确认数据_${day}.csv`;d.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+    const blob=makeXlsx([head,...body]),url=URL.createObjectURL(blob),a=d.createElement('a');
+    const day=new Date().toISOString().slice(0,10);a.href=url;a.download=`设备铭牌已确认数据_${day}.xlsx`;d.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
   }
   if(csv){csv.addEventListener('click',exportWithEnvironment,true)}
 
