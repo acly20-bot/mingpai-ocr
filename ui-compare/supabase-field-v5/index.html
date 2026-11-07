@@ -368,7 +368,7 @@ frame.addEventListener('load',async()=>{
           env.innerHTML='<span>🌡</span><input class="temp" inputmode="decimal" aria-label="温度">℃<span> / </span><input class="hum" inputmode="numeric" aria-label="相对湿度">%RH';
           title.appendChild(env);
           const save=async()=>{const r=await getRecord(id);if(!r)return;r.temperature=env.querySelector('.temp').value.trim();r.humidity=env.querySelector('.hum').value.trim();r.envCapturedAt=r.envCapturedAt||Date.now();await putRecord(r);await syncEnvironmentCloud(r);};
-          env.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',save));
+          env.querySelectorAll('input').forEach(inp=>{['click','pointerdown','touchstart'].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));inp.addEventListener('change',save);inp.addEventListener('blur',save);});
         }
         env.querySelector('.temp').value=rec.temperature??'';
         env.querySelector('.hum').value=rec.humidity??'';
