@@ -283,21 +283,6 @@ frame.addEventListener('load',async()=>{
   // V4 weather + per-record environment persistence
   const DB_NAME='mingpai-free-v1', STORE='records', WEATHER_KEY='mingpai-field-weather-v1';
   let currentWeather=null;
-  const ENV_SCF='https://1387910526-fhjoqqg0on.ap-guangzhou.tencentscf.com';
-  function sharedKey(){return (d.getElementById('syncSharedKey')?.value||localStorage.getItem('mingpai-feishu-sync-key')||localStorage.getItem('mingpai-tencent-sync-key')||'').trim()}
-  async function syncEnvironmentCloud(rec){
-    const recordId=rec?.feishuRecordId||rec?.remoteRecordId||'';
-    if(!recordId||rec?.temperature==null||rec?.humidity==null)return;
-    const sig=recordId+'|'+String(rec.temperature)+'|'+String(rec.humidity);
-    if(rec.envCloudSig===sig)return;
-    const key=sharedKey();if(!key)return;
-    try{
-      const r=await fetch(ENV_SCF+'/sync-environment',{method:'POST',headers:{'Content-Type':'application/json','X-Mingpai-Key':key},body:JSON.stringify({recordId,temperature:rec.temperature,humidity:rec.humidity})});
-      const j=await r.json().catch(()=>({}));if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
-      rec.envCloudSig=sig;await putRecord(rec);
-    }catch(e){console.warn('environment cloud sync failed',e)}
-  }
-
   function openDb(){
     return new Promise((resolve,reject)=>{
       const req=indexedDB.open(DB_NAME,2);
