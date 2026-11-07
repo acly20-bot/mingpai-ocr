@@ -6,6 +6,7 @@ on:
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
+      - 'ui-compare/**'
   workflow_dispatch:
 
 permissions:
