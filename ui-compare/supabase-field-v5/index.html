@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Supabase Field V5 · 温湿度修正版</title>
+<style>
+html,body{margin:0;height:100%;background:#f5f8f6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.top{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:#fff;border-bottom:1px solid #e5ebe7;color:#718079;font-size:10px}
+.top strong{color:#1b3026}.top a{color:#16845a;text-decoration:none;font-weight:700}
+iframe{display:block;width:100%;height:calc(100% - 31px);border:0;background:#fff}
+</style>
+</head>
+<body>
+<div class="top"><strong>Supabase Field V5 · 温湿度修正版</strong><span>基线 v1.153.4.4.1</span><a href="../">返回对比</a></div>
+<iframe id="app" src="../../index.html?field=v5&rev=202611071755"></iframe>
+<script>
+const frame=document.getElementById('app');
+frame.addEventListener('load',async()=>{
+  let d; try{d=frame.contentDocument}catch(e){return}
+  if(!d||d.body.dataset.fieldDone)return;
+  d.body.dataset.fieldDone='1';
+
+  const st=d.createElement('style');
+  st.textContent=`
+  body{background:#f4f8f6!important;color:#17201c!important}
+  .brand-header{background:#00695c!important;color:#fff!important;border-bottom:0!important;padding:10px 12px!important;box-shadow:none!important}
+  .brand-inner{max-width:1040px!important;margin:auto!important;display:flex!important;align-items:center!important;gap:8px!important}
+  .brand-mark,.brand-divider{display:none!important}
+  .brand-inner:before{content:'▣';font-size:18px;color:#fff;margin-right:3px}
+  .brand-inner h1{font-size:inherit!important;line-height:1.2!important;color:#fff!important;margin:0!important}
+  .field-settings-btn{margin-left:auto!important;background:transparent!important;color:#fff!important;border:1px solid rgba(255,255,255,.38)!important;border-radius:7px!important;padding:6px 9px!important;min-height:34px!important;font:inherit!important;font-weight:600!important}
+  .field-settings-panel{max-width:1040px!important;margin:6px auto 0!important;background:#fff!important;border:1px solid #dfe7e2!important;border-radius:10px!important;padding:8px!important}
+  .wrap{max-width:1040px!important;padding:7px 6px 72px!important}
+  .panel{background:#fff!important;border:1px solid #dfe7e2!important;border-radius:11px!important;box-shadow:none!important}
+  #fieldWork,#fieldStats,#fieldRecords{margin:0 0 7px!important;padding:8px!important}
+
+  /* 工作信息：保留稳定版字号，只压缩间距 */
+  #fieldWork>.row:first-of-type{display:grid!important;grid-template-columns:1.35fr 1fr .82fr .78fr;gap:6px!important}
+  #fieldWork>.row:first-of-type .field{min-width:0!important}
+  #fieldWork label{margin-bottom:3px!important}
+  #fieldWork input,#fieldWork select{height:38px!important;padding:7px 9px!important;border-radius:7px!important;background:#fbfcfb!important;border-color:#dce4df!important}
+  #fieldWork .primary-actions{display:grid!important;grid-template-columns:1.1fr 1fr .9fr;gap:6px!important;margin:6px 0 0!important}
+  #fieldWork .primary-actions .btn{min-width:0!important;min-height:38px!important;border-radius:7px!important;padding:7px 9px!important;box-shadow:none!important}
+  #fieldWork #cameraBtn{background:#00a88f!important;color:#fff!important;border-color:#00a88f!important;font-weight:700!important}
+  #fieldWork #galleryBtn{background:#e6f6f2!important;color:#126453!important;border-color:#d5ece5!important}
+  #fieldWork #pasteQuickBtn{background:#f2f5f4!important;color:#3f5049!important;border-color:#e3e9e6!important}
+  #progress{margin-top:5px!important;padding:7px 8px!important;min-height:0!important;border-radius:7px!important;background:#edf8f4!important;border:1px solid #d9ece4!important;color:#315f50!important}
+
+  /* 两行状态栏：字号沿用稳定版 */
+  #fieldStats{padding:7px 8px!important}
+  #fieldStats .toolbar-row{display:none!important}
+  #fieldStats .topstat{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px!important;margin:0!important}
+  #fieldStats .pill,#fieldStats .retry-failed-all{
+    min-height:26px!important;padding:2px 5px!important;border-radius:7px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    line-height:1.05!important;text-align:center!important;
+    background:#f2f4f3!important;color:#8a938e!important;border:1px solid #e6ebe8!important;box-shadow:none!important
+  }
+  #fieldStats .pill.field-has-data.field-pending,
+  #fieldStats .pill.field-has-data.field-sync{background:#fff4d8!important;color:#8d620c!important;border-color:#efdca9!important}
+  #fieldStats .pill.field-has-data.field-confirmed,
+  #fieldStats .pill.field-has-data.field-selected,
+  #fieldStats .field-total.field-has-data{background:#e6f6ef!important;color:#126a4b!important;border-color:#cce8da!important}
+  #fieldStats .pill.field-has-data.field-failed,
+  #fieldStats .retry-failed-all.field-has-data{background:#fdeceb!important;color:#a6322d!important;border-color:#ecc7c4!important}
+  #fieldStats .field-queue.field-has-data{background:#edf1ef!important;color:#4f5d56!important;border-color:#dce3df!important}
+  #fieldStats .field-active{outline:2px solid currentColor!important;outline-offset:-1px!important;font-weight:700!important}
+  #fieldStats .field-pending.field-active,#fieldStats .field-sync.field-active{background:#f1d27b!important}
+  #fieldStats .field-confirmed.field-active,#fieldStats .field-selected.field-active,#fieldStats .field-total.field-active{background:#b8e4cf!important}
+  #fieldStats .field-failed.field-active,#fieldStats .retry-failed-all.field-active{background:#ebb0ab!important}
+
+  /* 常用批量操作常驻 */
+  .field-bulk{display:block!important;margin:5px 0 4px!important}
+  .field-bulk .bulkbar{display:flex!important;flex-wrap:wrap!important;gap:5px!important;margin:0!important}
+  .field-bulk .btn{min-height:34px!important;padding:6px 9px!important;border-radius:7px!important}
+
+  /* 设备记录标题 + 下载数据 */
+  #fieldRecords{padding:8px!important}
+  .field-head{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .field-head h2{margin:0;white-space:nowrap}
+  .field-head .field-network{display:flex;align-items:center}
+  .field-head #networkPill{margin:0!important;white-space:nowrap!important}
+  .field-head .toolbar-download{margin-left:auto!important}
+  .field-head .toolbar-download .btn{background:#00a88f!important;color:#fff!important;border-color:#00a88f!important;border-radius:8px!important;min-height:36px!important;padding:7px 12px!important;font-weight:700!important}
+  .field-tools{display:grid!important;grid-template-columns:auto 132px auto minmax(0,1fr);gap:6px!important;align-items:center!important;padding:5px!important;background:#f7faf8!important;border:1px solid #e5ebe7!important;border-radius:8px!important;margin:0 0 5px!important}
+  .field-tools .field-tool-label{white-space:nowrap;color:#65736c}
+  .field-tools #filterStatus{width:132px!important}
+  .field-tools input,.field-tools select{height:36px!important;padding:6px 8px!important;border-radius:7px!important;background:#fff!important;border-color:#dce3df!important;min-width:0!important;width:100%!important}
+  #fieldRecords .pages{margin:4px 0!important}
+  #fieldRecords .pages .btn{min-height:32px!important;padding:5px 9px!important;border-radius:7px!important;background:#f5f7f6!important;color:#647169!important;border-color:#e3e8e5!important}
+  #fieldRecords #recordList .card{border:1px solid #e3e9e6!important;border-radius:9px!important;padding:7px!important;margin:5px 0!important;box-shadow:none!important}
+  #fieldRecords #recordList .thumb{border-radius:7px!important}
+  #fieldRecords #recordList input,#fieldRecords #recordList textarea,#fieldRecords #recordList select{background:#fbfcfb!important;border-color:#dfe6e2!important;border-radius:7px!important}
+  #fieldRecords #recordList .controls .btn{border-radius:7px!important}
+  #fieldRecords .badge{border-radius:999px!important}
+
+  /* 底部快捷栏：稳定版深绿色 */
+  .mobile-dock{background:#00695c!important;color:#fff!important;border-top:0!important;box-shadow:0 -4px 16px rgba(0,70,60,.16)!important}
+  .dock-btn{color:#fff!important}
+  .dock-home{background:#00a88f!important;color:#fff!important}
+  .dock-camera-ring{background:#00a88f!important;border-color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.18)!important}
+  .dock-btn span,.dock-btn div{color:inherit!important}
+
+  @media(max-width:700px){
+    .wrap{padding:5px 4px 66px!important}
+    .brand-header{padding:8px 9px!important}
+    #fieldWork,#fieldStats,#fieldRecords{padding:6px!important;margin-bottom:5px!important}
+    #fieldWork>.row:first-of-type{grid-template-columns:1fr 1fr!important;gap:5px!important}
+    #fieldWork input,#fieldWork select{height:36px!important;padding:6px 7px!important}
+    #fieldWork .primary-actions{gap:5px!important;margin-top:5px!important}
+    #fieldWork .primary-actions .btn{min-height:36px!important;padding:6px 6px!important}
+    #progress{padding:6px 7px!important;margin-top:4px!important}
+    #fieldStats .topstat{grid-template-columns:repeat(4,1fr)!important;gap:3px!important}
+    #fieldStats .pill,#fieldStats .retry-failed-all{min-height:25px!important;padding:2px 3px!important}
+    .field-bulk .bulkbar{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:4px!important}
+    .field-bulk .btn{min-width:0!important;padding:5px 3px!important}
+    .field-head{margin-bottom:4px!important}
+    .field-tools{grid-template-columns:auto 112px auto minmax(0,1fr)!important;gap:4px!important;padding:4px!important}
+    .field-tools #filterStatus{width:112px!important}
+    .field-tools input,.field-tools select{height:34px!important;padding:5px 6px!important}
+    #fieldRecords .pages{margin:3px 0!important}
+    #fieldRecords .pages .btn{min-height:30px!important}
+    #fieldRecords #recordList .card{padding:6px!important;margin:4px 0!important}
+  }
+
+  /* V3 final preview overrides */
+  .brand-inner{width:100%!important;max-width:1040px!important;justify-content:flex-start!important}
+  .field-settings-btn{margin-left:auto!important;color:#fff!important;background:transparent!important;border:0!important;font-weight:700!important}
+  #fieldStats{padding-top:4px!important;padding-bottom:4px!important}
+  #fieldStats .topstat{gap:3px!important}
+  #fieldStats .pill,#fieldStats .retry-failed-all{min-height:24px!important;padding:1px 4px!important;line-height:1!important}
+  .field-head{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:5px!important}
+  .field-head h2{margin:0!important;white-space:nowrap!important}
+  .field-head .field-network{display:flex!important;align-items:center!important;white-space:nowrap!important}
+  .field-head .toolbar-download{margin-left:auto!important}
+  .field-record-tools{display:grid!important;grid-template-columns:auto 120px auto minmax(0,1fr)!important;gap:5px!important;align-items:center!important;padding:4px 5px!important;background:#f7faf8!important;border:1px solid #e5ebe7!important;border-radius:8px!important;margin-bottom:5px!important}
+  .field-record-tools .tool-label{white-space:nowrap!important}
+  .field-record-tools select{width:120px!important;height:34px!important}
+  .field-record-tools input{width:100%!important;min-width:0!important;height:34px!important}
+  @media(max-width:700px){
+    .field-record-tools{grid-template-columns:auto 108px auto minmax(0,1fr)!important;gap:4px!important}
+    .field-record-tools select{width:108px!important}
+    #fieldStats .pill,#fieldStats .retry-failed-all{min-height:23px!important;padding:1px 3px!important}
+  }
+
+  /* V4 final UI */
+  .brand-inner:before{display:none!important}
+  .brand-mark,.brand-divider{display:block!important}
+  .brand-mark{transform:scale(.78)!important;transform-origin:center!important}
+  .brand-divider{height:25px!important}
+  .field-weather{margin-left:auto!important;display:flex!important;align-items:center!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#fff!important;white-space:nowrap!important;font-weight:650!important;cursor:pointer!important;box-shadow:none!important}
+  .field-settings-btn{margin-left:0!important;color:#fff!important;background:transparent!important;border:0!important;padding:5px 6px!important}
+  #fieldStats .pill.field-has-data.field-failed,
+  #fieldStats .retry-failed-all.field-has-data{background:#fff1f1!important;color:#a63a35!important;border-color:#efcecb!important}
+  .field-head .toolbar-download .btn{background:#00a88f!important;color:#fff!important;border-color:#00a88f!important;border-radius:7px!important;min-height:36px!important;height:36px!important;width:auto!important;min-width:0!important;max-width:none!important;padding:7px 12px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important}
+  .field-clear-danger{background:#fff1f1!important;color:#a63a35!important;border-color:#efcecb!important}
+  .mobile-dock{min-height:50px!important}
+  .mobile-dock .dock-btn{font-size:12px!important;padding-top:0!important;padding-bottom:0!important}
+  .mobile-dock .dock-icon{font-size:24px!important;line-height:1!important}.mobile-dock svg{transform:scale(1.12)}.mobile-dock .dock-camera-ring{width:54px!important;height:54px!important}
+  .env-summary{display:flex!important;align-items:center!important;gap:2px!important;margin-top:3px!important;color:#15815e!important;font-weight:700!important}
+  .env-summary input{width:54px!important;border:0!important;background:transparent!important;padding:0!important;height:auto!important;font:inherit!important;color:inherit!important;text-align:right!important;box-shadow:none!important}
+  .env-summary input.hum{width:43px!important}
+  .card-status-stack{margin-left:auto!important;display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:3px!important}
+  .card-status-stack .badge{margin:0!important}
+  .sync-mini{font-size:11px!important;color:#7c8782!important;white-space:nowrap!important}
+  @media(max-width:700px){
+    .field-weather{padding:4px 7px!important;font-size:12px!important}
+    .brand-mark{transform:scale(.72)!important}
+    .mobile-dock .dock-btn{font-size:12px!important}
+  }
+  `;
+  d.head.appendChild(st);
+
+  const wrap=d.querySelector('.wrap');
+  if(!wrap)return;
+  const panels=[...wrap.children].filter(x=>x.classList&&x.classList.contains('panel'));
+  if(panels.length<4)return;
+  const [work,stats,records,advanced]=panels;
+  work.id='fieldWork';stats.id='fieldStats';records.id='fieldRecords';
+
+
+  // V3 robust DOM layout
+  const allEls=()=>[...d.querySelectorAll('*')];
+
+  // top title + right settings
+  const brand=d.querySelector('.brand-inner');
+  if(brand){
+    const title=brand.querySelector('h1'); if(title) title.textContent='设备铭牌识别';
+    let settingsBtn=d.querySelector('.field-settings-btn');
+    if(!settingsBtn){
+      settingsBtn=d.createElement('button');
+      settingsBtn.type='button'; settingsBtn.className='field-settings-btn'; settingsBtn.textContent='⚙ 设置';
+      brand.appendChild(settingsBtn);
+    }
+    if(advanced){
+      advanced.classList.add('field-settings-panel');
+      advanced.style.display='none';
+      if(advanced.tagName==='DETAILS') advanced.open=true;
+      const header=d.querySelector('.brand-header');
+      if(header) header.after(advanced);
+      settingsBtn.onclick=()=>{
+        const showing=advanced.style.display!=='none';
+        advanced.style.display=showing?'none':'block';
+        settingsBtn.textContent=showing?'⚙ 设置':'✕ 收起';
+      };
+    }
+  }
+
+  // record heading
+  const oldHead=records.querySelector(':scope > .row');
+  if(oldHead) oldHead.remove();
+  let head=records.querySelector('.field-head');
+  if(!head){head=d.createElement('div');head.className='field-head';head.innerHTML='<h2>设备记录</h2>';records.prepend(head);}
+
+  // move network after title
+  let network=d.getElementById('networkPill');
+  if(!network){
+    network=allEls().find(el=>el.children.length===0 && /网络\s*[：:]\s*(在线|离线|检测中)/.test((el.textContent||'').trim()));
+  }
+  if(network){
+    let nh=head.querySelector('.field-network');
+    if(!nh){nh=d.createElement('div');nh.className='field-network';head.appendChild(nh);}
+    nh.appendChild(network);
+  }
+
+  // move download to far right
+  let csv=d.getElementById('csvTopBtn') || [...d.querySelectorAll('button,.btn')].find(el=>(el.textContent||'').trim()==='下载数据');
+  if(csv){
+    let holder=head.querySelector('.toolbar-download');
+    if(!holder){holder=d.createElement('div');holder.className='toolbar-download';head.appendChild(holder);}
+    holder.appendChild(csv);
+  }
+
+  // build one-line status/filter/search toolbar
+  let filter=d.getElementById('filterStatus') || [...d.querySelectorAll('select')].find(sel=>[...sel.options].some(o=>(o.textContent||'').trim()==='全部记录'));
+  let search=d.getElementById('searchInput') || [...d.querySelectorAll('input')].find(inp=>/名称\s*\/\s*厂家\s*\/\s*型号\s*\/\s*编号/.test(inp.placeholder||''));
+  const oldToolbar=allEls().find(el=>el!==records && el.classList && (el.classList.contains('toolbar-row')||el.classList.contains('field-tools')) && ((filter&&el.contains(filter))||(search&&el.contains(search))));
+  const tools=d.createElement('div');tools.className='field-record-tools';
+  const l1=d.createElement('span');l1.className='tool-label';l1.textContent='状态';
+  const l2=d.createElement('span');l2.className='tool-label';l2.textContent='搜索';
+  tools.appendChild(l1);if(filter)tools.appendChild(filter);tools.appendChild(l2);if(search)tools.appendChild(search);
+  const page=records.querySelector('.pages');
+  records.insertBefore(tools,page);
+  if(oldToolbar && oldToolbar.parentNode) oldToolbar.remove();
+
+  // common bulk buttons remain visible
+  let bulk=stats.querySelector('.bulkbar') || records.querySelector('.bulkbar');
+  if(bulk){
+    let holder=records.querySelector('.field-bulk');
+    if(!holder){holder=d.createElement('div');holder.className='field-bulk';}
+    holder.appendChild(bulk);
+    records.insertBefore(holder,page);
+  }
+
+  // status order
+  const topstat=stats.querySelector('.topstat');
+  const findPill=(prefix)=>[...stats.querySelectorAll('.pill')].find(el=>(el.textContent||'').trim().startsWith(prefix));
+  const retry=[...stats.querySelectorAll('button,.btn')].find(el=>(el.textContent||'').trim()==='失败重识别')||stats.querySelector('.retry-failed-all');
+  const allEl=d.getElementById('countAll')||findPill('总记录');
+  const okEl=d.getElementById('countOk')||findPill('已确认');
+  const pendingEl=d.getElementById('countPending')||findPill('待审核');
+  const syncEl=d.getElementById('countSync')||findPill('待同步');
+  const selectedEl=d.getElementById('countSelected')||findPill('已选');
+  const queueEl=d.getElementById('queuePill')||findPill('队列')||findPill('识别中');
+  const failedEl=d.getElementById('queueFailedPill')||findPill('失败');
+  if(queueEl) queueEl.textContent=(queueEl.textContent||'').replace(/^队列\s*[：:]\s*/,'');
+  if(topstat)[allEl,okEl,pendingEl,syncEl,selectedEl,queueEl,failedEl,retry].filter(Boolean).forEach(el=>topstat.appendChild(el));
+
+  const semanticMap={
+    countAll:'field-total',
+    countPending:'field-pending',
+    countOk:'field-confirmed',
+    countSync:'field-sync',
+    countSelected:'field-selected',
+    queuePill:'field-queue',
+    queueFailedPill:'field-failed'
+  };
+  Object.entries(semanticMap).forEach(([id,cls])=>{const el=d.getElementById(id);if(el)el.classList.add(cls)});
+  if(retry)retry.classList.add('field-failed-action');
+
+
+  // V4 weather + per-record environment persistence
+  const DB_NAME='mingpai-free-v1', STORE='records', WEATHER_KEY='mingpai-field-weather-v1';
+  let currentWeather=null;
+  const ENV_SCF='https://1387910526-fhjoqqg0on.ap-guangzhou.tencentscf.com';
+  function sharedKey(){return (d.getElementById('syncSharedKey')?.value||localStorage.getItem('mingpai-feishu-sync-key')||localStorage.getItem('mingpai-tencent-sync-key')||'').trim()}
+  async function syncEnvironmentCloud(rec){
+    const recordId=rec?.feishuRecordId||rec?.remoteRecordId||'';
+    if(!recordId||rec?.temperature==null||rec?.humidity==null)return;
+    const sig=recordId+'|'+String(rec.temperature)+'|'+String(rec.humidity);
+    if(rec.envCloudSig===sig)return;
+    const key=sharedKey();if(!key)return;
+    try{
+      const r=await fetch(ENV_SCF+'/sync-environment',{method:'POST',headers:{'Content-Type':'application/json','X-Mingpai-Key':key},body:JSON.stringify({recordId,temperature:rec.temperature,humidity:rec.humidity})});
+      const j=await r.json().catch(()=>({}));if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
+      rec.envCloudSig=sig;await putRecord(rec);
+    }catch(e){console.warn('environment cloud sync failed',e)}
+  }
+
+  function openDb(){
+    return new Promise((resolve,reject)=>{
+      const req=indexedDB.open(DB_NAME,2);
+      req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'});};
+      req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+    });
+  }
+  async function getRecord(id){const db=await openDb();return new Promise((res,rej)=>{const q=db.transaction(STORE,'readonly').objectStore(STORE).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}
+  async function putRecord(rec){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(rec);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+  async function allRecords(){const db=await openDb();return new Promise((res,rej)=>{const q=db.transaction(STORE,'readonly').objectStore(STORE).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)})}
+  const baselineIds=new Set((await allRecords()).map(r=>r.id));
+
+  function weatherText(w){return w&&Number.isFinite(+w.temperature)&&Number.isFinite(+w.humidity)?`${(+w.temperature).toFixed(1)}℃/${Math.round(+w.humidity)}%RH`:'--℃/--%RH'}
+  function installWeatherChip(){
+    if(!brand)return;
+    let chip=brand.querySelector('.field-weather');
+    if(!chip){chip=d.createElement('button');chip.type='button';chip.className='field-weather';brand.insertBefore(chip,d.querySelector('.field-settings-btn')||null);}
+    chip.textContent=weatherText(currentWeather);
+    chip.title='点击刷新当前温湿度';
+    chip.onclick=()=>refreshWeather(true);
+  }
+  function loadWeatherCache(){
+    try{const w=JSON.parse(localStorage.getItem(WEATHER_KEY)||'null');if(w&&Date.now()-Number(w.savedAt||0)<20*60*1000)currentWeather=w}catch{}
+  }
+  async function refreshWeather(force=false){
+    installWeatherChip();
+    if(!force&&currentWeather&&Date.now()-Number(currentWeather.savedAt||0)<20*60*1000){decorateCards();return}
+    if(!navigator.geolocation)return;
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      try{
+        const {latitude,longitude}=pos.coords;
+        const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
+        const resp=await fetch(url,{cache:'no-store'}); if(!resp.ok)throw new Error('weather HTTP '+resp.status);
+        const js=await resp.json();
+        currentWeather={temperature:Number(js?.current?.temperature_2m),humidity:Number(js?.current?.relative_humidity_2m),savedAt:Date.now(),latitude,longitude};
+        localStorage.setItem(WEATHER_KEY,JSON.stringify(currentWeather));
+        installWeatherChip(); decorateCards();
+      }catch(e){console.warn('weather fetch failed',e)}
+    },err=>console.warn('geolocation failed',err),{enableHighAccuracy:false,timeout:10000,maximumAge:15*60*1000});
+  }
+
+  function syncLabel(rec){
+    const s=rec?.syncStatus;
+    return s==='synced'?'已同步':s==='syncing'?'同步中':s==='error'?'失败待重试':s==='pending'?'有修改待同步':s==='local-only'?'仅本机保存':rec?.status==='confirmed'?'尚未同步':'待确认';
+  }
+  async function decorateCard(card){
+    if(card.dataset.envDecorating==='1')return;
+    const id=card.querySelector('[data-select-id]')?.getAttribute('data-select-id')||card.querySelector('[data-id]')?.getAttribute('data-id');
+    if(!id)return;
+    card.dataset.envDecorating='1';
+    try{
+      let rec=await getRecord(id); if(!rec)return;
+      // 只给“本次打开页面后新生成的记录”自动写入一次天气值；旧记录和手工修改值绝不被刷新覆盖
+      if(!baselineIds.has(id)&&currentWeather&&(rec.temperature==null||rec.temperature==='')&&(rec.humidity==null||rec.humidity==='')){
+        rec.temperature=Number(currentWeather.temperature).toFixed(1);
+        rec.humidity=String(Math.round(Number(currentWeather.humidity)));
+        rec.envCapturedAt=Date.now();
+        await putRecord(rec);
+        baselineIds.add(id);
+      }
+
+      const title=card.querySelector('.cardtitle');
+      if(title){
+        const small=title.querySelector('small'); if(small)small.remove();
+        let env=title.querySelector('.env-summary');
+        if(!env){
+          env=d.createElement('div');env.className='env-summary';
+          env.innerHTML='<span>🌡</span><input class="temp" inputmode="decimal" aria-label="温度">℃<span> / </span><input class="hum" inputmode="numeric" aria-label="相对湿度">%RH';
+          title.appendChild(env);
+          const save=async()=>{const r=await getRecord(id);if(!r)return;r.temperature=env.querySelector('.temp').value.trim();r.humidity=env.querySelector('.hum').value.trim();r.envCapturedAt=r.envCapturedAt||Date.now();await putRecord(r);await syncEnvironmentCloud(r);};
+          env.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',save));
+        }
+        env.querySelector('.temp').value=rec.temperature??'';
+        env.querySelector('.hum').value=rec.humidity??'';
+      }
+
+      const head=card.querySelector('.cardhead');
+      const badge=head?.querySelector('.badge');
+      if(head&&badge){
+        let stack=head.querySelector('.card-status-stack');
+        if(!stack){stack=d.createElement('div');stack.className='card-status-stack';badge.replaceWith(stack);stack.appendChild(badge);const sm=d.createElement('div');sm.className='sync-mini';stack.appendChild(sm);}
+        stack.querySelector('.sync-mini').textContent='飞书：'+syncLabel(rec);
+      }
+
+      // 已确认记录不再显示“取消确认”
+      card.querySelectorAll('button').forEach(btn=>{if((btn.textContent||'').trim()==='取消确认')btn.remove();});
+      if(rec.feishuRecordId||rec.remoteRecordId)syncEnvironmentCloud(rec);
+      card.dataset.envInitialized='1';
+    }catch(e){console.warn('decorate env card failed',e)}
+    finally{card.dataset.envDecorating='0'}
+  }
+  function decorateCards(){d.querySelectorAll('#recordList .card').forEach(card=>decorateCard(card))}
+
+  // Clear button uses same danger style; retain 取消选择.
+  [...d.querySelectorAll('button,.btn')].forEach(btn=>{if((btn.textContent||'').trim()==='清空')btn.classList.add('field-clear-danger')});
+
+  loadWeatherCache(); installWeatherChip(); refreshWeather(false);
+  const cardsObserver=new MutationObserver(()=>decorateCards());
+  const list=d.getElementById('recordList');if(list)cardsObserver.observe(list,{childList:true,subtree:true});
+  decorateCards();
+
+  function numFrom(el){
+    const m=(el?.textContent||'').match(/\d+/g);
+    if(!m)return 0;
+    return Math.max(...m.map(Number));
+  }
+  function paint(){
+    const queueLabel=d.getElementById('queuePill');
+    if(queueLabel){
+      const cleaned=(queueLabel.textContent||'').replace(/^队列\s*[：:]\s*/,'');
+      if(cleaned!==queueLabel.textContent) queueLabel.textContent=cleaned;
+    }
+    Object.keys(semanticMap).forEach(id=>{
+      const el=d.getElementById(id);if(!el)return;
+      const n=numFrom(el);
+      el.classList.toggle('field-has-data',n>0);
+      el.classList.toggle('field-zero',n===0);
+      el.classList.toggle('field-active',el.classList.contains('filter-active'));
+    });
+    const failed=d.getElementById('queueFailedPill');
+    const fn=numFrom(failed);
+    if(retry){
+      retry.classList.toggle('field-has-data',fn>0);
+      retry.classList.toggle('field-zero',fn===0);
+      retry.classList.toggle('field-active',retry.classList.contains('filter-active'));
+    }
+  }
+  paint();
+  new MutationObserver(paint).observe(d.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+});
+</script>
+</body>
+</html>
