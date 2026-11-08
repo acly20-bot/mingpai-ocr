@@ -18,6 +18,18 @@ frame.addEventListener('load',async()=>{
   if(!d||d.body.dataset.fieldDone)return;
   d.body.dataset.fieldDone='1';
 
+  // v1.16: OCR.space mode is priority cloud mode with Paddle fallback.
+  const relabelOcrMode=()=>{
+    const sel=d.getElementById('ocrMode');
+    if(!sel)return;
+    [...sel.options].forEach(opt=>{
+      if(opt.value==='space'||/仅\s*OCR\.space\s*云端/i.test(opt.textContent||'')){
+        opt.textContent='优先 OCR.space（失败自动切换 Paddle）';
+      }
+    });
+  };
+  relabelOcrMode();
+
   const st=d.createElement('style');
   st.textContent=`
   body{background:#f4f8f6!important;color:#17201c!important}
@@ -535,7 +547,7 @@ frame.addEventListener('load',async()=>{
   }
 
 
-  /* v1.153.4.4.4.4-test UI tweaks */
+  /* v1.16 UI tweaks */
   .weather-inline input{
     text-align:left!important;
     min-width:2.2ch!important;
@@ -562,7 +574,7 @@ frame.addEventListener('load',async()=>{
   }
 
 
-  /* v1.153.4.4.4.4-test weather alignment override */
+  /* v1.16 weather alignment override */
   .weather-inline input{
     width:34px!important;
     min-width:34px!important;
@@ -576,7 +588,7 @@ frame.addEventListener('load',async()=>{
   }
 
 
-  /* v1.153.4.4.4.4-test: align unit right edges */
+  /* v1.16: align unit right edges */
   .weather-inline .temp-line,.weather-inline .hum-line{
     display:flex!important;
     align-items:center!important;
@@ -600,7 +612,7 @@ frame.addEventListener('load',async()=>{
   }
 
 
-  /* v1.153.4.4.4.4-test */
+  /* v1.16 */
   #progress:empty{display:none!important}
   #fieldStats .pill.field-has-data.field-selected,
   #fieldStats .pill.field-has-data.field-queue{
