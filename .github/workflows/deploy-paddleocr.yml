@@ -65,10 +65,15 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Add v153444 UI test wrapper
+      - name: Add v153444 full test entry
         run: |
           if [ -d test-v153444 ]; then
             cp -R test-v153444 app/test-v153444
+            cp app/index.html app/test-v153444/core.html
+            cp app/coi-serviceworker.js app/test-v153444/coi-serviceworker.js
+            sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v153444-test.js/g' app/test-v153444/core.html
+            sed -i 's/1\.153\.4\.4\.1/1.153.4.4.4-test/g' app/test-v153444/core.html
+            sed -i 's/mingpai-stable15344-coi-reload/mingpai-v153444-test-coi-reload/g' app/test-v153444/core.html
           fi
 
       - name: Upload Pages artifact
