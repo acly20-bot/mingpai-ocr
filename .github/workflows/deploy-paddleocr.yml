@@ -6,7 +6,6 @@ on:
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
-      - 'test-v153444/**'
   workflow_dispatch:
 
 permissions:
@@ -47,7 +46,7 @@ jobs:
           sed -i 's/mingpai-stable15344-coi-reload/mingpai-stable1162-coi-reload/g' app/core.html
 
           # Reuse the fully validated V12 wrapper as the formal root UI.
-          cp test-v153444/index.html app/index.html
+          cp stable-wrapper/index.html app/index.html
           python - <<'PY'
           from pathlib import Path
           p=Path('app/index.html')
@@ -60,44 +59,6 @@ jobs:
           s=s.replace('v1.153.4.4.4.1-test','v1.16.2')
           p.write_text(s,encoding='utf-8')
           PY
-
-      - name: Build v153443 V12 independent test entry
-        run: |
-          mkdir -p app/test-v153443
-
-          # Stable core logic, but use the COS test bundle.
-          cp app/index.html app/test-v153443/core.html
-          cp app/coi-serviceworker.js app/test-v153443/coi-serviceworker.js
-          sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v153443-test.js/g' app/test-v153443/core.html
-          sed -i 's/1\.153\.4\.4\.1/1.153.4.4.3-test/g' app/test-v153443/core.html
-          sed -i 's/mingpai-stable15344-coi-reload/mingpai-v153443-test-coi-reload/g' app/test-v153443/core.html
-
-          # Reuse the already validated V12 UI wrapper with the final three UI tweaks.
-          git show 0d085b44a426a403ffc9eb1b528921b3914a51f3:stable-release/v1.153.4.4.2/index.html > app/test-v153443/index.html
-
-          # Fix mobile dynamic viewport so the bottom dock / preview controls remain visible.
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('app/test-v153443/index.html')
-          s=p.read_text(encoding='utf-8')
-          s=s.replace(
-              'iframe{display:block;width:100%;height:100vh;border:0;background:#fff}',
-              'html,body{overflow:hidden}iframe{display:block;width:100%;height:100vh;height:100dvh;border:0;background:#fff}'
-          )
-          s=s.replace('rev=202611081130','rev=202611081437-v153443-test')
-          p.write_text(s,encoding='utf-8')
-          PY
-
-      - name: Add v153444 full test entry
-        run: |
-          if [ -d test-v153444 ]; then
-            cp -R test-v153444 app/test-v153444
-            cp app/index.html app/test-v153444/core.html
-            cp app/coi-serviceworker.js app/test-v153444/coi-serviceworker.js
-            sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v1534441-test.js/g' app/test-v153444/core.html
-            sed -i 's/1\.153\.4\.4\.1/1.153.4.4.4.1-test/g' app/test-v153444/core.html
-            sed -i 's/mingpai-stable15344-coi-reload/mingpai-v1534441-test-coi-reload/g' app/test-v153444/core.html
-          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
