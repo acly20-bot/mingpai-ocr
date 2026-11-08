@@ -38,6 +38,29 @@ jobs:
           mkdir -p app
           unzip -oq github-pages-cos-models.zip -d app
 
+      - name: Promote v1.153.4.4.5 to stable root
+        run: |
+          # Keep the original stable shell as core.html, then point it to the new COS bundle.
+          cp app/index.html app/core.html
+          sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v153445.js/g' app/core.html
+          sed -i 's/1\.153\.4\.4\.1/1.153.4.4.5/g' app/core.html
+          sed -i 's/mingpai-stable15344-coi-reload/mingpai-stable153445-coi-reload/g' app/core.html
+
+          # Reuse the fully validated V12 wrapper as the formal root UI.
+          cp test-v153444/index.html app/index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
+                      './core.html?field=v12&rev=202611090055-v153445-stable')
+          s=s.replace('v1.153.4.4.4.4-test','v1.153.4.4.5')
+          s=s.replace('v1.153.4.4.4.3-test','v1.153.4.4.5')
+          s=s.replace('v1.153.4.4.4.2-test','v1.153.4.4.5')
+          s=s.replace('v1.153.4.4.4.1-test','v1.153.4.4.5')
+          p.write_text(s,encoding='utf-8')
+          PY
+
       - name: Build v153443 V12 independent test entry
         run: |
           mkdir -p app/test-v153443
