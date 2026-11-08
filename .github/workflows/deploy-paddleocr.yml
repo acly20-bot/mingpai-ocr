@@ -6,8 +6,7 @@ on:
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
-      - 'ui-compare/**'
-      - 'stable-release/**'
+      - 'test-v153443/**'
   workflow_dispatch:
 
 permissions:
@@ -30,21 +29,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
-      - name: Extract prebuilt site
+      - name: Extract stable site
         run: |
           mkdir -p app
           unzip -oq github-pages-cos-models.zip -d app
-      - name: Add UI comparison previews
+      - name: Add independent v153443 test entry
         run: |
-          if [ -d ui-compare ]; then
-            cp -R ui-compare app/ui-compare
+          if [ -d test-v153443 ]; then
+            cp -R test-v153443 app/test-v153443
           fi
-      - name: Promote stable V12 wrapper
-        run: |
-          cp app/index.html app/core.html
-          sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v153442.js/g' app/core.html
-          sed -i 's/1\.153\.4\.4\.1/1.153.4.4.2/g' app/core.html
-          cp stable-release/v1.153.4.4.2/index.html app/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
