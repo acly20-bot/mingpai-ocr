@@ -64,6 +64,83 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
+      - name: Build v153444 V12 UI test entry
+        run: |
+          mkdir -p app/test-v153444
+          cp app/test-v153443/core.html app/test-v153444/core.html
+          cp app/test-v153443/coi-serviceworker.js app/test-v153444/coi-serviceworker.js
+          git show 0d085b44a426a403ffc9eb1b528921b3914a51f3:stable-release/v1.153.4.4.2/index.html > app/test-v153444/index.html
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/test-v153444/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace(
+              'iframe{display:block;width:100%;height:100vh;border:0;background:#fff}',
+              'html,body{overflow:hidden}iframe{display:block;width:100%;height:100vh;height:100dvh;border:0;background:#fff}'
+          )
+          s=s.replace('rev=202611081130','rev=202611081529-v153444-test')
+
+          css_patch = r'''
+  /* v1.153.4.4.4-test final UI tweaks */
+  .weather-inline input{
+    text-align:left!important;
+    min-width:2.2ch!important;
+    max-width:5.5ch!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  #recordList .card-status-stack{
+    align-self:stretch!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-end!important;
+  }
+  #recordList .card-status-stack .sync-mini{
+    margin-top:auto!important;
+    margin-left:0!important;
+    text-align:right!important;
+    align-self:flex-end!important;
+    font-size:10.5px!important;
+    line-height:1.15!important;
+  }
+  #recordList .cardtitle .card-meta-row{
+    justify-content:flex-start!important;
+  }
+'''
+          marker='  `;\n  d.head.appendChild(st);'
+          if marker not in s:
+              raise SystemExit('CSS insertion marker missing')
+          s=s.replace(marker,css_patch+'\n  `;\n  d.head.appendChild(st);')
+
+          old_move = """        const env=title.querySelector('.env-inline');
+        const sync=head?.querySelector('.sync-mini');
+        if(env && env.parentElement!==meta) meta.appendChild(env);
+        if(sync && sync.parentElement!==meta) meta.appendChild(sync);"""
+          new_move = """        const env=title.querySelector('.env-inline');
+        if(env && env.parentElement!==meta) meta.appendChild(env);"""
+          if old_move not in s:
+              raise SystemExit('sync layout block missing')
+          s=s.replace(old_move,new_move)
+
+          old_values = """    if(d.activeElement!==ti)ti.value=currentWeather&&Number.isFinite(+currentWeather.temperature)?Number(currentWeather.temperature).toFixed(1):'';
+    if(d.activeElement!==hi)hi.value=currentWeather&&Number.isFinite(+currentWeather.humidity)?String(Math.round(+currentWeather.humidity)):'';"""
+          new_values = """    if(d.activeElement!==ti)ti.value=currentWeather&&Number.isFinite(+currentWeather.temperature)?Number(currentWeather.temperature).toFixed(1):'';
+    if(d.activeElement!==hi)hi.value=currentWeather&&Number.isFinite(+currentWeather.humidity)?String(Math.round(+currentWeather.humidity)):'';
+    const fitWeatherInput=inp=>{
+      const n=Math.max(2.2,Math.min(5.5,String(inp.value||'').length+0.35));
+      inp.style.width=n+'ch';
+    };
+    fitWeatherInput(ti);fitWeatherInput(hi);
+    if(!ti.dataset.fitBound){ti.dataset.fitBound='1';ti.addEventListener('input',()=>fitWeatherInput(ti));}
+    if(!hi.dataset.fitBound){hi.dataset.fitBound='1';hi.addEventListener('input',()=>fitWeatherInput(hi));}"""
+          if old_values not in s:
+              raise SystemExit('weather value block missing')
+          s=s.replace(old_values,new_values)
+
+          s=s.replace('版本：v1.153.4.4.2','版本：v1.153.4.4.4-test')
+          p.write_text(s,encoding='utf-8')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
