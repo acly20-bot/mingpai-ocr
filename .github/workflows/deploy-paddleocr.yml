@@ -42,6 +42,8 @@ jobs:
       - name: Promote stable V12 wrapper
         run: |
           cp app/index.html app/core.html
+          sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v153442.js/g' app/core.html
+          sed -i 's/1\.153\.4\.4\.1/1.153.4.4.2/g' app/core.html
           cp stable-release/v1.153.4.4.2/index.html app/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
