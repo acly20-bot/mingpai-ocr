@@ -7,6 +7,7 @@ on:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
       - 'ui-compare/**'
+      - 'stable-release/**'
   workflow_dispatch:
 
 permissions:
@@ -38,6 +39,10 @@ jobs:
           if [ -d ui-compare ]; then
             cp -R ui-compare app/ui-compare
           fi
+      - name: Promote stable V12 wrapper
+        run: |
+          cp app/index.html app/core.html
+          cp stable-release/v1.153.4.4.2/index.html app/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
