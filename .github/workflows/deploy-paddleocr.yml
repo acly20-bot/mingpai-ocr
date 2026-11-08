@@ -6,7 +6,6 @@ on:
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
-      - 'test-v153443/**'
   workflow_dispatch:
 
 permissions:
@@ -27,21 +26,67 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Extract stable site
         run: |
           mkdir -p app
           unzip -oq github-pages-cos-models.zip -d app
-      - name: Add independent v153443 test entry
+
+      - name: Build independent v153443 test entry from stable page
         run: |
-          if [ -d test-v153443 ]; then
-            cp -R test-v153443 app/test-v153443
-          fi
+          mkdir -p app/test-v153443
+          cp app/index.html app/test-v153443/index.html
+          cp app/coi-serviceworker.js app/test-v153443/coi-serviceworker.js
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/test-v153443/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace(
+            "./runtime/index-B81hyAdU-v153441.js?v=1.153.4.4.1",
+            "./runtime/index-B81hyAdU-v153443-test.js?v=1.153.4.4.3-test"
+          )
+          s=s.replace(
+            "https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v153441.js?v=1.153.4.4.1",
+            "https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v153443-test.js?v=1.153.4.4.3-test"
+          )
+          s=s.replace("mingpai-stable15344-coi-reload","mingpai-v153443-test-coi-reload")
+          old="""    try{await attach(MAIN,false);return;}catch(e){console.warn('同源 runtime 加载失败，改用 COS 直连兜底',e)}
+    try{await attach(MAIN_DIRECT,true);return;}catch(e){
+      const p=document.getElementById('networkPill'),s=document.getElementById('progress');
+      if(p){p.textContent='资源：主程序未加载';p.className='pill mini-net netbad'}
+      if(s)s.textContent='主程序未能加载。请检查腾讯云 COS 的 v1.153.4.4.1 主程序文件是否已上传，或稍后刷新重试。';
+    }"""
+          new="""    const sources=[[MAIN,false],[MAIN_DIRECT,true]];
+    let lastError=null;
+    for(let round=0;round<3;round++){
+      if(round>0) await new Promise(r=>setTimeout(r,round===1?1200:2500));
+      for(const [base,isDirect] of sources){
+        const sep=base.includes('?')?'&':'?';
+        const src=round===0?base:(base+sep+'loadRetry='+round+'&t='+Date.now());
+        try{await attach(src,isDirect);return true;}catch(e){lastError=e;console.warn('主程序加载失败，自动重试',round+1,isDirect?'COS直连':'runtime代理',e)}
+      }
+    }
+    const p=document.getElementById('networkPill'),s=document.getElementById('progress');
+    if(p){p.textContent='资源：主程序未加载';p.className='pill mini-net netbad'}
+    if(s)s.textContent='主程序自动重试后仍未能从腾讯云 COS 加载，请检查网络后再刷新。';
+    console.error('主程序最终加载失败',lastError);
+    return false;"""
+          if old not in s:
+              raise SystemExit('loader block not found in stable index')
+          s=s.replace(old,new)
+          s=s.replace('版本：v1.153.4.4.1','版本：v1.153.4.4.3-test')
+          s=s.replace('},15000);','},35000);')
+          p.write_text(s,encoding='utf-8')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: app
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
