@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>设备铭牌智能识别与审核</title>
+<style>
+html,body{margin:0;height:100%;background:#f5f8f6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+iframe{display:block;width:100%;height:100vh;border:0;background:#fff}
+</style>
+</head>
+<body>
+<iframe id="app" src="./core.html?field=v12&rev=202611081130"></iframe>
+<script>
+const frame=document.getElementById('app');
+frame.addEventListener('load',async()=>{
+  let d; try{d=frame.contentDocument}catch(e){return}
+  if(!d||d.body.dataset.fieldDone)return;
+  d.body.dataset.fieldDone='1';
+
+  const st=d.createElement('style');
+  st.textContent=`
+  body{background:#f4f8f6!important;color:#17201c!important}
+  .brand-header{background:#00695c!important;color:#fff!important;border-bottom:0!important;padding:10px 12px!important;box-shadow:none!important}
+  .brand-inner{max-width:1040px!important;margin:auto!important;display:flex!important;align-items:center!important;gap:8px!important}
+  .brand-mark,.brand-divider{display:none!important}
+  .brand-inner:before{content:'▣';font-size:18px;color:#fff;margin-right:3px}
+  .brand-inner h1{font-size:inherit!important;line-height:1.2!important;color:#fff!important;margin:0!important}
+  .field-settings-btn{margin-left:auto!important;background:transparent!important;color:#fff!important;border:1px solid rgba(255,255,255,.38)!important;border-radius:7px!important;padding:6px 9px!important;min-height:34px!important;font:inherit!important;font-weight:600!important}
+  .field-settings-panel{max-width:1040px!important;margin:6px auto 0!important;background:#fff!important;border:1px solid #dfe7e2!important;border-radius:10px!important;padding:8px!important}
+  .wrap{max-width:1040px!important;padding:7px 6px 72px!important}
+  .panel{background:#fff!important;border:1px solid #dfe7e2!important;border-radius:11px!important;box-shadow:none!important}
+  #fieldWork,#fieldStats,#fieldRecords{margin:0 0 7px!important;padding:8px!important}
+
+  /* 工作信息：保留稳定版字号，只压缩间距 */
+  #fieldWork>.row:first-of-type{display:grid!important;grid-template-columns:1.35fr 1fr .82fr .78fr;gap:6px!important}
+  #fieldWork>.row:first-of-type .field{min-width:0!important}
+  #fieldWork label{margin-bottom:3px!important}
+  #fieldWork input,#fieldWork select{height:38px!important;padding:7px 9px!important;border-radius:7px!important;background:#fbfcfb!important;border-color:#dce4df!important}
+  #fieldWork .primary-actions{display:grid!important;grid-template-columns:1.1fr 1fr .9fr;gap:6px!important;margin:6px 0 0!important}
+  #fieldWork .primary-actions .btn{min-width:0!important;min-height:38px!important;border-radius:7px!important;padding:7px 9px!important;box-shadow:none!important}
+  #fieldWork #cameraBtn{background:#00a88f!important;color:#fff!important;border-color:#00a88f!important;font-weight:700!important}
+  #fieldWork #galleryBtn{background:#e6f6f2!important;color:#126453!important;border-color:#d5ece5!important}
+  #fieldWork #pasteQuickBtn{background:#f2f5f4!important;color:#3f5049!important;border-color:#e3e9e6!important}
+  #progress{margin-top:5px!important;padding:7px 8px!important;min-height:0!important;border-radius:7px!important;background:#edf8f4!important;border:1px solid #d9ece4!important;color:#315f50!important}
+
+  /* 两行状态栏：字号沿用稳定版 */
+  #fieldStats{padding:7px 8px!important}
+  #fieldStats .toolbar-row{display:none!important}
+  #fieldStats .topstat{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px!important;margin:0!important}
+  #fieldStats .pill,#fieldStats .retry-failed-all{
+    min-height:26px!important;padding:2px 5px!important;border-radius:7px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    line-height:1.05!important;text-align:center!important;
+    background:#f2f4f3!important;color:#8a938e!important;border:1px solid #e6ebe8!important;box-shadow:none!important
+  }
+  #fieldStats .pill.field-has-data.field-pending,
+  #fieldStats .pill.field-has-data.field-sync{background:#fff4d8!important;color:#8d620c!important;border-color:#efdca9!important}
+  #fieldStats .pill.field-has-data.field-confirmed,
+  #fieldStats .pill.field-has-data.field-selected,
+  #fieldStats .field-total.field-has-data{background:#e6f6ef!important;color:#126a4b!important;border-color:#cce8da!important}
+  #fieldStats .pill.field-has-data.field-failed,
+  #fieldStats .retry-failed-all.field-has-data{background:#fdeceb!important;color:#a6322d!important;border-color:#ecc7c4!important}
+  #fieldStats .field-queue.field-has-data{background:#edf1ef!important;color:#4f5d56!important;border-color:#dce3df!important}
+  #fieldStats .field-active{outline:2px solid currentColor!important;outline-offset:-1px!important;font-weight:700!important}
+  #fieldStats .field-pending.field-active,#fieldStats .field-sync.field-active{background:#f1d27b!important}
+  #fieldStats .field-confirmed.field-active,#fieldStats .field-selected.field-active,#fieldStats .field-total.field-active{background:#b8e4cf!important}
+  #fieldStats .field-failed.field-active,#fieldStats .retry-failed-all.field-active{background:#ebb0ab!important}
+
+  /* 常用批量操作常驻 */
+  .field-bulk{display:block!important;margin:5px 0 4px!important}
+  .field-bulk .bulkbar{display:flex!important;flex-wrap:wrap!important;gap:5px!important;margin:0!important}
+  .field-bulk .btn{min-height:34px!important;padding:6px 9px!important;border-radius:7px!important}
+
+  /* 设备记录标题 + 下载数据 */
+  #fieldRecords{padding:8px!important}
+  .field-head{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .field-head h2{margin:0;white-space:nowrap}
+  .field-head .field-network{display:flex;align-items:center}
+  .field-head #networkPill{margin:0!important;white-space:nowrap!important}
+  .field-head .toolbar-download{margin-left:auto!important}
+  .field-head .toolbar-download .btn{background:#00a88f!important;color:#fff!important;border-color:#00a88f!important;border-radius:8px!important;min-height:36px!important;padding:7px 12px!important;font-weight:700!important}
+  .field-tools{display:grid!important;grid-template-columns:auto 132px auto minmax(0,1fr);gap:6px!important;align-items:center!important;padding:5px!important;background:#f7faf8!important;border:1px solid #e5ebe7!important;border-radius:8px!important;margin:0 0 5px!important}
+  .field-tools .field-tool-label{white-space:nowrap;color:#65736c}
+  .field-tools #filterStatus{width:132px!important}
+  .field-tools input,.field-tools select{height:36px!important;padding:6px 8px!important;border-radius:7px!important;background:#fff!important;border-color:#dce3df!important;min-width:0!important;width:100%!important}
+  #fieldRecords .pages{margin:4px 0!important}
+  #fieldRecords .pages .btn{min-height:32px!important;padding:5px 9px!important;border-radius:7px!important;background:#f5f7f6!important;color:#647169!important;border-color:#e3e8e5!important}
+  #fieldRecords #recordList .card{border:1px solid #e3e9e6!important;border-radius:9px!important;padding:7px!important;margin:5px 0!important;box-shadow:none!important}
+  #fieldRecords #recordList .thumb{border-radius:7px!important}
+  #fieldRecords #recordList input,#fieldRecords #recordList textarea,#fieldRecords #recordList select{background:#fbfcfb!important;border-color:#dfe6e2!important;border-radius:7px!important}
+  #fieldRecords #recordList .controls .btn{border-radius:7px!important}
+  #fieldRecords .badge{border-radius:999px!important}
+
+  /* 底部快捷栏：稳定版深绿色 */
+  .mobile-dock{background:#00695c!important;color:#fff!important;border-top:0!important;box-shadow:0 -4px 16px rgba(0,70,60,.16)!important}
+  .dock-btn{color:#fff!important}
+  .dock-home{background:#00a88f!important;color:#fff!important}
+  .dock-camera-ring{background:#00a88f!important;border-color:#fff!important;box-shadow:0 3px 12px rgba(0,0,0,.18)!important}
+  .dock-btn span,.dock-btn div{color:inherit!important}
+
+  @media(max-width:700px){
+    .wrap{padding:5px 4px 66px!important}
+    .brand-header{padding:8px 9px!important}
+    #fieldWork,#fieldStats,#fieldRecords{padding:6px!important;margin-bottom:5px!important}
+    #fieldWork>.row:first-of-type{grid-template-columns:1fr 1fr!important;gap:5px!important}
+    #fieldWork input,#fieldWork select{height:36px!important;padding:6px 7px!important}
+    #fieldWork .primary-actions{gap:5px!important;margin-top:5px!important}
+    #fieldWork .primary-actions .btn{min-height:36px!important;padding:6px 6px!important}
+    #progress{padding:6px 7px!important;margin-top:4px!important}
+    #fieldStats .topstat{grid-template-columns:repeat(4,1fr)!important;gap:3px!important}
+    #fieldStats .pill,#fieldStats .retry-failed-all{min-height:25px!important;padding:2px 3px!important}
+    .field-bulk .bulkbar{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:4px!important}
+    .field-bulk .btn{min-width:0!important;padding:5px 3px!important}
+    .field-head{margin-bottom:4px!important}
+    .field-tools{grid-template-columns:auto 112px auto minmax(0,1fr)!important;gap:4px!important;padding:4px!important}
+    .field-tools #filterStatus{width:112px!important}
+    .field-tools input,.field-tools select{height:34px!important;padding:5px 6px!important}
+    #fieldRecords .pages{margin:3px 0!important}
+    #fieldRecords .pages .btn{min-height:30px!important}
+    #fieldRecords #recordList .card{padding:6px!important;margin:4px 0!important}
+  }
+
+  /* V3 final preview overrides */
+  .brand-inner{width:100%!important;max-width:1040px!important;justify-content:flex-start!important}
+  .field-settings-btn{margin-left:auto!important;color:#fff!important;background:transparent!important;border:0!important;font-weight:700!important}
+  #fieldStats{padding-top:4px!important;padding-bottom:4px!important}
+  #fieldStats .topstat{gap:3px!important}
+  #fieldStats .pill,#fieldStats .retry-failed-all{min-height:24px!important;padding:1px 4px!important;line-height:1!important}
+  .field-head{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:5px!important}
+  .field-head h2{margin:0!important;white-space:nowrap!important}
+  .field-head .field-network{display:flex!important;align-items:center!important;white-space:nowrap!important}
+  .field-head .toolbar-download{margin-left:auto!important}
+  .field-record-tools{display:grid!important;grid-template-columns:auto 120px auto minmax(0,1fr)!important;gap:5px!important;align-items:center!important;padding:4px 5px!important;background:#f7faf8!important;border:1px solid #e5ebe7!important;border-radius:8px!important;margin-bottom:5px!important}
+  .field-record-tools .tool-label{white-space:nowrap!important}
+  .field-record-tools select{width:120px!important;height:34px!important}
+  .field-record-tools input{width:100%!important;min-width:0!important;height:34px!important}
+  @media(max-width:700px){
+    .field-record-tools{grid-template-columns:auto 108px auto minmax(0,1fr)!important;gap:4px!important}
+    .field-record-tools select{width:108px!important}
+    #fieldStats .pill,#fieldStats .retry-failed-all{min-height:23px!important;padding:1px 3px!important}
+  }
+
+  /* V4 final UI */
+  .brand-inner:before{display:none!important}
+  .brand-mark,.brand-divider{display:block!important}
+  .brand-mark{transform:scale(.78)!important;transform-origin:center!important}
+  .brand-divider{height:25px!important}
+  .field-weather{margin-left:auto!important;display:flex!important;align-items:center!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#fff!important;white-space:nowrap!important;font-weight:650!important;cursor:pointer!important;box-shadow:none!important}
+  .field-settings-btn{margin-left:0!important;color:#fff!important;background:transparent!important;border:0!important;padding:5px 6px!important}
+  #fieldStats .pill.field-has-data.field-failed,
+  #fieldStats .retry-failed-all.field-has-data{background:#fff1f1!important;color:#a63a35!important;border-color:#efcecb!important}
+  .field-head .toolbar-download{margin-left:auto!important}
+  .field-clear-danger{background:#fff1f1!important;color:#a63a35!important;border-color:#efcecb!important}
+  .mobile-dock{min-height:50px!important}
+  .mobile-dock .dock-btn{font-size:12px!important;padding-top:0!important;padding-bottom:0!important}
+  .mobile-dock .dock-icon{font-size:24px!important;line-height:1!important}.mobile-dock svg{transform:scale(1.12)}.mobile-dock .dock-camera-ring{width:54px!important;height:54px!important}
+  .env-summary{display:inline-flex!important;align-items:center!important;margin-top:3px!important;color:#15815e!important;font-weight:700!important;cursor:pointer!important;border-radius:6px!important;padding:2px 4px!important}
+  .env-summary:active{background:#e8f7f1!important}
+  .card-status-stack{margin-left:auto!important;display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:3px!important}
+  .card-status-stack .badge{margin:0!important}
+  .sync-mini{font-size:11px!important;color:#7c8782!important;white-space:nowrap!important}
+  @media(max-width:700px){
+    .field-weather{padding:4px 7px!important;font-size:12px!important}
+    .brand-mark{transform:scale(.72)!important}
+    .mobile-dock .dock-btn{font-size:12px!important}
+  }
+
+
+  /* V8 interaction/layout fixes */
+  .field-weather{margin-left:auto!important;display:inline-flex!important;align-items:center!important;gap:4px!important;color:#fff!important;background:transparent!important;border:0!important;padding:0!important;white-space:nowrap!important;font-weight:700!important}
+  .field-weather-refresh{color:#fff!important;background:transparent!important;border:0!important;padding:0 2px!important;margin-left:2px!important;font-size:16px!important;line-height:1!important;cursor:pointer!important}
+  .field-record-tools select{display:flex!important;align-items:center!important;justify-content:center!important;line-height:34px!important;text-align:center!important;text-align-last:center!important;padding-top:0!important;padding-bottom:0!important}
+  .field-record-tools select option{text-align:center}
+  .env-summary{display:inline-flex!important;align-items:center!important;margin-top:3px!important;color:#15815e!important;font-weight:700!important;cursor:pointer!important;border-radius:6px!important;padding:2px 4px!important}
+  .env-summary:active{background:#e8f7f1!important}
+
+  /* V10: download button intentionally inherits the original V3 rule above */
+  .field-weather{gap:1px!important}
+  .weather-inline,.env-inline{display:inline-flex!important;align-items:center!important;gap:1px!important;color:#fff!important;font-weight:700!important;white-space:nowrap!important}
+  .weather-inline input,.env-inline input{
+    border:0!important;background:rgba(255,255,255,.10)!important;color:inherit!important;
+    border-radius:5px!important;height:28px!important;padding:2px 4px!important;
+    font:inherit!important;font-weight:700!important;text-align:right!important;box-shadow:none!important
+  }
+  .weather-inline .temp,.env-inline .temp{width:48px!important}
+  .weather-inline .hum,.env-inline .hum{width:38px!important}
+  .env-inline{color:#15815e!important;margin-top:3px!important}
+  .env-inline input{background:#f7fbf9!important;color:#15815e!important;border:1px solid #d7ebe2!important}
+  .env-summary{display:none!important}
+  @media(max-width:700px){
+    .weather-inline input,.env-inline input{height:26px!important}
+    .weather-inline .temp,.env-inline .temp{width:44px!important}
+    .weather-inline .hum,.env-inline .hum{width:35px!important}
+  }
+
+  /* V10 draft: invisible-until-focus environment editors */
+  .weather-inline input{
+    background:transparent!important;border:1px solid transparent!important;border-radius:5px!important;
+    outline:none!important;box-shadow:none!important;color:#fff!important;
+  }
+  .weather-inline input:focus{
+    background:rgba(255,255,255,.12)!important;border-color:rgba(255,255,255,.55)!important;
+  }
+  .env-inline input{
+    background:transparent!important;border:1px solid transparent!important;border-radius:5px!important;
+    outline:none!important;box-shadow:none!important;color:#15815e!important;
+  }
+  .env-inline input:focus{
+    background:#fff!important;border-color:#b9ddd0!important;box-shadow:0 0 0 2px rgba(21,129,94,.08)!important;
+  }
+
+  /* V11 header + download holder fix */
+  .brand-inner{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto auto!important;
+    align-items:center!important;
+    column-gap:10px!important;
+    width:100%!important;
+  }
+  .field-weather-wrap{
+    margin-left:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:3px!important;
+  }
+  .weather-inline{
+    display:grid!important;
+    grid-template-columns:auto!important;
+    grid-template-rows:auto auto!important;
+    justify-items:center!important;
+    align-items:center!important;
+    row-gap:0!important;
+    font-size:11px!important;
+    line-height:1.05!important;
+    min-width:58px!important;
+  }
+  .weather-inline .temp-line,.weather-inline .hum-line{
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:1px!important;
+    white-space:nowrap!important;
+  }
+  .weather-inline input{
+    width:34px!important;
+    height:20px!important;
+    padding:0 2px!important;
+    font-size:11px!important;
+    line-height:20px!important;
+    background:transparent!important;
+    border:1px solid transparent!important;
+    border-radius:4px!important;
+    color:#fff!important;
+    text-align:right!important;
+  }
+  .weather-inline input:focus{
+    background:rgba(255,255,255,.12)!important;
+    border-color:rgba(255,255,255,.55)!important;
+  }
+  .field-weather-refresh{
+    font-size:14px!important;
+    padding:0 1px!important;
+    margin:0!important;
+  }
+  .field-settings-btn{
+    margin-left:0!important;
+    white-space:nowrap!important;
+  }
+
+  /* Only the inner download button is green; holder is neutral/white */
+  .field-head .toolbar-download{
+    margin-left:auto!important;
+    background:#fff!important;
+    padding:0!important;
+    border:0!important;
+    box-shadow:none!important;
+    border-radius:8px!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:auto!important;
+    min-width:0!important;
+    flex:0 0 auto!important;
+  }
+  .field-head .toolbar-download .btn{
+    background:#00a88f!important;
+    color:#fff!important;
+    border-color:#00a88f!important;
+    border-radius:8px!important;
+    min-height:36px!important;
+    height:36px!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    padding:7px 12px!important;
+    font-weight:700!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+  }
+
+  @media(max-width:700px){
+    .brand-inner{
+      grid-template-columns:minmax(0,1fr) auto auto!important;
+      column-gap:6px!important;
+    }
+    .weather-inline{font-size:10px!important;min-width:52px!important}
+    .weather-inline input{
+      width:31px!important;
+      height:18px!important;
+      font-size:10px!important;
+      line-height:18px!important;
+    }
+    .field-head .toolbar-download{
+      background:#fff!important;
+      width:auto!important;
+      min-width:0!important;
+      padding:0!important;
+    }
+    .field-head .toolbar-download .btn{
+      width:auto!important;
+      min-width:0!important;
+      max-width:none!important;
+      height:34px!important;
+      min-height:34px!important;
+      padding:6px 10px!important;
+      border-radius:8px!important;
+    }
+  }
+
+
+  /* V12: header layout + compact queue label + record meta row */
+  .brand-inner{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:6px!important;
+    width:100%!important;
+  }
+  .brand-divider{display:none!important}
+  .brand-mark{
+    order:0!important;
+    flex:0 0 auto!important;
+    margin:0!important;
+  }
+  .brand-inner h1{
+    order:1!important;
+    margin:0!important;
+    white-space:nowrap!important;
+    flex:0 0 auto!important;
+  }
+  .field-weather-wrap{
+    order:2!important;
+    margin-left:auto!important;
+    margin-right:2px!important;
+    flex:0 0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:2px!important;
+  }
+  .field-settings-btn{
+    order:3!important;
+    margin-left:0!important;
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+  }
+
+  #queuePill{
+    white-space:nowrap!important;
+    word-break:keep-all!important;
+  }
+
+  #recordList .cardhead{
+    align-items:stretch!important;
+  }
+  #recordList .cardtitle{
+    align-self:stretch!important;
+    display:flex!important;
+    flex-direction:column!important;
+    min-width:0!important;
+  }
+  #recordList .cardtitle .card-meta-row{
+    margin-top:auto!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    min-width:0!important;
+    width:100%!important;
+    padding-top:2px!important;
+    font-size:inherit!important;
+    line-height:1.15!important;
+  }
+  #recordList .cardtitle .env-inline{
+    margin:0!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    gap:1px!important;
+    color:#66736d!important;
+    font-weight:400!important;
+    font-size:inherit!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+  }
+  #recordList .cardtitle .env-inline input{
+    height:20px!important;
+    padding:0 1px!important;
+    margin:0!important;
+    border:1px solid transparent!important;
+    background:transparent!important;
+    border-radius:4px!important;
+    color:#66736d!important;
+    font:inherit!important;
+    font-weight:400!important;
+    line-height:18px!important;
+    text-align:right!important;
+    box-shadow:none!important;
+    outline:none!important;
+  }
+  #recordList .cardtitle .env-inline .temp{width:35px!important}
+  #recordList .cardtitle .env-inline .hum{width:28px!important}
+  #recordList .cardtitle .env-inline input:focus{
+    background:#fff!important;
+    border-color:#b9ddd0!important;
+    box-shadow:0 0 0 2px rgba(21,129,94,.08)!important;
+  }
+  #recordList .cardtitle .sync-mini{
+    margin-left:auto!important;
+    color:#7a8680!important;
+    font:inherit!important;
+    font-weight:400!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+    align-self:flex-end!important;
+  }
+  #recordList .card-status-stack{
+    align-self:flex-start!important;
+  }
+
+  @media(max-width:700px){
+    .brand-inner{gap:4px!important}
+    .brand-mark{
+      transform:scale(.70)!important;
+      transform-origin:left center!important;
+      margin-right:-3px!important;
+    }
+    .brand-inner h1{
+      font-size:15px!important;
+      letter-spacing:-.2px!important;
+    }
+    .field-weather-wrap{
+      margin-left:auto!important;
+      margin-right:0!important;
+      gap:1px!important;
+    }
+    .weather-inline{
+      min-width:48px!important;
+      font-size:10px!important;
+    }
+    .weather-inline input{
+      width:30px!important;
+      height:18px!important;
+      font-size:10px!important;
+      line-height:18px!important;
+      padding:0 1px!important;
+    }
+    .field-weather-refresh{font-size:13px!important}
+    .field-settings-btn{
+      padding:4px 3px!important;
+    }
+    #recordList .cardtitle .card-meta-row{
+      gap:5px!important;
+      padding-top:1px!important;
+    }
+    #recordList .cardtitle .env-inline input{
+      height:18px!important;
+      line-height:16px!important;
+    }
+    #recordList .cardtitle .env-inline .temp{width:33px!important}
+    #recordList .cardtitle .env-inline .hum{width:27px!important}
+  }
+
+
+
+  /* v1.153.4.4.2 final UI adjustments */
+  .field-weather-wrap{
+    margin-left:auto!important;
+    margin-right:12px!important;
+    gap:4px!important;
+  }
+  .weather-inline{
+    font-size:12.5px!important;
+    min-width:58px!important;
+    justify-items:start!important;
+  }
+  .weather-inline .temp-line,.weather-inline .hum-line{
+    width:100%!important;
+    justify-content:flex-start!important;
+  }
+  .weather-inline input{
+    width:35px!important;
+    font-size:12.5px!important;
+    text-align:left!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  .field-weather-refresh{
+    padding:3px 2px!important;
+    margin-left:1px!important;
+  }
+  .field-clear-danger,
+  #clearAllLocalBtn{
+    background:#fff0f0!important;
+    color:#a82d2d!important;
+    border-color:#ffd4d1!important;
+    box-shadow:none!important;
+  }
+  #recordList .cardtitle .sync-mini{
+    margin-left:auto!important;
+    text-align:right!important;
+    font-size:10.5px!important;
+    line-height:1.15!important;
+    color:#7a8680!important;
+    font-weight:400!important;
+    white-space:nowrap!important;
+  }
+  @media(max-width:700px){
+    .field-weather-wrap{margin-right:10px!important}
+    .weather-inline{font-size:11.5px!important;min-width:54px!important}
+    .weather-inline input{font-size:11.5px!important;width:33px!important}
+  }
+
+  `;
+  d.head.appendChild(st);
+
+  const wrap=d.querySelector('.wrap');
+  if(!wrap)return;
+  const panels=[...wrap.children].filter(x=>x.classList&&x.classList.contains('panel'));
+  if(panels.length<4)return;
+  const [work,stats,records,advanced]=panels;
+  work.id='fieldWork';stats.id='fieldStats';records.id='fieldRecords';
+
+  // V3 robust DOM layout
+  const allEls=()=>[...d.querySelectorAll('*')];
+
+  // top title + right settings
+  const brand=d.querySelector('.brand-inner');
+  if(brand){
+    const title=brand.querySelector('h1'); if(title) title.textContent='设备铭牌识别';
+    let settingsBtn=d.querySelector('.field-settings-btn');
+    if(!settingsBtn){
+      settingsBtn=d.createElement('button');
+      settingsBtn.type='button'; settingsBtn.className='field-settings-btn'; settingsBtn.textContent='⚙ 设置';
+      brand.appendChild(settingsBtn);
+    }
+    if(advanced){
+      advanced.classList.add('field-settings-panel');
+      advanced.style.display='none';
+      if(advanced.tagName==='DETAILS') advanced.open=true;
+      const header=d.querySelector('.brand-header');
+      if(header) header.after(advanced);
+      settingsBtn.onclick=()=>{
+        const showing=advanced.style.display!=='none';
+        advanced.style.display=showing?'none':'block';
+        settingsBtn.textContent=showing?'⚙ 设置':'✕ 收起';
+      };
+    }
+  }
+
+  // record heading
+  const oldHead=records.querySelector(':scope > .row');
+  if(oldHead) oldHead.remove();
+  let head=records.querySelector('.field-head');
+  if(!head){head=d.createElement('div');head.className='field-head';head.innerHTML='<h2>设备记录</h2>';records.prepend(head);}
+
+  // move network after title
+  let network=d.getElementById('networkPill');
+  if(!network){
+    network=allEls().find(el=>el.children.length===0 && /网络\s*[：:]\s*(在线|离线|检测中)/.test((el.textContent||'').trim()));
+  }
+  if(network){
+    let nh=head.querySelector('.field-network');
+    if(!nh){nh=d.createElement('div');nh.className='field-network';head.appendChild(nh);}
+    nh.appendChild(network);
+  }
+
+  // move download to far right
+  let csv=d.getElementById('csvTopBtn') || [...d.querySelectorAll('button,.btn')].find(el=>(el.textContent||'').trim()==='下载数据');
+  if(csv){
+    let holder=head.querySelector('.toolbar-download');
+    if(!holder){holder=d.createElement('div');holder.className='toolbar-download';head.appendChild(holder);}
+    holder.appendChild(csv);
+  }
+
+  // build one-line status/filter/search toolbar
+  let filter=d.getElementById('filterStatus') || [...d.querySelectorAll('select')].find(sel=>[...sel.options].some(o=>(o.textContent||'').trim()==='全部记录'));
+  let search=d.getElementById('searchInput') || [...d.querySelectorAll('input')].find(inp=>/名称\s*\/\s*厂家\s*\/\s*型号\s*\/\s*编号/.test(inp.placeholder||''));
+  const oldToolbar=allEls().find(el=>el!==records && el.classList && (el.classList.contains('toolbar-row')||el.classList.contains('field-tools')) && ((filter&&el.contains(filter))||(search&&el.contains(search))));
+  const tools=d.createElement('div');tools.className='field-record-tools';
+  const l1=d.createElement('span');l1.className='tool-label';l1.textContent='状态';
+  const l2=d.createElement('span');l2.className='tool-label';l2.textContent='搜索';
+  tools.appendChild(l1);if(filter)tools.appendChild(filter);tools.appendChild(l2);if(search)tools.appendChild(search);
+  const page=records.querySelector('.pages');
+  records.insertBefore(tools,page);
+  if(oldToolbar && oldToolbar.parentNode) oldToolbar.remove();
+
+  // common bulk buttons remain visible
+  let bulk=stats.querySelector('.bulkbar') || records.querySelector('.bulkbar');
+  if(bulk){
+    let holder=records.querySelector('.field-bulk');
+    if(!holder){holder=d.createElement('div');holder.className='field-bulk';}
+    holder.appendChild(bulk);
+    records.insertBefore(holder,page);
+  }
+
+  // status order
+  const topstat=stats.querySelector('.topstat');
+  const findPill=(prefix)=>[...stats.querySelectorAll('.pill')].find(el=>(el.textContent||'').trim().startsWith(prefix));
+  const retry=[...stats.querySelectorAll('button,.btn')].find(el=>(el.textContent||'').trim()==='失败重识别')||stats.querySelector('.retry-failed-all');
+  const allEl=d.getElementById('countAll')||findPill('总记录');
+  const okEl=d.getElementById('countOk')||findPill('已确认');
+  const pendingEl=d.getElementById('countPending')||findPill('待审核');
+  const syncEl=d.getElementById('countSync')||findPill('待同步');
+  const selectedEl=d.getElementById('countSelected')||findPill('已选');
+  const queueEl=d.getElementById('queuePill')||findPill('队列')||findPill('识别中');
+  const failedEl=d.getElementById('queueFailedPill')||findPill('失败');
+  if(queueEl) queueEl.textContent=(queueEl.textContent||'').replace(/^队列\s*[：:]\s*/,'');
+  if(topstat)[allEl,okEl,pendingEl,syncEl,selectedEl,queueEl,failedEl,retry].filter(Boolean).forEach(el=>topstat.appendChild(el));
+
+  const semanticMap={
+    countAll:'field-total',
+    countPending:'field-pending',
+    countOk:'field-confirmed',
+    countSync:'field-sync',
+    countSelected:'field-selected',
+    queuePill:'field-queue',
+    queueFailedPill:'field-failed'
+  };
+  Object.entries(semanticMap).forEach(([id,cls])=>{const el=d.getElementById(id);if(el)el.classList.add(cls)});
+  if(retry)retry.classList.add('field-failed-action');
+
+
+  // V4 weather + per-record environment persistence
+  const DB_NAME='mingpai-free-v1', STORE='records', WEATHER_KEY='mingpai-field-weather-v2', OLD_WEATHER_KEY='mingpai-field-weather-v1';
+  let currentWeather=null;
+  function openDb(){
+    return new Promise((resolve,reject)=>{
+      const req=indexedDB.open(DB_NAME,2);
+      req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'});};
+      req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+    });
+  }
+  async function getRecord(id){const db=await openDb();return new Promise((res,rej)=>{const q=db.transaction(STORE,'readonly').objectStore(STORE).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}
+  async function putRecord(rec){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(rec);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+  async function allRecords(){const db=await openDb();return new Promise((res,rej)=>{const q=db.transaction(STORE,'readonly').objectStore(STORE).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)})}
+  const baselineIds=new Set((await allRecords()).map(r=>r.id));
+  const envDrafts=new Map();
+
+  function weatherText(w){return w&&Number.isFinite(+w.temperature)&&Number.isFinite(+w.humidity)?`${(+w.temperature).toFixed(1)}℃/${Math.round(+w.humidity)}%RH`:'--℃/--%RH'}
+
+  function installWeatherChip(){
+    if(!brand)return;
+    let wrap=brand.querySelector('.field-weather-wrap');
+    if(!wrap){
+      wrap=d.createElement('div');wrap.className='field-weather-wrap';
+      wrap.style.marginLeft='auto';wrap.style.display='inline-flex';wrap.style.alignItems='center';wrap.style.gap='3px';
+
+      const inline=d.createElement('div');inline.className='weather-inline';
+      inline.innerHTML='<span class="temp-line"><input class="temp" inputmode="decimal" aria-label="顶部温度">℃</span><span class="hum-line"><input class="hum" inputmode="numeric" aria-label="顶部湿度">%RH</span>';
+      const refresh=d.createElement('button');refresh.type='button';refresh.className='field-weather-refresh';refresh.textContent='↻';refresh.title='刷新定位温湿度';
+      wrap.append(inline,refresh);brand.insertBefore(wrap,d.querySelector('.field-settings-btn')||null);
+
+      const saveManual=()=>{
+        const t=inline.querySelector('.temp').value.trim(),h=inline.querySelector('.hum').value.trim();
+        currentWeather={...(currentWeather||{}),temperature:Number(t),humidity:Number(h),savedAt:Date.now(),manual:true,dateKey:(d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10))};
+        localStorage.setItem(WEATHER_KEY,JSON.stringify(currentWeather));
+      };
+      inline.querySelectorAll('input').forEach(inp=>{
+        ['click','pointerdown','touchstart'].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));
+        inp.addEventListener('change',saveManual);inp.addEventListener('blur',saveManual);
+      });
+      refresh.addEventListener('click',()=>{if(currentWeather)currentWeather.manual=false;refreshWeather(true);});
+    }
+    const inline=wrap.querySelector('.weather-inline');
+    const ti=inline.querySelector('.temp'),hi=inline.querySelector('.hum');
+    if(d.activeElement!==ti)ti.value=currentWeather&&Number.isFinite(+currentWeather.temperature)?Number(currentWeather.temperature).toFixed(1):'';
+    if(d.activeElement!==hi)hi.value=currentWeather&&Number.isFinite(+currentWeather.humidity)?String(Math.round(+currentWeather.humidity)):'';
+  }
+  function loadWeatherCache(){
+    try{
+      const todayKey=d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10);
+      let w=JSON.parse(localStorage.getItem(WEATHER_KEY)||'null');
+      if(!w){
+        const old=JSON.parse(localStorage.getItem(OLD_WEATHER_KEY)||'null');
+        if(old){w={...old,dateKey:todayKey};localStorage.setItem(WEATHER_KEY,JSON.stringify(w))}
+      }
+      if(w) currentWeather=w;
+    }catch{}
+  }
+  async function refreshWeather(force=false){
+    installWeatherChip();
+    const currentDateKey=d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10); if(!force&&currentWeather&&currentWeather.dateKey===currentDateKey&&Number.isFinite(+currentWeather.temperature)&&Number.isFinite(+currentWeather.humidity)){decorateCards();return}
+    if(!navigator.geolocation)return;
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      try{
+        const {latitude,longitude}=pos.coords;
+        const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
+        const resp=await fetch(url,{cache:'no-store'}); if(!resp.ok)throw new Error('weather HTTP '+resp.status);
+        const js=await resp.json();
+        currentWeather={temperature:Number(js?.current?.temperature_2m),humidity:Number(js?.current?.relative_humidity_2m),savedAt:Date.now(),latitude,longitude,manual:false,dateKey:(d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10))};
+        localStorage.setItem(WEATHER_KEY,JSON.stringify(currentWeather));
+         installWeatherChip(); decorateCards();
+      }catch(e){console.warn('weather fetch failed',e)}
+    },err=>console.warn('geolocation failed',err),{enableHighAccuracy:false,timeout:10000,maximumAge:60*60*1000});
+  }
+
+  function syncLabel(rec){
+    const s=rec?.syncStatus;
+    return s==='synced'?'已同步':s==='syncing'?'同步中':s==='error'?'失败待重试':s==='pending'?'有修改待同步':s==='local-only'?'仅本机保存':rec?.status==='confirmed'?'尚未同步':'待确认';
+  }
+  async function decorateCard(card){
+    if(card.dataset.envDecorating==='1')return;
+    const id=card.querySelector('[data-select-id]')?.getAttribute('data-select-id')||card.querySelector('[data-id]')?.getAttribute('data-id');
+    if(!id)return;
+    card.dataset.envDecorating='1';
+    try{
+      let rec=await getRecord(id); if(!rec)return;
+
+      // v1.153.4.4.2 recognition corrections (narrow-context only)
+      const rawText=String(rec.raw||'');
+      let recChanged=false;
+      if(/POWER[-–—]?420FX/i.test(rawText)&&/高频电刀/.test(rawText)){
+        if(rec.name!=='高频电刀'){rec.name='高频电刀';recChanged=true}
+        if(rec.model!=='POWER-420FX'){rec.model='POWER-420FX';recChanged=true}
+        if(/常州市延陵电子设备有限公司/.test(rawText)&&rec.manufacturer!=='常州市延陵电子设备有限公司'){
+          rec.manufacturer='常州市延陵电子设备有限公司';recChanged=true;
+        }
+        if(/18FX020/i.test(rawText)&&rec.code!=='18FX020'){rec.code='18FX020';recChanged=true}
+      }
+      if(/PM-9000\s*Express/i.test(rawText)&&/(病人监护仪|MINDRAY|迈瑞)/i.test(rawText)){
+        if(rec.name!=='多参数监护仪'){rec.name='多参数监护仪';recChanged=true}
+      }
+      if(recChanged){
+        await putRecord(rec);
+        const fieldMap={name:rec.name,manufacturer:rec.manufacturer,model:rec.model,code:rec.code};
+        Object.entries(fieldMap).forEach(([field,value])=>{
+          if(value==null)return;
+          const el=card.querySelector('[data-field="'+field+'"]');
+          if(el&&el.value!==String(value)){
+            el.value=String(value);
+            el.dispatchEvent(new Event('input',{bubbles:true}));
+            el.dispatchEvent(new Event('change',{bubbles:true}));
+          }
+        });
+      }
+
+      // 只在本次页面新生成记录时复制顶部当前温湿度一次
+      if(!baselineIds.has(id)&&(rec.temperature==null||rec.temperature==='')&&(rec.humidity==null||rec.humidity==='')){
+        rec.temperature=currentWeather&&Number.isFinite(+currentWeather.temperature)?Number(currentWeather.temperature).toFixed(1):'';
+        rec.humidity=currentWeather&&Number.isFinite(+currentWeather.humidity)?String(Math.round(+currentWeather.humidity)):'';
+        rec.envCapturedAt=Date.now();
+        await putRecord(rec);
+        baselineIds.add(id);
+      }
+
+      const title=card.querySelector('.cardtitle');
+      if(title){
+        const small=title.querySelector('small'); if(small)small.remove();
+        const old=title.querySelector('.env-summary');if(old)old.remove();
+        let env=title.querySelector('.env-inline');
+        if(!env){
+          env=d.createElement('div');env.className='env-inline';
+          env.innerHTML='<input class="temp" inputmode="decimal" aria-label="记录温度">℃ / <input class="hum" inputmode="numeric" aria-label="记录湿度">%RH';
+          title.appendChild(env);
+          const ti=env.querySelector('.temp'),hi=env.querySelector('.hum');
+          const keepDraft=e=>{
+            e.stopPropagation();
+            envDrafts.set(id,{temperature:ti.value,humidity:hi.value});
+          };
+          ['input','change','keydown','keyup','click','pointerdown','touchstart'].forEach(ev=>{
+            ti.addEventListener(ev,keepDraft);hi.addEventListener(ev,keepDraft);
+          });
+          const persist=async e=>{
+            e.stopPropagation();
+            const draft=envDrafts.get(id)||{temperature:ti.value,humidity:hi.value};
+            const r=await getRecord(id);if(!r)return;
+            r.temperature=String(draft.temperature??'').trim();
+            r.humidity=String(draft.humidity??'').trim();
+            r.envCapturedAt=r.envCapturedAt||Date.now();
+            await putRecord(r);
+            envDrafts.delete(id);
+            ti.value=r.temperature;hi.value=r.humidity;
+          };
+          ti.addEventListener('blur',persist);hi.addEventListener('blur',persist);
+        }
+        const ti=env.querySelector('.temp'),hi=env.querySelector('.hum');
+        const draft=envDrafts.get(id);
+        const showT=draft?draft.temperature:(rec.temperature??'');
+        const showH=draft?draft.humidity:(rec.humidity??'');
+        if(d.activeElement!==ti)ti.value=showT;
+        if(d.activeElement!==hi)hi.value=showH;
+      }
+
+      const head=card.querySelector('.cardhead');
+      const badge=head?.querySelector('.badge');
+      if(head&&badge){
+        let stack=head.querySelector('.card-status-stack');
+        if(!stack){stack=d.createElement('div');stack.className='card-status-stack';badge.replaceWith(stack);stack.appendChild(badge);const sm=d.createElement('div');sm.className='sync-mini';stack.appendChild(sm);}
+        stack.querySelector('.sync-mini').textContent='飞书：'+syncLabel(rec);
+      }
+
+
+      // V12: 温湿度与飞书同步状态放在缩略图底部同一行
+      if(title){
+        let meta=title.querySelector('.card-meta-row');
+        if(!meta){
+          meta=d.createElement('div');
+          meta.className='card-meta-row';
+          title.appendChild(meta);
+        }
+        const env=title.querySelector('.env-inline');
+        const sync=head?.querySelector('.sync-mini');
+        if(env && env.parentElement!==meta) meta.appendChild(env);
+        if(sync && sync.parentElement!==meta) meta.appendChild(sync);
+      }
+
+      // 已确认记录不再显示“取消确认”
+      card.querySelectorAll('button').forEach(btn=>{if((btn.textContent||'').trim()==='取消确认')btn.remove();});
+      card.dataset.envInitialized='1';
+    }catch(e){console.warn('decorate env card failed',e)}
+    finally{card.dataset.envDecorating='0'}
+  }
+  function decorateCards(){d.querySelectorAll('#recordList .card').forEach(card=>decorateCard(card))}
+
+  // Clear button uses same danger style; retain 取消选择.
+  [...d.querySelectorAll('button,.btn')].forEach(btn=>{if((btn.textContent||'').trim()==='清空')btn.classList.add('field-clear-danger')});
+
+
+  // V6 外部浏览器本地导出：全部本地记录 + 温湿度 + 状态
+  function xmlEscape(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function crc32(bytes){let x=0xffffffff;for(const b of bytes){x^=b;for(let k=0;k<8;k++)x=(x>>>1)^((x&1)?0xedb88320:0)}return(x^0xffffffff)>>>0}
+  function u16(n){return new Uint8Array([n&255,(n>>>8)&255])}
+  function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255])}
+  function cat(parts){const len=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(len);let o=0;for(const p of parts){out.set(p,o);o+=p.length}return out}
+  function zipStored(files){
+    const enc=new TextEncoder(),locals=[],centrals=[];let offset=0;
+    for(const [name,text] of files){const nb=enc.encode(name),data=enc.encode(text),crc=crc32(data);
+      const local=cat([u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nb.length),u16(0),nb,data]);locals.push(local);
+      const central=cat([u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nb.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),nb]);centrals.push(central);offset+=local.length;
+    }
+    const size=centrals.reduce((n,p)=>n+p.length,0);return cat([...locals,...centrals,u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(size),u32(offset),u16(0)]);
+  }
+  function makeXlsx(rows){
+    const cell=v=>'<c t="inlineStr"><is><t xml:space="preserve">'+xmlEscape(v)+'</t></is></c>';
+    const sheet='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+rows.map((r,i)=>'<row r="'+(i+1)+'">'+r.map(cell).join('')+'</row>').join('')+'</sheetData></worksheet>';
+    return new Blob([zipStored([
+      ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'],
+      ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+      ['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="设备记录" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+      ['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'],
+      ['xl/worksheets/sheet1.xml',sheet]
+    ])],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  function fmtStatus(r){return r.status==='confirmed'?'已确认':r.status==='pending'?'待审核':(r.status||'')}
+  function pad2(n){return String(n).padStart(2,'0')}
+  async function localExport(ev){
+    const ua=navigator.userAgent||'',isWechat=/MicroMessenger/i.test(ua);if(isWechat)return;
+    ev.preventDefault();ev.stopPropagation();ev.stopImmediatePropagation();
+    const rows=(await allRecords()).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    if(!rows.length){alert('当前没有可导出的本地记录。');return}
+    const head=['单位名称','科室','检定日期','检定员','设备名称','生产厂家','型号','出厂编号','温度（℃）','相对湿度（%RH）','备注','状态','铭牌文本'];
+    const body=rows.map(r=>[r.unitName||r.batch||'',r.dept||'',r.date||'',r.operatorName||'',r.name||'',r.manufacturer||'',r.model||'',r.code||'',r.temperature??'',r.humidity??'',r.remark||'',fmtStatus(r),r.raw||'']);
+    const now=new Date(),stamp=now.getFullYear()+pad2(now.getMonth()+1)+pad2(now.getDate())+'_'+pad2(now.getHours())+pad2(now.getMinutes())+pad2(now.getSeconds());
+    const blob=makeXlsx([head,...body]),url=URL.createObjectURL(blob),a=d.createElement('a');a.href=url;a.download='设备铭牌数据_'+stamp+'.xlsx';d.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }
+  if(csv)csv.addEventListener('click',localExport,true);
+
+  loadWeatherCache(); installWeatherChip(); refreshWeather(false);
+  d.getElementById('workdate')?.addEventListener('change',()=>refreshWeather(false));
+  const cardsObserver=new MutationObserver(()=>decorateCards());
+  const list=d.getElementById('recordList');if(list)cardsObserver.observe(list,{childList:true,subtree:true});
+  decorateCards();
+
+  function numFrom(el){
+    const m=(el?.textContent||'').match(/\d+/g);
+    if(!m)return 0;
+    return Math.max(...m.map(Number));
+  }
+  function paint(){
+    const queueLabel=d.getElementById('queuePill');
+    if(queueLabel){
+      const cleaned=(queueLabel.textContent||'').replace(/^队列\s*[：:]\s*/,'');
+      if(cleaned!==queueLabel.textContent) queueLabel.textContent=cleaned;
+    }
+    Object.keys(semanticMap).forEach(id=>{
+      const el=d.getElementById(id);if(!el)return;
+      const n=numFrom(el);
+      el.classList.toggle('field-has-data',n>0);
+      el.classList.toggle('field-zero',n===0);
+      el.classList.toggle('field-active',el.classList.contains('filter-active'));
+    });
+    const failed=d.getElementById('queueFailedPill');
+    const fn=numFrom(failed);
+    if(retry){
+      retry.classList.toggle('field-has-data',fn>0);
+      retry.classList.toggle('field-zero',fn===0);
+      retry.classList.toggle('field-active',retry.classList.contains('filter-active'));
+    }
+  }
+  paint();
+  new MutationObserver(paint).observe(d.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+});
+</script>
+</body>
+</html>
