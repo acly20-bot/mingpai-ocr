@@ -71,9 +71,9 @@ jobs:
             cp -R test-v153444 app/test-v153444
             cp app/index.html app/test-v153444/core.html
             cp app/coi-serviceworker.js app/test-v153444/coi-serviceworker.js
-            sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v153444-test.js/g' app/test-v153444/core.html
-            sed -i 's/1\.153\.4\.4\.1/1.153.4.4.4-test/g' app/test-v153444/core.html
-            sed -i 's/mingpai-stable15344-coi-reload/mingpai-v153444-test-coi-reload/g' app/test-v153444/core.html
+            sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v1534441-test.js/g' app/test-v153444/core.html
+            sed -i 's/1\.153\.4\.4\.1/1.153.4.4.4.1-test/g' app/test-v153444/core.html
+            sed -i 's/mingpai-stable15344-coi-reload/mingpai-v1534441-test-coi-reload/g' app/test-v153444/core.html
           fi
 
       - name: Upload Pages artifact
