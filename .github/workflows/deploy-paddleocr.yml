@@ -7,6 +7,7 @@ on:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
       - 'ui-compare/**'
+      - 'stable-overlay/**'
   workflow_dispatch:
 
 permissions:
@@ -38,6 +39,24 @@ jobs:
           if [ -d ui-compare ]; then
             cp -R ui-compare app/ui-compare
           fi
+      - name: Add stable v1.153.4.4.2 overlay
+        run: |
+          mkdir -p app/stable-overlay
+          cp stable-overlay/v153442.css app/stable-overlay/v153442.css
+          cp stable-overlay/v153442.js app/stable-overlay/v153442.js
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/index.html')
+          s=p.read_text(encoding='utf-8')
+          css='<link rel="stylesheet" href="./stable-overlay/v153442.css?v=1.153.4.4.2">'
+          js='<script src="./stable-overlay/v153442.js?v=1.153.4.4.2"></script>'
+          if css not in s:
+              s=s.replace('</head>',css+'\n</head>')
+          if js not in s:
+              s=s.replace('</body>',js+'\n</body>')
+          s=s.replace('版本：v1.153.4.4.1','版本：v1.153.4.4.2')
+          p.write_text(s,encoding='utf-8')
+          PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
