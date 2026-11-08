@@ -10,7 +10,7 @@ html,body{overflow:hidden}iframe{display:block;width:100%;height:100vh;height:10
 </style>
 </head>
 <body>
-<iframe id="app" src="./core.html?field=v12&rev=202611081801-v1534441-fix"></iframe>
+<iframe id="app" src="./core.html?field=v12&rev=202611081836-v1534442-align"></iframe>
 <script>
 const frame=document.getElementById('app');
 frame.addEventListener('load',async()=>{
@@ -535,7 +535,7 @@ frame.addEventListener('load',async()=>{
   }
 
 
-  /* v1.153.4.4.4.1-test UI tweaks */
+  /* v1.153.4.4.4.2-test UI tweaks */
   .weather-inline input{
     text-align:left!important;
     min-width:2.2ch!important;
@@ -562,7 +562,7 @@ frame.addEventListener('load',async()=>{
   }
 
 
-  /* v1.153.4.4.4.1-test weather alignment override */
+  /* v1.153.4.4.4.2-test weather alignment override */
   .weather-inline input{
     width:34px!important;
     min-width:34px!important;
@@ -573,6 +573,30 @@ frame.addEventListener('load',async()=>{
   }
   @media(max-width:700px){
     .weather-inline input{width:31px!important;min-width:31px!important;max-width:31px!important;text-align:right!important;}
+  }
+
+
+  /* v1.153.4.4.4.2-test: align unit right edges */
+  .weather-inline .temp-line,.weather-inline .hum-line{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    width:72px!important;
+    gap:1px!important;
+    white-space:nowrap!important;
+  }
+  .weather-inline input{
+    flex:0 0 34px!important;
+    width:34px!important;
+    min-width:34px!important;
+    max-width:34px!important;
+    text-align:right!important;
+    padding-left:0!important;
+    padding-right:1px!important;
+  }
+  @media(max-width:700px){
+    .weather-inline .temp-line,.weather-inline .hum-line{width:66px!important;}
+    .weather-inline input{flex-basis:31px!important;width:31px!important;min-width:31px!important;max-width:31px!important;}
   }
 
   `;
