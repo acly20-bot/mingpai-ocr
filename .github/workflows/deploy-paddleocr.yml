@@ -6,6 +6,7 @@ on:
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
+      - 'stable-wrapper/**'
   workflow_dispatch:
 
 permissions:
@@ -57,6 +58,29 @@ jobs:
           s=s.replace('v1.153.4.4.4.3-test','v1.16.2')
           s=s.replace('v1.153.4.4.4.2-test','v1.16.2')
           s=s.replace('v1.153.4.4.4.1-test','v1.16.2')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Build adaptive OCR scheduler test entry
+        run: |
+          mkdir -p app/test-adaptive
+          cp app/core.html app/test-adaptive/core.html
+          cp stable-wrapper/index.html app/test-adaptive/index.html
+          cp app/coi-serviceworker.js app/test-adaptive/coi-serviceworker.js
+
+          # Test bundle only: stable v1.16.2 remains untouched at root.
+          sed -i 's/index-B81hyAdU-v1162.js/index-B81hyAdU-v117-adaptive-test.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.16/1.17-adaptive-test/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable1162-coi-reload/mingpai-v117-adaptive-test-coi-reload/g' app/test-adaptive/core.html
+
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('app/test-adaptive/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
+                      './core.html?field=v12&rev=202611092020-adaptive-test')
+          s=s.replace('<title>设备铭牌智能识别与审核</title>',
+                      '<title>设备铭牌识别｜自适应模型调度测试</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
