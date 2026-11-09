@@ -69,18 +69,18 @@ jobs:
           cp app/coi-serviceworker.js app/test-adaptive/coi-serviceworker.js
 
           # Test bundle only: stable v1.16.2 remains untouched at root.
-          sed -i 's/index-B81hyAdU-v1162.js/index-B81hyAdU-v1174-rules-test.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.16/1.17.4-rules-test/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable1162-coi-reload/mingpai-v1174-rules-test-coi-reload/g' app/test-adaptive/core.html
+          sed -i 's/index-B81hyAdU-v1162.js/index-B81hyAdU-v117.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.16/1.17-rc/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable1162-coi-reload/mingpai-v117-rc-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611100045-rules1174-test')
+                      './core.html?field=v12&rev=202611100115-v117-rc')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜外部规则测试</title>')
+                      '<title>设备铭牌识别｜v1.17 候选版</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
