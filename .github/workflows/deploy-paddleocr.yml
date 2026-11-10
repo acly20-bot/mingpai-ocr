@@ -38,26 +38,26 @@ jobs:
           mkdir -p app
           unzip -oq github-pages-cos-models.zip -d app
 
-      - name: Promote v1.17 to stable root
+      - name: Promote v1.17.1-fixes-test to stable root
         run: |
           # Keep the original stable shell as core.html, then point it to the new COS bundle.
           cp app/index.html app/core.html
-          sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v117-final.js/g' app/core.html
+          sed -i 's/index-B81hyAdU-v153441.js/index-B81hyAdU-v1171-fixes-test.js/g' app/core.html
           sed -i 's/1\.153\.4\.4\.1/1.16/g' app/core.html
           sed -i 's/mingpai-stable15344-coi-reload/mingpai-stable117-coi-reload/g' app/core.html
 
           # Reuse the fully validated V12 wrapper as the formal root UI.
-          cp stable-wrapper/index.html app/index.html
+          cp stable-wrapper/test-v1171-fixes.html app/index.html
           python - <<'PY'
           from pathlib import Path
           p=Path('app/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611100155-v117-stable')
-          s=s.replace('v1.153.4.4.4.4-test','v1.17')
-          s=s.replace('v1.153.4.4.4.3-test','v1.17')
-          s=s.replace('v1.153.4.4.4.2-test','v1.17')
-          s=s.replace('v1.153.4.4.4.1-test','v1.17')
+                      './core.html?field=v12&rev=202611110050-v1171-fixes-test')
+          s=s.replace('v1.153.4.4.4.4-test','v1.17.1-fixes-test')
+          s=s.replace('v1.153.4.4.4.3-test','v1.17.1-fixes-test')
+          s=s.replace('v1.153.4.4.4.2-test','v1.17.1-fixes-test')
+          s=s.replace('v1.153.4.4.4.1-test','v1.17.1-fixes-test')
           p.write_text(s,encoding='utf-8')
           PY
 
@@ -65,12 +65,12 @@ jobs:
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
-          cp stable-wrapper/index.html app/test-adaptive/index.html
+          cp stable-wrapper/test-v1171-fixes.html app/test-adaptive/index.html
           cp app/coi-serviceworker.js app/test-adaptive/coi-serviceworker.js
 
-          # Test bundle only: stable v1.17 remains untouched at root.
-          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v117.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.16/1.17/g' app/test-adaptive/core.html
+          # Test bundle only: stable v1.17.1-fixes-test remains untouched at root.
+          sed -i 's/index-B81hyAdU-v1171-fixes-test.js/index-B81hyAdU-v117.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.16/1.17.1-fixes-test/g' app/test-adaptive/core.html
           sed -i 's/mingpai-stable117-coi-reload/mingpai-v117-final-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
@@ -78,9 +78,9 @@ jobs:
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611100155-v117-final')
+                      './core.html?field=v12&rev=202611110050-v1171-fixes-test')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.17 候选版</title>')
+                      '<title>设备铭牌识别｜vv1.17.1-fixes-test.1 修复测试</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
