@@ -92,7 +92,7 @@ jobs:
           u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test31.js'
           data=urllib.request.urlopen(u,timeout=60).read().decode('utf-8','replace')
           print('BUNDLE_LEN',len(data))
-          pats=['上次识别被中断','queueStatus','queued','识别失败','准备就绪','initPaddle','loadRecords','getAll']
+          pats=['上次识别被中断','queueStatus','queued','识别失败','准备就绪','initPaddle','loadRecords','getAll','queueFailed=false','queueStatus="done"','enqueueExistingV9','v1183ResumeInterruptedQueue()','await AI()','runPhotoQueueV9']
           for pat in pats:
               print('\\n###',pat)
               pos=0; n=0
