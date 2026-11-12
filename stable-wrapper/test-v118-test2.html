@@ -121,37 +121,145 @@ frame.addEventListener('load',async()=>{
 
 
   const v118NormalizeDialogs=()=>{
-    // Unify every visible Close button in the app.
-    for(const b of [...d.querySelectorAll('button,.btn')]){
-      const tx=(b.textContent||'').trim();
-      if(tx==='关闭'){
-        b.style.setProperty('background','#fff1f1','important');
-        b.style.setProperty('color','#a33','important');
-        b.style.setProperty('border','1px solid #efb5b5','important');
-        b.style.setProperty('border-radius','10px','important');
-        b.style.setProperty('font-weight','700','important');
+    const allButtons=[...d.querySelectorAll('button,.btn')];
+
+    const nearestOverlay=(el)=>{
+      let n=el;
+      while(n&&n!==d.body){
+        const cs=getComputedStyle(n);
+        if(cs.position==='fixed')return n;
+        n=n.parentElement;
+      }
+      return el?.closest?.('[role="dialog"]')||null;
+    };
+
+    const setCancelStyle=(b)=>{
+      if(!b)return;
+      b.style.setProperty('background','#fff1f1','important');
+      b.style.setProperty('color','#a33','important');
+      b.style.setProperty('border','1px solid #efb5b5','important');
+      b.style.setProperty('border-radius','10px','important');
+      b.style.setProperty('font-weight','700','important');
+    };
+
+    // 1) Thumbnail viewer: 关闭｜重拍照 / Paddle重识别｜OCR.space重识别.
+    const paddle=allButtons.find(b=>(b.textContent||'').trim()==='Paddle重识别');
+    const cloud=allButtons.find(b=>(b.textContent||'').trim()==='OCR.space重识别');
+    if(paddle&&cloud){
+      const overlay=nearestOverlay(paddle)||nearestOverlay(cloud);
+      if(overlay){
+        const obs=[...overlay.querySelectorAll('button,.btn')];
+        const rephoto=obs.find(b=>(b.textContent||'').trim()==='重拍照');
+        const close=obs.find(b=>(b.textContent||'').trim()==='关闭');
+        if(rephoto&&close){
+          const row=paddle.parentElement;
+          if(row&&[close,rephoto,paddle,cloud].every(b=>b.parentElement===row)){
+            row.style.setProperty('display','grid','important');
+            row.style.setProperty('grid-template-columns','repeat(2,minmax(0,1fr))','important');
+            row.style.setProperty('grid-template-rows','auto auto','important');
+            row.style.setProperty('gap','8px','important');
+            row.style.setProperty('align-items','stretch','important');
+            // Explicit order regardless of original DOM order.
+            close.style.setProperty('grid-column','1','important'); close.style.setProperty('grid-row','1','important');
+            rephoto.style.setProperty('grid-column','2','important'); rephoto.style.setProperty('grid-row','1','important');
+            paddle.style.setProperty('grid-column','1','important'); paddle.style.setProperty('grid-row','2','important');
+            cloud.style.setProperty('grid-column','2','important'); cloud.style.setProperty('grid-row','2','important');
+            [close,rephoto,paddle,cloud].forEach(b=>{
+              b.style.setProperty('width','100%','important');
+              b.style.setProperty('min-width','0','important');
+              b.style.setProperty('white-space','nowrap','important');
+              b.style.setProperty('min-height','42px','important');
+              b.style.setProperty('padding','7px 6px','important');
+              b.style.setProperty('font-size','14px','important');
+            });
+            setCancelStyle(close);
+          }
+        }
       }
     }
 
-    // Re-recognition/crop dialog: Paddle / OCR.space / Close must remain on one row.
-    const buttons=[...d.querySelectorAll('button,.btn')];
-    const paddle=buttons.find(b=>(b.textContent||'').trim()==='Paddle重识别');
-    const cloud=buttons.find(b=>(b.textContent||'').trim()==='OCR.space重识别');
-    const close=buttons.find(b=>(b.textContent||'').trim()==='关闭' && b.parentElement && (paddle?.parentElement===b.parentElement || cloud?.parentElement===b.parentElement));
-    const row=paddle?.parentElement;
-    if(row&&cloud&&close){
-      row.style.setProperty('display','grid','important');
-      row.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1.12fr) minmax(74px,.62fr)','important');
-      row.style.setProperty('gap','8px','important');
-      row.style.setProperty('align-items','stretch','important');
-      for(const b of [paddle,cloud,close]){
-        b.style.setProperty('width','100%','important');
-        b.style.setProperty('min-width','0','important');
-        b.style.setProperty('white-space','nowrap','important');
-        b.style.setProperty('padding-left','6px','important');
-        b.style.setProperty('padding-right','6px','important');
-        b.style.setProperty('font-size','14px','important');
+    // 2/3) Crop dialogs: compact enough to fit one phone screen.
+    // Identify by visible text/title and by rotate controls + confirm/cancel/re-recognize actions.
+    const fixed=[...d.querySelectorAll('body *')].filter(el=>{
+      const cs=getComputedStyle(el);
+      if(cs.position!=='fixed'||cs.display==='none'||cs.visibility==='hidden')return false;
+      const r=el.getBoundingClientRect();
+      return r.width>innerWidth*.72&&r.height>innerHeight*.55;
+    });
+    for(const modal of fixed){
+      const txt=(modal.textContent||'');
+      const cropLike=txt.includes('裁剪铭牌识别区域') || (txt.includes('左转90°')&&txt.includes('右转90°'));
+      if(!cropLike)continue;
+
+      const panel=[...modal.children].find(x=>{
+        const r=x.getBoundingClientRect(); return r.width>innerWidth*.65&&r.height>innerHeight*.45;
+      })||modal.firstElementChild||modal;
+      panel.style.setProperty('max-height','calc(100dvh - 18px)','important');
+      panel.style.setProperty('overflow-y','auto','important');
+      panel.style.setProperty('padding-top','12px','important');
+      panel.style.setProperty('padding-bottom','10px','important');
+
+      // Compress oversized visual/control blocks without changing OCR image itself.
+      [...modal.querySelectorAll('button,.btn')].forEach(b=>{
+        b.style.setProperty('min-height','40px','important');
+        b.style.setProperty('padding-top','6px','important');
+        b.style.setProperty('padding-bottom','6px','important');
+        b.style.setProperty('line-height','1.15','important');
+      });
+      [...modal.querySelectorAll('img,canvas')].forEach(el=>{
+        const r=el.getBoundingClientRect();
+        if(r.height>innerHeight*.48) el.style.setProperty('max-height','48dvh','important');
+      });
+
+      const mbtn=[...modal.querySelectorAll('button,.btn')];
+      const confirm=mbtn.find(b=>(b.textContent||'').trim()==='确认');
+      let cancel=mbtn.find(b=>(b.textContent||'').trim()==='取消');
+      const p=mbtn.find(b=>(b.textContent||'').trim()==='Paddle重识别');
+      const c=mbtn.find(b=>(b.textContent||'').trim()==='OCR.space重识别');
+      const close=mbtn.find(b=>(b.textContent||'').trim()==='关闭');
+
+      // Re-recognition crop: rename Close -> Cancel.
+      if((p||c)&&close&&!cancel){
+        close.textContent='取消';
+        cancel=close;
       }
+      if(cancel)setCancelStyle(cancel);
+
+      // Photo / re-photo crop: Confirm + Cancel centered and equal width.
+      if(confirm&&cancel&&confirm.parentElement===cancel.parentElement){
+        const row=confirm.parentElement;
+        row.style.setProperty('display','grid','important');
+        row.style.setProperty('grid-template-columns','repeat(2,minmax(0,1fr))','important');
+        row.style.setProperty('gap','10px','important');
+        row.style.setProperty('align-items','stretch','important');
+        [confirm,cancel].forEach(b=>{
+          b.style.setProperty('width','100%','important');
+          b.style.setProperty('min-width','0','important');
+          b.style.setProperty('min-height','40px','important');
+          b.style.setProperty('padding','6px 8px','important');
+        });
+      }
+
+      // Re-recognition crop: keep Paddle / OCR / Cancel on one compact row if they share a row.
+      if(p&&c&&cancel&&p.parentElement===c.parentElement&&p.parentElement===cancel.parentElement){
+        const row=p.parentElement;
+        row.style.setProperty('display','grid','important');
+        row.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1.12fr) minmax(68px,.72fr)','important');
+        row.style.setProperty('gap','6px','important');
+        [p,c,cancel].forEach(b=>{
+          b.style.setProperty('width','100%','important');
+          b.style.setProperty('min-width','0','important');
+          b.style.setProperty('white-space','nowrap','important');
+          b.style.setProperty('font-size','13px','important');
+          b.style.setProperty('min-height','40px','important');
+          b.style.setProperty('padding','6px 4px','important');
+        });
+      }
+    }
+
+    // Other Close buttons elsewhere: same light-red visual treatment.
+    for(const b of allButtons){
+      if((b.textContent||'').trim()==='关闭')setCancelStyle(b);
     }
   };
   v118NormalizeDialogs();
