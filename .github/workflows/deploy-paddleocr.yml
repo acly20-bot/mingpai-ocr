@@ -101,6 +101,8 @@ jobs:
                   if i<0 or n>=12: break
                   print(data[max(0,i-700):i+1100].replace('\\n',' '))
                   pos=i+len(pat);n+=1
+          print('\\n### BUNDLE_TAIL')
+          print(data[-22000:].replace('\\n',' '))
           PY
 
       - name: Upload Pages artifact
