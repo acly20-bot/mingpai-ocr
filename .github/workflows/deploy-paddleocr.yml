@@ -61,26 +61,26 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.17.1.3 fixes test entry
+      - name: Build v1.17.1.4 fixes test entry
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
-          cp stable-wrapper/test-v11713-fixes.html app/test-adaptive/index.html
+          cp stable-wrapper/test-v11714-fixes.html app/test-adaptive/index.html
           cp app/coi-serviceworker.js app/test-adaptive/coi-serviceworker.js
 
-          # Test entry only: point to v1.17.1.3 COS test bundle.
-          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v11713-fixes-test.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.17.1.3-fixes-test/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable117-coi-reload/mingpai-v11713-fixes-test-coi-reload/g' app/test-adaptive/core.html
+          # Test entry only: point to v1.17.1.4 COS test bundle.
+          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v11714-fixes-test.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.17/1.17.1.4-fixes-test/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable117-coi-reload/mingpai-v11714-fixes-test-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611121310-v11713-fixes-test')
+                      './core.html?field=v12&rev=202611121400-v11714-fixes-test')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.17.1.3 修复测试</title>')
+                      '<title>设备铭牌识别｜v1.17.1.4 修复测试</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
