@@ -61,6 +61,70 @@ frame.addEventListener('load',async()=>{
   setTimeout(finalCandidateUi,500);
   setTimeout(finalCandidateUi,1500);
 
+  // v1.18 test.2 final iframe-side UI fixes.
+  const V118_SHORT_FOOTER='照片和记录保存在当前浏览器；删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载Excel留档。';
+  const applyV118InnerFinal=()=>{
+    // Footer/version are rendered inside core.html, so modify the iframe document directly.
+    try{
+      const walker=d.createTreeWalker(d.body,NodeFilter.SHOW_TEXT);
+      let n;
+      while((n=walker.nextNode())){
+        const t=n.nodeValue||'';
+        if(t.includes('OCR 与智能分类均需人工复核')||t.includes('照片缩略图和审核记录保存在当前浏览器')){
+          n.nodeValue=V118_SHORT_FOOTER+' 版本：v1.18-test.2';
+          continue;
+        }
+        if(/v1\.18-test\.1|v1\.18 test\.1/.test(t)){
+          n.nodeValue=t.replace(/v1\.18-test\.1/g,'v1.18-test.2').replace(/v1\.18 test\.1/g,'v1.18 test.2');
+        }
+      }
+    }catch{}
+
+    if(!d.getElementById('v118InnerFinalStyle')){
+      const x=d.createElement('style');
+      x.id='v118InnerFinalStyle';
+      x.textContent=`
+      @media(max-width:700px){
+        .wrap{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+        .mobile-dock{
+          display:grid!important;
+          grid-template-columns:repeat(5,minmax(0,1fr))!important;
+          position:fixed!important;
+          left:0!important;right:0!important;bottom:0!important;top:auto!important;
+          width:100%!important;
+          min-height:76px!important;height:76px!important;
+          margin:0!important;
+          padding:3px 3px max(3px,env(safe-area-inset-bottom,0px))!important;
+          box-sizing:border-box!important;
+          transform:none!important;
+          overflow:visible!important;
+          z-index:2147483000!important;
+        }
+        .mobile-dock .dock-btn{
+          min-width:0!important;
+          height:66px!important;min-height:66px!important;
+          margin:0!important;padding:2px 1px!important;
+          display:flex!important;flex-direction:column!important;
+          align-items:center!important;justify-content:center!important;
+          overflow:visible!important;
+          line-height:1.05!important;
+        }
+        .mobile-dock .dock-camera-ring{
+          position:relative!important;top:-7px!important;
+          width:58px!important;height:58px!important;
+          margin:0 auto -7px!important;
+        }
+      }`;
+      (d.head||d.documentElement).appendChild(x);
+    }
+  };
+  applyV118InnerFinal();
+  [300,800,1600,3200,6000].forEach(ms=>setTimeout(applyV118InnerFinal,ms));
+  try{
+    const v118InnerMo=new MutationObserver(()=>applyV118InnerFinal());
+    v118InnerMo.observe(d.body,{subtree:true,childList:true,characterData:true});
+  }catch{}
+
   const st=d.createElement('style');
   st.textContent=`
   body{background:#f4f8f6!important;color:#17201c!important}
@@ -1166,21 +1230,24 @@ frame.addEventListener('load',async()=>{
   const MANIFEST='./version-v118-test.json';
   const CACHE='mingpai-runtime-long-v1';
   function mount(){
-    let box=document.getElementById('v118StandaloneUpgradeStatus');
+    const frame=document.getElementById('app');
+    let td;
+    try{td=frame?.contentDocument}catch{}
+    if(!td||!td.body)return null;
+    let box=td.getElementById('v118StandaloneUpgradeStatus');
     if(box) return box;
-    box=document.createElement('div');
+    box=td.createElement('div');
     box.id='v118StandaloneUpgradeStatus';
     box.textContent='版本检查：正在检查在线版本…';
-    box.style.cssText='margin:8px auto;padding:9px 11px;max-width:1180px;border-radius:10px;background:#fff8df;color:#765a00;border:1px solid #ecd98a;font-size:14px;line-height:1.45;box-sizing:border-box';
-    const wrap=document.querySelector('.wrap');
-    const target=document.getElementById('fieldRuntimeStatus')||document.getElementById('queueStatus');
+    box.style.cssText='margin:6px 0;padding:8px 10px;border-radius:8px;background:#fff8df;color:#765a00;border:1px solid #ecd98a;font-size:14px;line-height:1.4;box-sizing:border-box';
+    const target=td.getElementById('fieldRuntimeStatus')||td.getElementById('progress')||td.getElementById('queueStatus');
     if(target?.parentNode) target.parentNode.insertBefore(box,target.nextSibling);
-    else if(wrap) wrap.insertBefore(box,wrap.children[1]||null);
-    else document.body.prepend(box);
+    else (td.querySelector('.wrap')||td.body).prepend(box);
     return box;
   }
   function say(msg,kind='ok'){
-    const box=mount();
+    let box=mount();
+    if(!box){setTimeout(()=>say(msg,kind),300);return;}
     box.textContent=msg;
     if(kind==='error'){
       box.style.background='#fff1f0'; box.style.color='#a33a32'; box.style.borderColor='#efc3bd';
@@ -1248,71 +1315,6 @@ frame.addEventListener('load',async()=>{
 })();
 </script>
 
-
-<style id="v118-final-mobile-dock">
-@media (max-width:700px){
-  html,body{padding-bottom:0!important}
-  .wrap{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
-  .mobile-dock{
-    display:grid!important;
-    grid-template-columns:repeat(5,minmax(0,1fr))!important;
-    position:fixed!important;
-    left:0!important;right:0!important;bottom:0!important;top:auto!important;
-    width:100%!important;
-    height:76px!important;min-height:76px!important;
-    margin:0!important;
-    padding:4px 4px max(4px,env(safe-area-inset-bottom,0px))!important;
-    box-sizing:border-box!important;
-    overflow:visible!important;
-    transform:none!important;
-    z-index:2147483000!important;
-  }
-  .mobile-dock .dock-btn{
-    min-width:0!important;
-    height:66px!important;min-height:66px!important;
-    padding:2px 1px!important;margin:0!important;
-    display:flex!important;flex-direction:column!important;
-    align-items:center!important;justify-content:center!important;
-    line-height:1.05!important;overflow:visible!important;
-  }
-  .mobile-dock .dock-icon{line-height:1!important;margin:0 0 2px!important}
-  .mobile-dock .dock-camera-ring{
-    position:relative!important;
-    top:-8px!important;
-    width:58px!important;height:58px!important;
-    margin:0 auto -8px!important;
-  }
-}
-</style>
-<script id="v118-final-footer-text">
-(()=>{
-  const SHORT='照片和记录保存在当前浏览器；删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载Excel留档。';
-  function fixTextNodes(){
-    const root=document.body||document.documentElement;
-    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
-    let n;
-    while((n=walker.nextNode())){
-      const t=n.nodeValue||'';
-      if(t.includes('OCR 与智能分类均需人工复核')){
-        n.nodeValue=SHORT;
-        continue;
-      }
-      if(t.includes('照片缩略图和审核记录保存在当前浏览器')){
-        n.nodeValue=SHORT;
-        continue;
-      }
-      if(t.includes('版本：') && /v1\.18-test\.1|v1\.18 test\.1/.test(t)){
-        n.nodeValue=t.replace(/v1\.18-test\.1/g,'v1.18-test.2').replace(/v1\.18 test\.1/g,'v1.18 test.2');
-      }
-    }
-  }
-  const run=()=>{try{fixTextNodes()}catch{}};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
-  [250,700,1500,3000,6000].forEach(ms=>setTimeout(run,ms));
-  const mo=new MutationObserver(()=>run());
-  setTimeout(()=>{try{mo.observe(document.body||document.documentElement,{subtree:true,childList:true,characterData:true})}catch{}},100);
-})();
-</script>
 
 </body>
 </html>
