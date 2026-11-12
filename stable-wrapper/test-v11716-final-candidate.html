@@ -1111,7 +1111,7 @@ frame.addEventListener('load',async()=>{
   const compactDiagnostics=()=>{
     const box=d.getElementById('adaptiveOcrStatusV117');
     if(box&&!box.dataset.collapsedV1171){box.dataset.collapsedV1171='1';const det=d.createElement('details');det.innerHTML='<summary style="cursor:pointer;font-weight:700">识别诊断（需要时点击展开）</summary>';box.parentNode.insertBefore(det,box);det.appendChild(box);box.style.marginTop='7px';}
-    d.querySelectorAll('p,.hint,small').forEach(el=>{const t=(el.textContent||'').trim();if(t.includes('OCR 与智能分类均需人工复核'))el.textContent='请人工复核型号和编号 · 已确认记录自动同步飞书 · v1.17';else if(t.includes('版本： v1.16')||t.includes('版本：v1.16'))el.textContent=t.replace(/v1\.16/g,'v1.17');});
+    d.querySelectorAll('p,.hint,small').forEach(el=>{const t=(el.textContent||'').trim();if(t.includes('OCR 与智能分类均需人工复核')||t.includes('请人工复核型号和编号'))el.textContent='照片和记录保存在当前浏览器；删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载Excel留档。';else if(t.includes('版本： v1.16')||t.includes('版本：v1.16'))el.textContent=t.replace(/v1\.16/g,'v1.17');});
   };
   setTimeout(compactDiagnostics,800);setTimeout(compactDiagnostics,1800);
 
