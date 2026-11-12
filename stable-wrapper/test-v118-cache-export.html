@@ -1223,5 +1223,93 @@ frame.addEventListener('load',async()=>{
   new MutationObserver(paint).observe(d.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
 });
 </script>
+
+<script id="v118-upgrade-probe">
+(()=> {
+  const MANIFEST='./version-v118-test.json';
+  const CACHE='mingpai-runtime-long-v1';
+  function mount(){
+    let box=document.getElementById('v118StandaloneUpgradeStatus');
+    if(box) return box;
+    box=document.createElement('div');
+    box.id='v118StandaloneUpgradeStatus';
+    box.textContent='版本检查：正在检查在线版本…';
+    box.style.cssText='margin:8px auto;padding:9px 11px;max-width:1180px;border-radius:10px;background:#fff8df;color:#765a00;border:1px solid #ecd98a;font-size:14px;line-height:1.45;box-sizing:border-box';
+    const wrap=document.querySelector('.wrap');
+    const target=document.getElementById('fieldRuntimeStatus')||document.getElementById('queueStatus');
+    if(target?.parentNode) target.parentNode.insertBefore(box,target.nextSibling);
+    else if(wrap) wrap.insertBefore(box,wrap.children[1]||null);
+    else document.body.prepend(box);
+    return box;
+  }
+  function say(msg,kind='ok'){
+    const box=mount();
+    box.textContent=msg;
+    if(kind==='error'){
+      box.style.background='#fff1f0'; box.style.color='#a33a32'; box.style.borderColor='#efc3bd';
+    }else if(kind==='work'){
+      box.style.background='#fff8df'; box.style.color='#765a00'; box.style.borderColor='#ecd98a';
+    }else{
+      box.style.background='#eefaf5'; box.style.color='#176b56'; box.style.borderColor='#cfeadf';
+    }
+  }
+  async function has(rel){
+    try{
+      const c=await caches.open(CACHE);
+      const key=new Request(new URL('./runtime/'+rel,location.href),{method:'GET'});
+      return !!(await c.match(key));
+    }catch{return false}
+  }
+  async function prefetch(sw,ver,files){
+    return new Promise((resolve,reject)=>{
+      const ch=new MessageChannel();
+      const timer=setTimeout(()=>reject(new Error('后台缓存等待超时')),90000);
+      ch.port1.onmessage=e=>{
+        const x=e.data||{};
+        if(x.type==='PREFETCH_VERSION_DONE'&&String(x.version||'')===ver){
+          clearTimeout(timer);
+          x.ok?resolve(x):reject(new Error(x.error||'后台缓存失败'));
+        }
+      };
+      sw.postMessage({type:'PREFETCH_VERSION',version:ver,runtimeFiles:files},[ch.port2]);
+    });
+  }
+  async function run(){
+    mount();
+    if(!navigator.onLine){say('版本检查：当前离线，继续使用本地缓存版本。','work');return;}
+    if(!('serviceWorker' in navigator)){say('版本检查：当前浏览器不支持 Service Worker。','error');return;}
+    try{
+      // Explicitly register the v1.18 worker so this probe does not depend on earlier page scripts.
+      const reg=await navigator.serviceWorker.register('./coi-serviceworker.js',{scope:'./'});
+      await navigator.serviceWorker.ready;
+      const r=await fetch(MANIFEST+'?probe='+Date.now(),{cache:'no-store'});
+      if(!r.ok) throw new Error('版本清单请求失败 '+r.status);
+      const m=await r.json();
+      const ver=String(m.version||'').trim();
+      const files=Array.isArray(m.runtimeFiles)?m.runtimeFiles:[m.mainJs].filter(Boolean);
+      const main=String(m.mainJs||files[0]||'');
+      if(!ver||!main) throw new Error('版本清单内容不完整');
+      if(await has(main)){
+        localStorage.setItem('mingpai-v118-manifest-version',ver);
+        say('在线版本检查正常：'+ver+' 已在本地缓存。');
+        return;
+      }
+      say('检测到新版本 '+ver+'，正在后台缓存主程序…','work');
+      const sw=reg.active||reg.waiting||reg.installing||navigator.serviceWorker.controller;
+      if(!sw) throw new Error('Service Worker 尚未就绪');
+      await prefetch(sw,ver,files);
+      if(!(await has(main))) throw new Error('后台任务完成，但未找到新主程序缓存');
+      localStorage.setItem('mingpai-v118-manifest-version',ver);
+      say('新版本 '+ver+' 已后台缓存完成；当前页面继续使用 test.1。');
+    }catch(err){
+      say('版本检查失败：'+(err?.message||String(err)),'error');
+      console.error('v1.18 standalone upgrade probe',err);
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(run,300));
+  else setTimeout(run,300);
+})();
+</script>
+
 </body>
 </html>
