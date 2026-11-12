@@ -71,7 +71,7 @@ frame.addEventListener('load',async()=>{
       while((n=walker.nextNode())){
         const t=n.nodeValue||'';
         if(t.includes('OCR 与智能分类均需人工复核')||t.includes('照片缩略图和审核记录保存在当前浏览器')){
-          n.nodeValue=V118_SHORT_FOOTER+' 版本：v1.18-test.2';
+          n.nodeValue=V118_SHORT_FOOTER;
           continue;
         }
         if(/v1\.18-test\.1|v1\.18 test\.1/.test(t)){
@@ -85,16 +85,16 @@ frame.addEventListener('load',async()=>{
       x.id='v118InnerFinalStyle';
       x.textContent=`
       @media(max-width:700px){
-        .wrap{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+        .wrap{padding-bottom:72px!important}
         .mobile-dock{
           display:grid!important;
           grid-template-columns:repeat(5,minmax(0,1fr))!important;
           position:fixed!important;
           left:0!important;right:0!important;bottom:0!important;top:auto!important;
           width:100%!important;
-          min-height:76px!important;height:76px!important;
+          min-height:64px!important;height:64px!important;
           margin:0!important;
-          padding:3px 3px max(3px,env(safe-area-inset-bottom,0px))!important;
+          padding:2px 3px max(2px,env(safe-area-inset-bottom,0px))!important;
           box-sizing:border-box!important;
           transform:none!important;
           overflow:visible!important;
@@ -102,7 +102,7 @@ frame.addEventListener('load',async()=>{
         }
         .mobile-dock .dock-btn{
           min-width:0!important;
-          height:66px!important;min-height:66px!important;
+          height:58px!important;min-height:58px!important;
           margin:0!important;padding:2px 1px!important;
           display:flex!important;flex-direction:column!important;
           align-items:center!important;justify-content:center!important;
@@ -110,9 +110,7 @@ frame.addEventListener('load',async()=>{
           line-height:1.05!important;
         }
         .mobile-dock .dock-camera-ring{
-          position:relative!important;top:-7px!important;
-          width:58px!important;height:58px!important;
-          margin:0 auto -7px!important;
+          position:relative!important;top:-8px!important;width:58px!important;height:58px!important;margin:0 auto -10px!important;
         }
       }`;
       (d.head||d.documentElement).appendChild(x);
@@ -1296,6 +1294,7 @@ frame.addEventListener('load',async()=>{
       if(await has(main)){
         localStorage.setItem('mingpai-v118-manifest-version',ver);
         say('在线版本检查正常：'+ver+' 已在本地缓存。');
+        setTimeout(()=>{const b=mount(); if(b) b.style.display='none';},3000);
         return;
       }
       say('检测到新版本 '+ver+'，正在后台缓存主程序…','work');
@@ -1305,6 +1304,7 @@ frame.addEventListener('load',async()=>{
       if(!(await has(main))) throw new Error('后台任务完成，但未找到新主程序缓存');
       localStorage.setItem('mingpai-v118-manifest-version',ver);
       say('新版本 '+ver+' 已后台缓存完成；当前页面已是 test.2。');
+      setTimeout(()=>{const b=mount(); if(b) b.style.display='none';},3000);
     }catch(err){
       say('版本检查失败：'+(err?.message||String(err)),'error');
       console.error('v1.18 standalone upgrade probe',err);
