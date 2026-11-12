@@ -1109,38 +1109,6 @@ frame.addEventListener('load',async()=>{
   };
   setTimeout(installDockStats,250);setTimeout(installDockStats,1000);
   // v1.18: tiny online version manifest check. Large COS files are only prefetched when version changes.
-  const V118_MANIFEST='./version-v118-test.json';
-  const V118_LOCAL_VERSION_KEY='mingpai-v118-manifest-version';
-  async function v118CheckVersion(){
-    if(!navigator.onLine||!('serviceWorker' in navigator))return;
-    try{
-      const r=await fetch(V118_MANIFEST+'?t='+Date.now(),{cache:'no-store'});
-      if(!r.ok)return;
-      const m=await r.json(),ver=String(m?.version||'').trim();
-      if(!ver)return;
-      const old=localStorage.getItem(V118_LOCAL_VERSION_KEY)||'';
-      if(old===ver)return;
-      const reg=await navigator.serviceWorker.ready,sw=reg.active||navigator.serviceWorker.controller;
-      if(!sw)return;
-      const files=Array.isArray(m.runtimeFiles)?m.runtimeFiles:[m.mainJs].filter(Boolean);
-      const onMsg=e=>{
-        const x=e.data||{};
-        if(x.type==='PREFETCH_VERSION_DONE'&&String(x.version||'')===ver){
-          navigator.serviceWorker.removeEventListener('message',onMsg);
-          if(x.ok){
-            localStorage.setItem(V118_LOCAL_VERSION_KEY,ver);
-            UAS('检测到新版本，主程序已后台缓存；下次刷新后使用。',3200);
-          }
-        }
-      };
-      navigator.serviceWorker.addEventListener('message',onMsg);
-      sw.postMessage({type:'PREFETCH_VERSION',version:ver,runtimeFiles:files});
-      setTimeout(()=>navigator.serviceWorker.removeEventListener('message',onMsg),90000);
-    }catch(e){console.warn('v1.18 version check skipped',e)}
-  }
-  setTimeout(v118CheckVersion,1800);
-  window.addEventListener('online',()=>setTimeout(v118CheckVersion,500));
-
   // v1.18 test.2: top metadata inputs use Done/Confirm instead of Next.
   const v118TopDone=()=>{
     ['unitName','dept','operatorName'].forEach(id=>{
@@ -1149,35 +1117,11 @@ frame.addEventListener('load',async()=>{
       el.enterKeyHint='done';
       if(!el.dataset.v118Done){
         el.dataset.v118Done='1';
-        el.addEventListener('keydown',e=>{
-          if(e.key==='Enter'){e.preventDefault();el.blur();}
-        });
+        el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();el.blur();}});
       }
     });
   };
-
-  const V118_FOOTER='照片和记录保存在当前浏览器；删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载Excel留档。';
-  const v118FixFooter=()=>{
-    v118TopDone();
-    const walker=d.createTreeWalker(d.body||d.documentElement,NodeFilter.SHOW_TEXT);
-    let n;
-    while((n=walker.nextNode())){
-      const t=(n.nodeValue||'').trim();
-      if(t.includes('OCR 与智能分类均需人工复核')||t.includes('照片缩略图和审核记录保存在当前浏览器')){
-        const p=n.parentElement;
-        if(p && !p.closest('textarea,input,button,select')) p.textContent=V118_FOOTER;
-      }
-    }
-  };
-  v118FixFooter();
-  setTimeout(v118FixFooter,400);
-  setTimeout(v118FixFooter,1200);
-  setTimeout(v118FixFooter,3000);
-  try{
-    const mo=new MutationObserver(()=>v118FixFooter());
-    mo.observe(d.body||d.documentElement,{childList:true,subtree:true,characterData:true});
-  }catch{}
-
+  v118TopDone();setTimeout(v118TopDone,400);setTimeout(v118TopDone,1200);
   const compactDiagnostics=()=>{
     const box=d.getElementById('adaptiveOcrStatusV117');
     if(box&&!box.dataset.collapsedV1171){box.dataset.collapsedV1171='1';const det=d.createElement('details');det.innerHTML='<summary style="cursor:pointer;font-weight:700">识别诊断（需要时点击展开）</summary>';box.parentNode.insertBefore(det,box);det.appendChild(box);box.style.marginTop='7px';}
@@ -1215,6 +1159,111 @@ frame.addEventListener('load',async()=>{
   paint();
   new MutationObserver(paint).observe(d.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
 });
+</script>
+
+<script id="v118-upgrade-probe">
+(()=> {
+  const MANIFEST='./version-v118-test.json';
+  const CACHE='mingpai-runtime-long-v1';
+  function mount(){
+    let box=document.getElementById('v118StandaloneUpgradeStatus');
+    if(box) return box;
+    box=document.createElement('div');
+    box.id='v118StandaloneUpgradeStatus';
+    box.textContent='版本检查：正在检查在线版本…';
+    box.style.cssText='margin:8px auto;padding:9px 11px;max-width:1180px;border-radius:10px;background:#fff8df;color:#765a00;border:1px solid #ecd98a;font-size:14px;line-height:1.45;box-sizing:border-box';
+    const wrap=document.querySelector('.wrap');
+    const target=document.getElementById('fieldRuntimeStatus')||document.getElementById('queueStatus');
+    if(target?.parentNode) target.parentNode.insertBefore(box,target.nextSibling);
+    else if(wrap) wrap.insertBefore(box,wrap.children[1]||null);
+    else document.body.prepend(box);
+    return box;
+  }
+  function say(msg,kind='ok'){
+    const box=mount();
+    box.textContent=msg;
+    if(kind==='error'){
+      box.style.background='#fff1f0'; box.style.color='#a33a32'; box.style.borderColor='#efc3bd';
+    }else if(kind==='work'){
+      box.style.background='#fff8df'; box.style.color='#765a00'; box.style.borderColor='#ecd98a';
+    }else{
+      box.style.background='#eefaf5'; box.style.color='#176b56'; box.style.borderColor='#cfeadf';
+    }
+  }
+  async function has(rel){
+    try{
+      const c=await caches.open(CACHE);
+      const key=new Request(new URL('./runtime/'+rel,location.href),{method:'GET'});
+      return !!(await c.match(key));
+    }catch{return false}
+  }
+  async function prefetch(sw,ver,files){
+    return new Promise((resolve,reject)=>{
+      const ch=new MessageChannel();
+      const timer=setTimeout(()=>reject(new Error('后台缓存等待超时')),90000);
+      ch.port1.onmessage=e=>{
+        const x=e.data||{};
+        if(x.type==='PREFETCH_VERSION_DONE'&&String(x.version||'')===ver){
+          clearTimeout(timer);
+          x.ok?resolve(x):reject(new Error(x.error||'后台缓存失败'));
+        }
+      };
+      sw.postMessage({type:'PREFETCH_VERSION',version:ver,runtimeFiles:files},[ch.port2]);
+    });
+  }
+  async function run(){
+    mount();
+    if(!navigator.onLine){say('版本检查：当前离线，继续使用本地缓存版本。','work');return;}
+    if(!('serviceWorker' in navigator)){say('版本检查：当前浏览器不支持 Service Worker。','error');return;}
+    try{
+      // Explicitly register the v1.18 worker so this probe does not depend on earlier page scripts.
+      const reg=await navigator.serviceWorker.register('./coi-serviceworker.js',{scope:'./'});
+      await navigator.serviceWorker.ready;
+      const r=await fetch(MANIFEST+'?probe='+Date.now(),{cache:'no-store'});
+      if(!r.ok) throw new Error('版本清单请求失败 '+r.status);
+      const m=await r.json();
+      const ver=String(m.version||'').trim();
+      const files=Array.isArray(m.runtimeFiles)?m.runtimeFiles:[m.mainJs].filter(Boolean);
+      const main=String(m.mainJs||files[0]||'');
+      if(!ver||!main) throw new Error('版本清单内容不完整');
+      if(await has(main)){
+        localStorage.setItem('mingpai-v118-manifest-version',ver);
+        say('在线版本检查正常：'+ver+' 已在本地缓存。');
+        return;
+      }
+      say('检测到新版本 '+ver+'，正在后台缓存主程序…','work');
+      const sw=reg.active||reg.waiting||reg.installing||navigator.serviceWorker.controller;
+      if(!sw) throw new Error('Service Worker 尚未就绪');
+      await prefetch(sw,ver,files);
+      if(!(await has(main))) throw new Error('后台任务完成，但未找到新主程序缓存');
+      localStorage.setItem('mingpai-v118-manifest-version',ver);
+      say('新版本 '+ver+' 已后台缓存完成；当前页面已是 test.2。');
+    }catch(err){
+      say('版本检查失败：'+(err?.message||String(err)),'error');
+      console.error('v1.18 standalone upgrade probe',err);
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(run,300));
+  else setTimeout(run,300);
+})();
+</script>
+
+<script id="v118-footer-final">
+(()=> {
+ const TEXT='照片和记录保存在当前浏览器；删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载Excel留档。';
+ function fix(){
+   const nodes=[...document.querySelectorAll('p,.hint,small,footer,div')];
+   for(const el of nodes){
+     const t=(el.textContent||'').trim();
+     if(t.length<320&&(t.includes('OCR 与智能分类均需人工复核')||t.includes('照片缩略图和审核记录保存在当前浏览器'))){
+       el.textContent=TEXT;
+     }
+   }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix); else fix();
+ setTimeout(fix,500);setTimeout(fix,1500);setTimeout(fix,3500);
+ new MutationObserver(fix).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+})();
 </script>
 </body>
 </html>
