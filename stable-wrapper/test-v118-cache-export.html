@@ -1111,6 +1111,49 @@ frame.addEventListener('load',async()=>{
   // v1.18: tiny online version manifest check. Large COS files are only prefetched when version changes.
   const V118_MANIFEST='./version-v118-test.json';
   const V118_LOCAL_VERSION_KEY='mingpai-v118-manifest-version';
+  const V118_RUNTIME_CACHE='mingpai-runtime-long-v1';
+
+  function v118StatusBox(){
+    let box=d.getElementById('v118UpdateStatus');
+    if(box)return box;
+    box=d.createElement('div');
+    box.id='v118UpdateStatus';
+    box.style.cssText='display:none;margin:8px 0;padding:9px 11px;border-radius:10px;background:#eefaf5;color:#176b56;font-size:14px;line-height:1.45;border:1px solid #cfeadf';
+    const anchor=d.getElementById('fieldRuntimeStatus')||d.getElementById('queueStatus')||d.querySelector('.wrap');
+    if(anchor?.parentNode) anchor.parentNode.insertBefore(box,anchor.nextSibling);
+    return box;
+  }
+  function v118ShowStatus(msg,kind='ok'){
+    const box=v118StatusBox();
+    box.style.display='block';
+    box.style.background=kind==='error'?'#fff4f3':'#eefaf5';
+    box.style.color=kind==='error'?'#a33a32':'#176b56';
+    box.style.borderColor=kind==='error'?'#f1cbc6':'#cfeadf';
+    box.textContent=msg;
+  }
+  async function v118HasCached(rel){
+    try{
+      const cache=await caches.open(V118_RUNTIME_CACHE);
+      const key=new Request(new URL('./runtime/'+rel,location.href),{method:'GET'});
+      return !!(await cache.match(key));
+    }catch{return false}
+  }
+  async function v118Prefetch(sw,ver,files){
+    return await new Promise((resolve,reject)=>{
+      const ch=new MessageChannel();
+      let done=false;
+      const timer=setTimeout(()=>{if(!done){done=true;reject(new Error('后台缓存等待超时'))}},90000);
+      ch.port1.onmessage=e=>{
+        if(done)return;
+        const x=e.data||{};
+        if(x.type==='PREFETCH_VERSION_DONE'&&String(x.version||'')===ver){
+          done=true;clearTimeout(timer);
+          x.ok?resolve(x):reject(new Error(x.error||'后台缓存失败'));
+        }
+      };
+      sw.postMessage({type:'PREFETCH_VERSION',version:ver,runtimeFiles:files},[ch.port2]);
+    });
+  }
   async function v118CheckVersion(){
     if(!navigator.onLine||!('serviceWorker' in navigator))return;
     try{
@@ -1118,27 +1161,28 @@ frame.addEventListener('load',async()=>{
       if(!r.ok)return;
       const m=await r.json(),ver=String(m?.version||'').trim();
       if(!ver)return;
-      const old=localStorage.getItem(V118_LOCAL_VERSION_KEY)||'';
-      if(old===ver)return;
-      const reg=await navigator.serviceWorker.ready,sw=reg.active||navigator.serviceWorker.controller;
-      if(!sw)return;
       const files=Array.isArray(m.runtimeFiles)?m.runtimeFiles:[m.mainJs].filter(Boolean);
-      const onMsg=e=>{
-        const x=e.data||{};
-        if(x.type==='PREFETCH_VERSION_DONE'&&String(x.version||'')===ver){
-          navigator.serviceWorker.removeEventListener('message',onMsg);
-          if(x.ok){
-            localStorage.setItem(V118_LOCAL_VERSION_KEY,ver);
-            UAS('检测到新版本，主程序已后台缓存；下次刷新后使用。',3200);
-          }
-        }
-      };
-      navigator.serviceWorker.addEventListener('message',onMsg);
-      sw.postMessage({type:'PREFETCH_VERSION',version:ver,runtimeFiles:files});
-      setTimeout(()=>navigator.serviceWorker.removeEventListener('message',onMsg),90000);
-    }catch(e){console.warn('v1.18 version check skipped',e)}
+      const main=String(m.mainJs||files[0]||'');
+      const cached=main?await v118HasCached(main):false;
+      const old=localStorage.getItem(V118_LOCAL_VERSION_KEY)||'';
+      if(old===ver&&cached){
+        v118ShowStatus('在线版本检查正常：'+ver+' 已在本地缓存。');
+        return;
+      }
+      v118ShowStatus('检测到新版本 '+ver+'，正在后台缓存主程序…');
+      const reg=await navigator.serviceWorker.ready,sw=reg.active||navigator.serviceWorker.controller;
+      if(!sw)throw new Error('Service Worker 尚未就绪');
+      await v118Prefetch(sw,ver,files);
+      const cachedAfter=main?await v118HasCached(main):true;
+      if(!cachedAfter)throw new Error('后台任务已完成，但未在本地缓存中找到新主程序');
+      localStorage.setItem(V118_LOCAL_VERSION_KEY,ver);
+      v118ShowStatus('新版本 '+ver+' 已后台缓存完成；当前页面继续使用旧版，切换入口后可直接使用新版本。');
+    }catch(e){
+      v118ShowStatus('在线版本检查：'+(e?.message||String(e)),'error');
+      console.warn('v1.18 version check failed',e);
+    }
   }
-  setTimeout(v118CheckVersion,1800);
+  setTimeout(v118CheckVersion,1200);
   window.addEventListener('online',()=>setTimeout(v118CheckVersion,500));
 
   const compactDiagnostics=()=>{
