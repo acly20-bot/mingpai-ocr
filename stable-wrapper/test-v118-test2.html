@@ -85,24 +85,24 @@ frame.addEventListener('load',async()=>{
       x.id='v118InnerFinalStyle';
       x.textContent=`
       @media(max-width:700px){
-        .wrap{padding-bottom:72px!important}
+        .wrap{padding-bottom:62px!important}
         .mobile-dock{
           display:grid!important;
           grid-template-columns:repeat(5,minmax(0,1fr))!important;
           position:fixed!important;
           left:0!important;right:0!important;bottom:0!important;top:auto!important;
           width:100%!important;
-          min-height:64px!important;height:64px!important;
+          min-height:50px!important;height:54px!important;
           margin:0!important;
-          padding:2px 3px max(2px,env(safe-area-inset-bottom,0px))!important;
+          padding:1px 3px max(1px,env(safe-area-inset-bottom,0px))!important;
           box-sizing:border-box!important;
           transform:none!important;
           overflow:visible!important;
-          z-index:2147483000!important;
+          z-index:90000!important;
         }
         .mobile-dock .dock-btn{
           min-width:0!important;
-          height:58px!important;min-height:58px!important;
+          height:50px!important;min-height:50px!important;
           margin:0!important;padding:2px 1px!important;
           display:flex!important;flex-direction:column!important;
           align-items:center!important;justify-content:center!important;
@@ -110,7 +110,7 @@ frame.addEventListener('load',async()=>{
           line-height:1.05!important;
         }
         .mobile-dock .dock-camera-ring{
-          position:relative!important;top:-8px!important;width:58px!important;height:58px!important;margin:0 auto -10px!important;
+          position:relative!important;top:-6px!important;width:54px!important;height:54px!important;margin:0 auto -8px!important;
         }
       }`;
       (d.head||d.documentElement).appendChild(x);
@@ -118,6 +118,32 @@ frame.addEventListener('load',async()=>{
   };
   applyV118InnerFinal();
   [300,800,1600,3200,6000].forEach(ms=>setTimeout(applyV118InnerFinal,ms));
+
+  const v118ModalDockGuard=()=>{
+    const dock=d.querySelector('.mobile-dock');
+    if(!dock)return;
+    const vw=Math.max(d.documentElement.clientWidth||0,innerWidth||0), vh=Math.max(d.documentElement.clientHeight||0,innerHeight||0);
+    let modalOpen=false;
+    for(const el of [...d.body.children]){
+      if(el===dock || el.closest?.('.mobile-dock'))continue;
+      const cs=getComputedStyle(el);
+      if(cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity||1)===0)continue;
+      if(cs.position!=='fixed')continue;
+      const r=el.getBoundingClientRect();
+      const covers=(r.width>=vw*.72 && r.height>=vh*.55);
+      const dialogLike=el.id==='fieldStatsModalV1171'||el.getAttribute('role')==='dialog'||/modal|dialog|overlay|crop/i.test(el.className||'')||/modal|dialog|overlay|crop/i.test(el.id||'');
+      if(covers||dialogLike){modalOpen=true;break;}
+    }
+    dock.style.setProperty('display',modalOpen?'none':'grid','important');
+  };
+  v118ModalDockGuard();
+  try{
+    const v118DockMo=new MutationObserver(()=>requestAnimationFrame(v118ModalDockGuard));
+    v118DockMo.observe(d.body,{subtree:true,childList:true,attributes:true,attributeFilter:['style','class','hidden','open']});
+  }catch{}
+  d.addEventListener('click',()=>setTimeout(v118ModalDockGuard,0),true);
+  d.addEventListener('transitionend',v118ModalDockGuard,true);
+
   try{
     const v118InnerMo=new MutationObserver(()=>applyV118InnerFinal());
     v118InnerMo.observe(d.body,{subtree:true,childList:true,characterData:true});
