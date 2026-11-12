@@ -62,7 +62,7 @@ frame.addEventListener('load',async()=>{
   setTimeout(finalCandidateUi,500);
   setTimeout(finalCandidateUi,1500);
 
-  // v1.18 test.3 final iframe-side UI fixes.
+  // v1.18 test.3.1 final iframe-side UI fixes.
   const V118_SHORT_FOOTER='照片和记录保存在当前浏览器；删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载Excel留档。';
   const applyV118InnerFinal=()=>{
     // Footer/version are rendered inside core.html, so modify the iframe document directly.
@@ -76,7 +76,7 @@ frame.addEventListener('load',async()=>{
           continue;
         }
         if(/v1\.18-test\.1|v1\.18 test\.1/.test(t)){
-          n.nodeValue=t.replace(/v1\.18-test\.1/g,'v1.18-test.3').replace(/v1\.18 test\.1/g,'v1.18 test.3');
+          n.nodeValue=t.replace(/v1\.18-test\.1/g,'v1.18-test.3.1').replace(/v1\.18 test\.1/g,'v1.18 test.3.1');
         }
       }
     }catch{}
@@ -1266,7 +1266,7 @@ frame.addEventListener('load',async()=>{
   const cardsObserver=new MutationObserver(()=>decorateCards());
   const list=d.getElementById('recordList');if(list)cardsObserver.observe(list,{childList:true,subtree:true});
   decorateCards();
-  // v1.18-test.3 test: compact field UI + inline statistics
+  // v1.18-test.3.1 test: compact field UI + inline statistics
   async function openFieldStats(){
     d.getElementById('fieldStatsModalV1171')?.remove();
     const rows=(await allRecords()).filter(r=>r&&r.name);
@@ -1316,7 +1316,7 @@ frame.addEventListener('load',async()=>{
   };
   setTimeout(installDockStats,250);setTimeout(installDockStats,1000);
   // v1.18: tiny online version manifest check. Large COS files are only prefetched when version changes.
-  // v1.18 test.3: top metadata inputs use Done/Confirm instead of Next.
+  // v1.18 test.3.1: top metadata inputs use Done/Confirm instead of Next.
   const v118TopDone=()=>{
     ['unitName','dept','operatorName'].forEach(id=>{
       const el=d.getElementById(id); if(!el) return;
