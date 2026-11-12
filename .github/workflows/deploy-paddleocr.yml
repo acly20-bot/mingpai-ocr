@@ -71,8 +71,8 @@ jobs:
 
           # Test entry only: point to the v1.18 COS test bundle.
           sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test2.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.18-test.1/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test1-coi-reload/g' app/test-adaptive/core.html
+          sed -i 's/1\.17/1.18-test.2/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test2-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
