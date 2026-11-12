@@ -1,9 +1,9 @@
 {
-  "version": "1.18-test.1",
-  "publishedAt": "2026-11-12T16:00:00+08:00",
-  "mainJs": "index-B81hyAdU-v118-cache-test.js",
+  "version": "1.18-test.2",
+  "publishedAt": "2026-11-12T17:40:00+08:00",
+  "mainJs": "index-B81hyAdU-v118-test2.js",
   "runtimeFiles": [
-    "index-B81hyAdU-v118-cache-test.js"
+    "index-B81hyAdU-v118-test2.js"
   ],
   "rules": "recognition-rules-v11714-test.json"
 }
