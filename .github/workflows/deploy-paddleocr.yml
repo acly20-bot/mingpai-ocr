@@ -85,26 +85,60 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Inspect test.3.1 main bundle for test.3.2
+      - name: Build v1.18 test.3.2 COS bundle
         run: |
           python - <<'PY'
-          import urllib.request
-          u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test31.js'
-          data=urllib.request.urlopen(u,timeout=60).read().decode('utf-8','replace')
-          print('BUNDLE_LEN',len(data))
-          pats=['上次识别被中断','queueStatus','queued','识别失败','准备就绪','initPaddle','loadRecords','getAll','queueFailed=false','queueStatus="done"','enqueueExistingV9','v1183ResumeInterruptedQueue()','await AI()','runPhotoQueueV9']
-          for pat in pats:
-              print('\\n###',pat)
-              pos=0; n=0
-              while True:
-                  i=data.find(pat,pos)
-                  if i<0 or n>=12: break
-                  print(data[max(0,i-700):i+1100].replace('\\n',' '))
-                  pos=i+len(pat);n+=1
-          print('\\n### BUNDLE_TAIL')
-          print(data[-22000:].replace('\\n',' '))
-          PY
+          import urllib.request, pathlib, zipfile, hashlib
+          src='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test31.js'
+          data=urllib.request.urlopen(src,timeout=90).read().decode('utf-8')
+          orig=data
+          def rep(old,new,label,count=None):
+              global data
+              n=data.count(old)
+              if n==0: raise SystemExit(f'PATCH NOT FOUND: {label}')
+              if count is not None and n!=count: raise SystemExit(f'PATCH COUNT {label}: expected {count}, got {n}')
+              data=data.replace(old,new)
+              print('PATCH',label,n)
 
+          rep('e.startsWith("已加入识别队列")||e.startsWith("识别中：")',
+              'e.startsWith("已加入识别队列")||e.startsWith("识别中：")||e.startsWith("上次识别被中断，已自动重新排队")',
+              'resume-stale-requeued',1)
+          rep('i.status="pending",i.queueFailed=!1,(i.feishuRecordId||i.remoteRecordId)&&(i.syncStatus="pending"),i.error=`已加入识别队列：${h}`',
+              'i.status="pending",i.queueFailed=!1,i.queueStatus="queued",i.failureReason="",i.queueRecoveredAt=0,(i.feishuRecordId||i.remoteRecordId)&&(i.syncStatus="pending"),i.error=`已加入识别队列：${h}`',
+              'retry-clear-old-failure',1)
+          rep('if(U){N.error="";N.queueStatus="done"}',
+              'if(U){N.error="";N.queueStatus="done";N.queueFailed=false;N.failureReason="";N.queueRecoveredAt=0;N.hardSelfHealPending=false}',
+              'queue-success-cleanup',1)
+          rep('if(ok){rec.error="";rec.queueFailed=false;return true}',
+              'if(ok){rec.error="";rec.queueFailed=false;rec.queueStatus="done";rec.failureReason="";rec.queueRecoveredAt=0;rec.hardSelfHealPending=false;return true}',
+              'image-heal-success-cleanup',1)
+          rep('if(healed){N.queueFailed=false;N.error="";UAS("图片读取异常已局部自愈，本张已重新读取并识别成功。",3500)}',
+              'if(healed){N.queueFailed=false;N.error="";N.queueStatus="done";N.failureReason="";N.queueRecoveredAt=0;N.hardSelfHealPending=false;UAS("图片读取异常已局部自愈，本张已重新读取并识别成功。",3500)}',
+              'catch-heal-success-cleanup',1)
+          rep('i.queueFailed=!h,i.thumb=await cg(N),await PA(i)',
+              'i.queueFailed=!h,h&&(i.error="",i.queueStatus="done",i.failureReason="",i.queueRecoveredAt=0,i.hardSelfHealPending=false),i.thumb=await cg(N),await PA(i)',
+              'direct-retry-success-cleanup',1)
+          rep('function nI(i){return i.unitName==null&&(i.unitName=i.batch||""),i.remark==null&&(i.remark=""),i.operatorName==null&&(i.operatorName=""),i.classifyNote==null&&(i.classifyNote=""),i.recognitionSec==null&&(i.recognitionSec=""),i}',
+              'function nI(i){i.unitName==null&&(i.unitName=i.batch||"");i.remark==null&&(i.remark="");i.operatorName==null&&(i.operatorName="");i.classifyNote==null&&(i.classifyNote="");i.recognitionSec==null&&(i.recognitionSec="");const e=String(i.error||"");const hasResult=!!(String(i.raw||"").trim()||String(i.name||"").trim()||String(i.manufacturer||"").trim()||String(i.model||"").trim()||String(i.code||"").trim());if(hasResult&&i.queueFailed===false&&(e.startsWith("上次识别被中断")||e.startsWith("识别中：")||e.startsWith("已加入识别队列"))){i.error="";i.queueStatus="done";i.failureReason="";i.queueRecoveredAt=0;i.hardSelfHealPending=false}return i}',
+              'legacy-success-normalize',1)
+
+          out=pathlib.Path('index-B81hyAdU-v118-test32.js')
+          out.write_text(data,encoding='utf-8')
+          print('SOURCE_LEN',len(orig),'OUTPUT_LEN',len(data))
+          print('SHA256',hashlib.sha256(out.read_bytes()).hexdigest())
+          with zipfile.ZipFile('mingpai-v1.18-test.3.2-COS.zip','w',zipfile.ZIP_DEFLATED) as z:
+              z.write(out,out.name)
+              z.writestr('README.txt','v1.18 test.3.2\nUpload index-B81hyAdU-v118-test32.js to Tencent COS assets/.\nFixes: failure-state cleanup, interrupted retry recovery, legacy stale-success cleanup.\n')
+          PY
+          cp index-B81hyAdU-v118-test32.js /tmp/test32.mjs
+          node --check /tmp/test32.mjs
+
+      - name: Upload v1.18 test.3.2 COS bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18-test.3.2-COS
+          path: mingpai-v1.18-test.3.2-COS.zip
+          retention-days: 7
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
