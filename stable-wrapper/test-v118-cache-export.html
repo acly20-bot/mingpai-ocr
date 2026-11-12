@@ -1059,7 +1059,7 @@ frame.addEventListener('load',async()=>{
   const cardsObserver=new MutationObserver(()=>decorateCards());
   const list=d.getElementById('recordList');if(list)cardsObserver.observe(list,{childList:true,subtree:true});
   decorateCards();
-  // v1.18-test test: compact field UI + inline statistics
+  // v1.18-test.1 test: compact field UI + inline statistics
   async function openFieldStats(){
     d.getElementById('fieldStatsModalV1171')?.remove();
     const rows=(await allRecords()).filter(r=>r&&r.name);
