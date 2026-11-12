@@ -62,11 +62,17 @@ self.addEventListener("message",e=>{
   const d=e.data||{};
   if(d.type==="PREFETCH_VERSION"&&Array.isArray(d.runtimeFiles)){
     e.waitUntil((async()=>{
+      const reply=msg=>{
+        try{
+          if(e.ports&&e.ports[0]) e.ports[0].postMessage(msg);
+          else e.source?.postMessage?.(msg);
+        }catch{}
+      };
       try{
         for(const rel of d.runtimeFiles)await fetchRuntimeByRel(String(rel||""));
-        e.source?.postMessage?.({type:"PREFETCH_VERSION_DONE",version:d.version||"",ok:true});
+        reply({type:"PREFETCH_VERSION_DONE",version:d.version||"",ok:true});
       }catch(err){
-        e.source?.postMessage?.({type:"PREFETCH_VERSION_DONE",version:d.version||"",ok:false,error:err?.message||String(err)});
+        reply({type:"PREFETCH_VERSION_DONE",version:d.version||"",ok:false,error:err?.message||String(err)});
       }
     })());
   }
