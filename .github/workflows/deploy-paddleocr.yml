@@ -85,6 +85,18 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
+      - name: Inspect test.3.2.5 WeChat retry scroll
+        run: |
+          python - <<'PY'
+          import urllib.request,re
+          url='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test325.js'
+          s=urllib.request.urlopen(url,timeout=90).read().decode('utf-8')
+          print('JS_BYTES',len(s))
+          for term in ['v151KeepScroll','enqueueExistingV9','focusRecordTop','__v118FocusRecordTop','function AI(','function CI(','photoQueueV9.shift','photoQueueV9.push','v151RestoreRecord','scrollTo(','scrollIntoView(']:
+              loc=[m.start() for m in re.finditer(re.escape(term),s)]
+              print('\\n###',term,'COUNT',len(loc))
+              for pos in loc[:12]: print('SNIPPET',pos,repr(s[max(0,pos-650):pos+1100]))
+          PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
