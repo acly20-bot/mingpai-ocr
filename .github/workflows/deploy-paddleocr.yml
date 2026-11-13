@@ -71,7 +71,7 @@ jobs:
 
           # Test entry only: point to the v1.18 COS test bundle.
           sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test326.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.18-test.3.2.8/g' app/test-adaptive/core.html
+          sed -i 's/1\.17/1.18-test.3.2.9/g' app/test-adaptive/core.html
           sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test326-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
@@ -79,7 +79,7 @@ jobs:
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611131910-v118-test328')
+                      './core.html?field=v12&rev=202611132020-v118-test329')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
                       '<title>设备铭牌识别｜v1.18 test.3.2.7</title>')
           p.write_text(s,encoding='utf-8')
