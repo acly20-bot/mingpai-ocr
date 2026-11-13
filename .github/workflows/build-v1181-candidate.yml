@@ -1,0 +1,43 @@
+name: Build Mingpai v1.18.1 candidate COS bundle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-v1181-candidate.yml'
+      - 'scripts/build-v1181-candidate.py'
+      - 'scripts/recognition-rules-v1181-additions.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch validated v1.18 main program and current rules from COS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import urlopen
+          from hashlib import sha256
+          base='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'
+          for name in ('index-B81hyAdU-v118-final-candidate.js','recognition-rules-v11714-test.json'):
+              data=urlopen(base+name,timeout=120).read()
+              Path(name).write_bytes(data)
+              print(name,len(data),sha256(data).hexdigest())
+          PY
+
+      - name: Patch and test v1.18.1
+        run: python scripts/build-v1181-candidate.py
+
+      - name: Upload verified two-file COS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18.1-candidate-COS
+          path: mingpai-v1.18.1-candidate-COS.zip
+          retention-days: 30
