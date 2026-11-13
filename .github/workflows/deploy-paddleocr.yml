@@ -61,7 +61,7 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.3 entry
+      - name: Build v1.18 test.3.2.4 entry
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
@@ -70,70 +70,21 @@ jobs:
           cp stable-wrapper/version-v118-test.json app/test-adaptive/version-v118-test.json
 
           # Test entry only: point to the v1.18 COS test bundle.
-          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test323.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.18-test.3.2.3/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test323-coi-reload/g' app/test-adaptive/core.html
+          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test324.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.17/1.18-test.3.2.4/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test324-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611131055-v118-test323')
+                      './core.html?field=v12&rev=202611131130-v118-test324')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.18 test.3.2.3</title>')
+                      '<title>设备铭牌识别｜v1.18 test.3.2.4</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.4 COS bundle
-        run: |
-          python - <<'PY'
-          import urllib.request,pathlib,zipfile,hashlib
-          src='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test323.js'
-          data=urllib.request.urlopen(src,timeout=90).read().decode('utf-8')
-          def rep(old,new,label,count=1):
-              global data
-              n=data.count(old)
-              if n!=count: raise SystemExit(f'PATCH COUNT {label}: expected {count}, got {n}')
-              data=data.replace(old,new)
-              print('PATCH',label,n)
-
-          rep('top:max(12px,env(safe-area-inset-top));left:10px;right:110px;transform:none;z-index:99990;width:auto;max-width:560px;box-sizing:border-box;padding:7px 10px;border-radius:9px;background:rgba(0,109,91,.94);color:#fff;font-size:12px;line-height:1.35;font-weight:650;',
-              'top:calc(env(safe-area-inset-top) + 60px);left:10px;right:10px;transform:none;z-index:99990;width:auto;max-width:none;box-sizing:border-box;padding:5px 8px;border-radius:7px;background:rgba(0,109,91,.84);color:#fff;font-size:11.5px;line-height:1.3;font-weight:650;',
-              'floating-below-header')
-
-          rep('function UI(i,opt=null){return new Promise',
-              'function UI(i,opt=null){if(!document.getElementById("v118Crop324Style")){const st=document.createElement("style");st.id="v118Crop324Style";st.textContent="@media(max-width:520px){#cropModal{padding:6px!important}.cropbox{width:calc(100vw - 12px)!important;max-height:calc(100dvh - 12px)!important;padding:8px!important;border-radius:10px!important}.cropbox h3{font-size:15px!important;margin:0 0 4px!important}.cropbox p{font-size:11.5px!important;line-height:1.35!important;margin:0 0 6px!important}.crop-rotate{margin-top:6px!important;padding:6px 7px!important}.crop-rotate-top{margin-bottom:4px!important}.crop-rotate-label,.crop-rotate-value{font-size:11.5px!important}.crop-rotate-buttons{gap:5px!important;margin-top:5px!important}.crop-rotate-buttons .btn,.cropactions .btn{font-size:12px!important;padding:7px 6px!important;min-height:34px!important;min-width:0!important}.cropactions{gap:6px!important;margin-top:6px!important}}";document.head.appendChild(st)}return new Promise',
-              'crop-mobile-default-size')
-
-          rep('if(result.action==="paddle")await enqueueExistingV9(h,d,"paddle","Paddle 重识别");else if(result.action==="space")await enqueueExistingV9(h,d,"space","OCR.space 重识别");v151RestoreRecord(anchor)',
-              'if(result.action==="paddle")await enqueueExistingV9(h,d,"paddle","Paddle 重识别");else if(result.action==="space")await enqueueExistingV9(h,d,"space","OCR.space 重识别")',
-              'editor-retry-no-old-restore')
-
-          rep('await enqueueExistingV9(h,d,a,a==="paddle"?"Paddle 重识别":"OCR.space 重识别"),v151RestoreRecord(anchor)',
-              'await enqueueExistingV9(h,d,a,a==="paddle"?"Paddle 重识别":"OCR.space 重识别")',
-              'preview-retry-no-old-restore')
-
-          rep('await enqueueExistingV9(h,d,x,U.dataset.action==="retry-paddle"?"Paddle 重识别":U.dataset.action==="retry-space"?"OCR.space 重识别":"重新识别"),v151RestoreRecord(v151Anchor);return',
-              'await enqueueExistingV9(h,d,x,U.dataset.action==="retry-paddle"?"Paddle 重识别":U.dataset.action==="retry-space"?"OCR.space 重识别":"重新识别");return',
-              'card-retry-no-old-restore')
-
-          out=pathlib.Path('index-B81hyAdU-v118-test324.js')
-          out.write_text(data,encoding='utf-8')
-          print('SHA256',hashlib.sha256(out.read_bytes()).hexdigest())
-          with zipfile.ZipFile('mingpai-v1.18-test.3.2.4-COS.zip','w',zipfile.ZIP_DEFLATED) as z:
-              z.write(out,out.name)
-              z.writestr('README.txt','v1.18 test.3.2.4\nUpload index-B81hyAdU-v118-test324.js to Tencent COS assets/.\nFixes: retry final position; crop mobile default sizing; floating status below green header.\n')
-          PY
-          cp index-B81hyAdU-v118-test324.js /tmp/test324.mjs
-          node --check /tmp/test324.mjs
-
-      - name: Upload v1.18 test.3.2.4 COS bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: mingpai-v1.18-test.3.2.4-COS
-          path: mingpai-v1.18-test.3.2.4-COS.zip
-          retention-days: 7
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
