@@ -100,6 +100,21 @@ frame.addEventListener('load',async()=>{
   [300,800,1600,3200,6000].forEach(ms=>setTimeout(applyV118InnerFinal,ms));
 
 
+  // Crop layout is applied before the first modal frame, not 80ms after opening.
+  if(!d.getElementById('v118Crop325Style')){
+    const css=d.createElement('style');css.id='v118Crop325Style';
+    css.textContent=`
+    @media(max-width:520px){
+      #cropModal{padding:6px!important}
+      #cropModal .cropbox{width:calc(100vw - 12px)!important;max-height:calc(100dvh - 12px)!important;overflow-y:auto!important;padding:8px!important;border-radius:10px!important}
+      #cropModal .cropcanvas{max-height:48dvh!important}
+      #cropModal .cropactions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;align-items:stretch!important;margin-top:6px!important}
+      #cropModal .cropactions[data-crop-mode]:not([data-crop-mode="preview"]){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+      #cropModal .cropactions .btn{width:100%!important;min-width:0!important;min-height:36px!important;padding:6px 4px!important;font-size:12px!important;line-height:1.15!important;white-space:nowrap!important}
+      #cropModal #cropCancel,#cropModal [data-crop-action="close"]{background:#fff1f1!important;color:#a33!important;border:1px solid #efb5b5!important;border-radius:9px!important;font-weight:700!important}
+    }`;
+    (d.head||d.documentElement).appendChild(css);
+  }
   const v118NormalizeDialogs=()=>{
     const allButtons=[...d.querySelectorAll('button,.btn')];
 
@@ -158,84 +173,7 @@ frame.addEventListener('load',async()=>{
       }
     }
 
-    // 2/3) Crop dialogs: compact enough to fit one phone screen.
-    // Identify by visible text/title and by rotate controls + confirm/cancel/re-recognize actions.
-    const fixed=[...d.querySelectorAll('body *')].filter(el=>{
-      const cs=getComputedStyle(el);
-      if(cs.position!=='fixed'||cs.display==='none'||cs.visibility==='hidden')return false;
-      const r=el.getBoundingClientRect();
-      return r.width>innerWidth*.72&&r.height>innerHeight*.55;
-    });
-    for(const modal of fixed){
-      const txt=(modal.textContent||'');
-      const cropLike=txt.includes('裁剪铭牌识别区域') || (txt.includes('左转90°')&&txt.includes('右转90°'));
-      if(!cropLike)continue;
-
-      const panel=[...modal.children].find(x=>{
-        const r=x.getBoundingClientRect(); return r.width>innerWidth*.65&&r.height>innerHeight*.45;
-      })||modal.firstElementChild||modal;
-      panel.style.setProperty('max-height','calc(100dvh - 18px)','important');
-      panel.style.setProperty('overflow-y','auto','important');
-      panel.style.setProperty('padding-top','12px','important');
-      panel.style.setProperty('padding-bottom','10px','important');
-
-      // Compress oversized visual/control blocks without changing OCR image itself.
-      [...modal.querySelectorAll('button,.btn')].forEach(b=>{
-        b.style.setProperty('min-height','40px','important');
-        b.style.setProperty('padding-top','6px','important');
-        b.style.setProperty('padding-bottom','6px','important');
-        b.style.setProperty('line-height','1.15','important');
-      });
-      [...modal.querySelectorAll('img,canvas')].forEach(el=>{
-        const r=el.getBoundingClientRect();
-        if(r.height>innerHeight*.48) el.style.setProperty('max-height','48dvh','important');
-      });
-
-      const mbtn=[...modal.querySelectorAll('button,.btn')];
-      const confirm=mbtn.find(b=>(b.textContent||'').trim()==='确认');
-      let cancel=mbtn.find(b=>(b.textContent||'').trim()==='取消');
-      const p=mbtn.find(b=>(b.textContent||'').trim()==='Paddle重识别');
-      const c=mbtn.find(b=>(b.textContent||'').trim()==='OCR.space重识别');
-      const close=mbtn.find(b=>(b.textContent||'').trim()==='关闭');
-
-      // Re-recognition crop: rename Close -> Cancel.
-      if((p||c)&&close&&!cancel){
-        close.textContent='取消';
-        cancel=close;
-      }
-      if(cancel)setCancelStyle(cancel);
-
-      // Photo / re-photo crop: Confirm + Cancel centered and equal width.
-      if(confirm&&cancel&&confirm.parentElement===cancel.parentElement){
-        const row=confirm.parentElement;
-        row.style.setProperty('display','grid','important');
-        row.style.setProperty('grid-template-columns','repeat(2,minmax(0,1fr))','important');
-        row.style.setProperty('gap','10px','important');
-        row.style.setProperty('align-items','stretch','important');
-        [confirm,cancel].forEach(b=>{
-          b.style.setProperty('width','100%','important');
-          b.style.setProperty('min-width','0','important');
-          b.style.setProperty('min-height','40px','important');
-          b.style.setProperty('padding','6px 8px','important');
-        });
-      }
-
-      // Re-recognition crop: keep Paddle / OCR / Cancel on one compact row if they share a row.
-      if(p&&c&&cancel&&p.parentElement===c.parentElement&&p.parentElement===cancel.parentElement){
-        const row=p.parentElement;
-        row.style.setProperty('display','grid','important');
-        row.style.setProperty('grid-template-columns','minmax(0,1fr) minmax(0,1.12fr) minmax(68px,.72fr)','important');
-        row.style.setProperty('gap','6px','important');
-        [p,c,cancel].forEach(b=>{
-          b.style.setProperty('width','100%','important');
-          b.style.setProperty('min-width','0','important');
-          b.style.setProperty('white-space','nowrap','important');
-          b.style.setProperty('font-size','13px','important');
-          b.style.setProperty('min-height','40px','important');
-          b.style.setProperty('padding','6px 4px','important');
-        });
-      }
-    }
+    // test.3.2.5: crop sizing is pre-styled before opening; no delayed resizing here.
 
     // Other Close buttons elsewhere: same light-red visual treatment.
     for(const b of allButtons){
