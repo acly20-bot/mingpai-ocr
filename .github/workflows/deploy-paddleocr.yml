@@ -85,6 +85,58 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
+      - name: Build v1.18 test.3.2.3 COS bundle
+        run: |
+          python - <<'PY'
+          import urllib.request,pathlib,zipfile,hashlib,re
+          src='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test322.js'
+          data=urllib.request.urlopen(src,timeout=90).read().decode('utf-8')
+          def rep(old,new,label,count=1):
+              global data
+              n=data.count(old)
+              if n!=count: raise SystemExit(f'PATCH COUNT {label}: expected {count}, got {n}')
+              data=data.replace(old,new)
+              print('PATCH',label,n)
+
+          rep('left:50%;transform:translateX(-50%);z-index:99990;width:min(620px,calc(100% - 24px));box-sizing:border-box;padding:10px 14px;border-radius:12px;background:rgba(0,109,91,.94);color:#fff;font-size:14px;line-height:1.45;font-weight:650;',
+              'left:10px;right:110px;transform:none;z-index:99990;width:auto;max-width:560px;box-sizing:border-box;padding:7px 10px;border-radius:9px;background:rgba(0,109,91,.94);color:#fff;font-size:12px;line-height:1.35;font-weight:650;',
+              'floating-position-size')
+
+          if 'let v118FocusRecordTopAfterQueue="";' not in data:
+              m=re.search(r'let photoQueueV9=\[\]',data)
+              if not m: raise SystemExit('PATCH NOT FOUND queue-global')
+              data=data[:m.start()]+'let v118FocusRecordTopAfterQueue="";'+data[m.start():]
+              print('PATCH queue-global 1')
+
+          rep('if(i.focusRecordTop){requestAnimationFrame(()=>{const card=v151FindRecordCard(N.id);(card||c("recordList"))?.scrollIntoView({block:"start",behavior:"smooth"})})}else v151KeepScroll(v151Y);',
+              'if(i.focusRecordTop){v118FocusRecordTopAfterQueue=String(N.id)}else v151KeepScroll(v151Y);',
+              'defer-retake-focus')
+
+          anchor='try{await AI()}catch{} if(focusLatestAfterBatch){'
+          if data.count(anchor)!=1: raise SystemExit(f'PATCH COUNT final-focus-anchor: {data.count(anchor)}')
+          data=data.replace(anchor,'try{await AI()}catch{} if(v118FocusRecordTopAfterQueue&&!focusLatestAfterBatch){const rid=v118FocusRecordTopAfterQueue;v118FocusRecordTopAfterQueue="";const go=()=>{const card=v151FindRecordCard(rid);if(card){const y=window.scrollY+card.getBoundingClientRect().top-8;window.scrollTo({top:Math.max(0,y),left:0,behavior:"auto"})}};go();requestAnimationFrame(go);setTimeout(go,80);setTimeout(go,220)} if(focusLatestAfterBatch){')
+          print('PATCH final-retake-focus 1')
+
+          rep('i.thumb=await cg(N),await PA(i),await AI(),requestAnimationFrame(()=>{const card=v151FindRecordCard(i.id);(card||c("recordList"))?.scrollIntoView({block:"start",behavior:"smooth"})}),UA(h?"重新识别完成，请核对字段后确认。":"重新识别失败，请查看该条记录的错误原因。")',
+              'i.thumb=await cg(N),await PA(i),await AI(),(()=>{const rid=String(i.id),go=()=>{const card=v151FindRecordCard(rid);if(card){const y=window.scrollY+card.getBoundingClientRect().top-8;window.scrollTo({top:Math.max(0,y),left:0,behavior:"auto"})}};go();requestAnimationFrame(go);setTimeout(go,80);setTimeout(go,220)})(),UA(h?"重新识别完成，请核对字段后确认。":"重新识别失败，请查看该条记录的错误原因。")',
+              'retry-stable-focus')
+
+          out=pathlib.Path('index-B81hyAdU-v118-test323.js')
+          out.write_text(data,encoding='utf-8')
+          print('SHA256',hashlib.sha256(out.read_bytes()).hexdigest())
+          with zipfile.ZipFile('mingpai-v1.18-test.3.2.3-COS.zip','w',zipfile.ZIP_DEFLATED) as z:
+              z.write(out,out.name)
+              z.writestr('README.txt','v1.18 test.3.2.3\nUpload index-B81hyAdU-v118-test323.js to Tencent COS assets/.\nFixes: delayed stable positioning for retake/re-recognize; smaller left floating status.\n')
+          PY
+          cp index-B81hyAdU-v118-test323.js /tmp/test323.mjs
+          node --check /tmp/test323.mjs
+
+      - name: Upload v1.18 test.3.2.3 COS bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18-test.3.2.3-COS
+          path: mingpai-v1.18-test.3.2.3-COS.zip
+          retention-days: 7
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
