@@ -126,6 +126,42 @@ jobs:
           print('Candidate test entry ready; formal root and test-adaptive unchanged')
           PY
 
+      - name: Promote validated v1.18 candidate to formal root
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          root=Path('app')
+          candidate=root/'candidate-v118'
+          for filename in ['core.html','index.html','coi-serviceworker.js','version-v118-test.json']:
+              assert (candidate/filename).exists(),filename
+          # Formal root uses the exact validated candidate wrapper and runtime.
+          core=(candidate/'core.html').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v118-final-candidate.js' in core
+          core=core.replace('1.18-final-candidate','1.18')
+          core=core.replace('mingpai-v118-final-candidate-coi-reload','mingpai-v118-formal-coi-reload')
+          (root/'core.html').write_text(core,encoding='utf-8')
+          wrapper=(candidate/'index.html').read_text(encoding='utf-8')
+          wrapper=wrapper.replace('final-candidate','1.18')
+          wrapper=wrapper.replace('v1.18 正式候选版','v1.18 正式版')
+          wrapper=wrapper.replace('mingpai-v118-candidate-manifest-version','mingpai-v118-formal-manifest-version')
+          wrapper=wrapper.replace('20261114-v118-eight-fixes','20261114-v118-formal')
+          (root/'index.html').write_text(wrapper,encoding='utf-8')
+          sw=(candidate/'coi-serviceworker.js').read_text(encoding='utf-8')
+          sw=sw.replace('1.18-final-candidate','1.18')
+          sw=sw.replace('mingpai-shell-v118-final-candidate','mingpai-shell-v118-formal')
+          (root/'coi-serviceworker.js').write_text(sw,encoding='utf-8')
+          manifest=json.loads((candidate/'version-v118-test.json').read_text(encoding='utf-8'))
+          manifest['version']='1.18'
+          (root/'version-v118-test.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert 'index-B81hyAdU-v118-final-candidate.js' in (root/'core.html').read_text(encoding='utf-8')
+          assert '1.18-final-candidate' not in (root/'core.html').read_text(encoding='utf-8')
+          assert '1.18-final-candidate' not in (root/'index.html').read_text(encoding='utf-8')
+          assert '1.18-final-candidate' not in (root/'coi-serviceworker.js').read_text(encoding='utf-8')
+          assert manifest['mainJs']=='index-B81hyAdU-v118-final-candidate.js'
+          print('PASS: formal v1.18 root built from verified candidate, v1.17 rollback asset preserved')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
