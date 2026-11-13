@@ -85,6 +85,25 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
+      - name: Build v1.18 eight-fix candidate and run regression tests
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request
+          url='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test326.js'
+          p=Path('index-B81hyAdU-v118-test326.js')
+          p.write_bytes(urllib.request.urlopen(url,timeout=120).read())
+          assert p.stat().st_size>10000000, 'Unexpected COS runtime size'
+          PY
+          python scripts/build-v118-final-candidate.py
+
+      - name: Upload v1.18 final candidate COS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18-final-candidate-COS
+          path: mingpai-v1.18-final-candidate-COS.zip
+          retention-days: 30
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
