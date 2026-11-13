@@ -61,7 +61,7 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.4 entry
+      - name: Build v1.18 test.3.2.5 entry
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
@@ -70,45 +70,21 @@ jobs:
           cp stable-wrapper/version-v118-test.json app/test-adaptive/version-v118-test.json
 
           # Test entry only: point to the v1.18 COS test bundle.
-          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test324.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.18-test.3.2.4/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test324-coi-reload/g' app/test-adaptive/core.html
+          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test325.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.17/1.18-test.3.2.5/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test325-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611131130-v118-test324')
+                      './core.html?field=v12&rev=202611131450-v118-test325')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.18 test.3.2.4</title>')
+                      '<title>设备铭牌识别｜v1.18 test.3.2.5</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build and self-test v1.18 test.3.2.5 COS bundle
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import urllib.request
-          src='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test324.js'
-          Path('index-B81hyAdU-v118-test324.js').write_bytes(urllib.request.urlopen(src,timeout=90).read())
-          PY
-          python scripts/build-v118-test325.py index-B81hyAdU-v118-test324.js index-B81hyAdU-v118-test325.js
-          mv index-B81hyAdU-v118-test325.zip mingpai-v1.18-test.3.2.5-COS.zip
-          python - <<'PY'
-          from pathlib import Path
-          s=Path('index-B81hyAdU-v118-test325.js').read_text()
-          assert 'focusRecordTop:h==="重拍照片"||/重识别|重新识别/' in s
-          assert 'U.hidden=!1},d.onerror=' in s
-          assert 'document.querySelector("label[for=unitName]")' in s
-          print('PASS: retry focus, crop pre-layout, status label bounds')
-          PY
-      - name: Upload v1.18 test.3.2.5 COS bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: mingpai-v1.18-test.3.2.5-COS
-          path: mingpai-v1.18-test.3.2.5-COS.zip
-          retention-days: 7
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
