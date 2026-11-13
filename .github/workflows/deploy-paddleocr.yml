@@ -85,6 +85,21 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
+      - name: Inspect v1.18 test.3.2 sync navigation
+        run: |
+          python - <<'PY'
+          import urllib.request
+          u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test32.js'
+          data=urllib.request.urlopen(u,timeout=90).read().decode('utf-8','replace')
+          for pat in ['async function VI','function VI','v151RestoreRecord','v11713PatchCard','syncStatus="synced"','syncStatus="error"','syncStatus="failed"']:
+              print('\n###',pat)
+              pos=0;n=0
+              while True:
+                  i=data.find(pat,pos)
+                  if i<0 or n>=8: break
+                  print(data[max(0,i-1800):i+4200].replace('\n',' '))
+                  pos=i+len(pat);n+=1
+          PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
