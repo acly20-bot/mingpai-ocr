@@ -106,9 +106,9 @@ jobs:
               'if(i.focusRecordTop){window.__v118FocusRecordTop=String(N.id)}else v151KeepScroll(v151Y);',
               'defer-retake-focus')
 
-          anchor='try{await AI()}catch{} if(focusLatestAfterBatch){'
+          anchor='try{await AI()}catch{}\nif(focusLatestAfterBatch){'
           if data.count(anchor)!=1: raise SystemExit(f'PATCH COUNT final-focus-anchor: {data.count(anchor)}')
-          data=data.replace(anchor,'try{await AI()}catch{} if(window.__v118FocusRecordTop&&!focusLatestAfterBatch){const rid=String(window.__v118FocusRecordTop);window.__v118FocusRecordTop="";const go=()=>{const card=v151FindRecordCard(rid);if(card){const y=window.scrollY+card.getBoundingClientRect().top-8;window.scrollTo({top:Math.max(0,y),left:0,behavior:"auto"})}};go();requestAnimationFrame(go);setTimeout(go,120);setTimeout(go,320);setTimeout(go,650)} if(focusLatestAfterBatch){')
+          data=data.replace(anchor,'try{await AI()}catch{}\nif(window.__v118FocusRecordTop&&!focusLatestAfterBatch){const rid=String(window.__v118FocusRecordTop);window.__v118FocusRecordTop="";const go=()=>{const card=v151FindRecordCard(rid);if(card){const y=window.scrollY+card.getBoundingClientRect().top-8;window.scrollTo({top:Math.max(0,y),left:0,behavior:"auto"})}};go();requestAnimationFrame(go);setTimeout(go,120);setTimeout(go,320);setTimeout(go,650)}\nif(focusLatestAfterBatch){')
           print('PATCH final-retake-focus 1')
 
           rep('i.thumb=await cg(N),await PA(i),await AI(),requestAnimationFrame(()=>{const card=v151FindRecordCard(i.id);(card||c("recordList"))?.scrollIntoView({block:"start",behavior:"smooth"})}),UA(h?"重新识别完成，请核对字段后确认。":"重新识别失败，请查看该条记录的错误原因。")',
