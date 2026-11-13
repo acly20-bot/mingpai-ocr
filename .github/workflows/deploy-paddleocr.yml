@@ -1,4 +1,5 @@
 name: Deploy PaddleOCR Mingpai to GitHub Pages
+# Deployment artifact retry: fresh workflow run avoids duplicate github-pages artifacts.
 
 on:
   push:
