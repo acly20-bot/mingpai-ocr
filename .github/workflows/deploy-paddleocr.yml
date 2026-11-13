@@ -210,6 +210,53 @@ jobs:
           print('PASS isolated 1.18.1 candidate; current formal v1.18 remains unchanged')
           PY
 
+      - name: Promote verified v1.18.1 candidate to formal root
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          root=Path('app')
+          candidate=root/'candidate-v1181'
+          for filename in ('core.html','index.html','coi-serviceworker.js','version-v118-test.json'):
+              assert (candidate/filename).exists(),filename
+          js='index-B81hyAdU-v1181-candidate.js'
+          rules='recognition-rules-v1181.json'
+          # Start from the exact candidate that passed real-device testing.
+          core=(candidate/'core.html').read_text(encoding='utf-8')
+          assert js in core and '1.18.1-candidate' in core
+          core=core.replace('1.18.1-candidate','1.18.1')
+          core=core.replace('mingpai-v1181-candidate-coi-reload','mingpai-v1181-formal-coi-reload')
+          (root/'core.html').write_text(core,encoding='utf-8')
+
+          wrapper=(candidate/'index.html').read_text(encoding='utf-8')
+          wrapper=wrapper.replace('v1.18.1 候选版','v1.18.1 正式版')
+          wrapper=wrapper.replace('1.18.1-candidate','1.18.1')
+          wrapper=wrapper.replace('mingpai-v1181-candidate-manifest-version','mingpai-v1181-formal-manifest-version')
+          wrapper=wrapper.replace('20261114-v1181-candidate','20261114-v1181-formal')
+          (root/'index.html').write_text(wrapper,encoding='utf-8')
+
+          sw=(candidate/'coi-serviceworker.js').read_text(encoding='utf-8')
+          assert 'mingpai-shell-v1181-candidate' in sw
+          sw=sw.replace('mingpai-shell-v1181-candidate','mingpai-shell-v1181-formal')
+          sw=sw.replace('const APP_VERSION="1.18.1-candidate"','const APP_VERSION="1.18.1"')
+          (root/'coi-serviceworker.js').write_text(sw,encoding='utf-8')
+
+          manifest=json.loads((candidate/'version-v118-test.json').read_text(encoding='utf-8'))
+          assert manifest['mainJs']==js and manifest['rules']==rules
+          assert manifest['version']=='1.18.1-candidate'
+          manifest['version']='1.18.1'
+          (root/'version-v118-test.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          assert js in (root/'core.html').read_text(encoding='utf-8')
+          assert js in (root/'version-v118-test.json').read_text(encoding='utf-8')
+          assert '1.18.1-candidate' not in (root/'core.html').read_text(encoding='utf-8')
+          assert '1.18.1-candidate' not in (root/'index.html').read_text(encoding='utf-8')
+          assert 'mingpai-shell-v1181-formal' in (root/'coi-serviceworker.js').read_text(encoding='utf-8')
+          assert 'v1.18.1 正式版' in (root/'index.html').read_text(encoding='utf-8')
+          assert (root/'candidate-v1181'/'core.html').exists()
+          print('PASS: v1.18.1 formal root uses tested candidate JS and rules; v1.18 rollback retained')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
