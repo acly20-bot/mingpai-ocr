@@ -113,6 +113,22 @@ jobs:
           name: mingpai-v1.18-test.3.2.1-COS
           path: mingpai-v1.18-test.3.2.1-COS.zip
           retention-days: 7
+      - name: Inspect test.3.2 navigation rules
+        run: |
+          python - <<'PY'
+          import urllib.request
+          u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test32.js'
+          data=urllib.request.urlopen(u,timeout=90).read().decode('utf-8','replace')
+          pats=['focusLatest','v151RestoreRecord','v151RememberRecord','scrollIntoView','window.scrollTo','scrollTo({','photoQueueV9.push','enqueueExistingV9','focusLatestAfterBatch']
+          for pat in pats:
+              print('\n###',pat)
+              pos=0;n=0
+              while True:
+                  i=data.find(pat,pos)
+                  if i<0 or n>=20: break
+                  print(data[max(0,i-900):i+1800].replace('\n',' '))
+                  pos=i+len(pat);n+=1
+          PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
