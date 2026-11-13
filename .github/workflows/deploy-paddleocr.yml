@@ -85,16 +85,31 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Inspect test.3.2.5 WeChat retry scroll
+      - name: Build and check v1.18 test.3.2.6 COS bundle
         run: |
           python - <<'PY'
-          import urllib.request,re
-          s=urllib.request.urlopen('https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test325.js',timeout=90).read().decode('utf-8')
-          for term in ['async function Hg(','async function AI(','function CI(){','function CI(','async function runPhotoQueueV9()','async function enqueueExistingV9(']:
-              m=list(re.finditer(re.escape(term),s))
-              print('\\n###',term,'COUNT',len(m))
-              for x in m[-2:]: print('SNIPPET',x.start(),repr(s[x.start():x.start()+6500]))
+          from pathlib import Path
+          import urllib.request
+          url='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test325.js'
+          Path('index-B81hyAdU-v118-test325.js').write_bytes(urllib.request.urlopen(url,timeout=90).read())
           PY
+          python scripts/build-v118-test326.py index-B81hyAdU-v118-test325.js index-B81hyAdU-v118-test326.js
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          f=Path('mingpai-v1.18-test.3.2.6-COS.zip')
+          assert f.exists()
+          with zipfile.ZipFile(f) as z:
+            assert 'index-B81hyAdU-v118-test326.js' in z.namelist()
+          print('PASS downloadable ZIP',f.stat().st_size)
+          PY
+
+      - name: Upload v1.18 test.3.2.6 COS bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18-test.3.2.6-COS
+          path: mingpai-v1.18-test.3.2.6-COS.zip
+          retention-days: 30
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
