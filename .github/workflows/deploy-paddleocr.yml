@@ -61,7 +61,7 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2 entry
+      - name: Build v1.18 test.3.2.1 entry
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
@@ -70,65 +70,21 @@ jobs:
           cp stable-wrapper/version-v118-test.json app/test-adaptive/version-v118-test.json
 
           # Test entry only: point to the v1.18 COS test bundle.
-          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test32.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.18-test.3.2/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test32-coi-reload/g' app/test-adaptive/core.html
+          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test321.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.17/1.18-test.3.2.1/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test321-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611130105-v118-test32')
+                      './core.html?field=v12&rev=202611130858-v118-test321')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.18 test.3.2</title>')
+                      '<title>设备铭牌识别｜v1.18 test.3.2.1</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.1 COS bundle
-        run: |
-          python - <<'PY'
-          import urllib.request, pathlib, zipfile, hashlib
-          src='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test32.js'
-          data=urllib.request.urlopen(src,timeout=90).read().decode('utf-8')
-          old='finally{EI.delete(i.id),v151RestoreRecord(v151Anchor)}'
-          new='finally{EI.delete(i.id)}'
-          n=data.count(old)
-          if n!=1: raise SystemExit(f'PATCH COUNT sync-finally: expected 1, got {n}')
-          data=data.replace(old,new)
-          out=pathlib.Path('index-B81hyAdU-v118-test321.js')
-          out.write_text(data,encoding='utf-8')
-          print('PATCH sync-finally',n)
-          print('SHA256',hashlib.sha256(out.read_bytes()).hexdigest())
-          with zipfile.ZipFile('mingpai-v1.18-test.3.2.1-COS.zip','w',zipfile.ZIP_DEFLATED) as z:
-              z.write(out,out.name)
-              z.writestr('README.txt','v1.18 test.3.2.1\nUpload index-B81hyAdU-v118-test321.js to Tencent COS assets/.\nFix: Feishu sync success/failure no longer scrolls back to the original record.\n')
-          PY
-          cp index-B81hyAdU-v118-test321.js /tmp/test321.mjs
-          node --check /tmp/test321.mjs
-
-      - name: Upload v1.18 test.3.2.1 COS bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: mingpai-v1.18-test.3.2.1-COS
-          path: mingpai-v1.18-test.3.2.1-COS.zip
-          retention-days: 7
-      - name: Inspect test.3.2 navigation rules
-        run: |
-          python - <<'PY'
-          import urllib.request
-          u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test32.js'
-          data=urllib.request.urlopen(u,timeout=90).read().decode('utf-8','replace')
-          pats=['focusLatest','v151RestoreRecord','v151RememberRecord','scrollIntoView','window.scrollTo','scrollTo({','photoQueueV9.push','enqueueExistingV9','focusLatestAfterBatch']
-          for pat in pats:
-              print('\n###',pat)
-              pos=0;n=0
-              while True:
-                  i=data.find(pat,pos)
-                  if i<0 or n>=20: break
-                  print(data[max(0,i-900):i+1800].replace('\n',' '))
-                  pos=i+len(pat);n+=1
-          PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
