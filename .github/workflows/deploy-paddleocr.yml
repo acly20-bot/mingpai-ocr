@@ -162,6 +162,54 @@ jobs:
           print('PASS: formal v1.18 root built from verified candidate, v1.17 rollback asset preserved')
           PY
 
+      - name: Verify v1.18.1 COS uploads and create isolated candidate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,json
+          base='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'
+          js='index-B81hyAdU-v1181-candidate.js'
+          rules='recognition-rules-v1181.json'
+          for name,min_bytes in [(js,10_000_000),(rules,8_000)]:
+              req=urllib.request.Request(base+name,method='HEAD')
+              with urllib.request.urlopen(req,timeout=60) as r:
+                  size=int(r.headers.get('Content-Length',0))
+                  assert r.status==200 and size>=min_bytes,(name,r.status,size)
+                  print('COS verified',name,size)
+          # Full GET of the small rules JSON: confirm intended version and rule count.
+          rule_data=json.loads(urllib.request.urlopen(base+rules,timeout=60).read())
+          assert rule_data['rulesVersion']=='v1.18.1-20261114'
+          assert len(rule_data['rules'])==21
+          assert any(r['id']=='v1181-anjian-dtp573' for r in rule_data['rules'])
+          root=Path('app')
+          dest=root/'candidate-v1181'
+          dest.mkdir(exist_ok=True)
+          core=(root/'core.html').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v118-final-candidate.js' in core
+          core=core.replace('index-B81hyAdU-v118-final-candidate.js',js)
+          core=core.replace('mingpai-v118-formal-coi-reload','mingpai-v1181-candidate-coi-reload')
+          core=core.replace('1.18','1.18.1-candidate')
+          (dest/'core.html').write_text(core,encoding='utf-8')
+          wrapper=(root/'index.html').read_text(encoding='utf-8')
+          wrapper=wrapper.replace('v1.18 正式版','v1.18.1 候选版')
+          wrapper=wrapper.replace('v1.18-1.18','v1.18.1-candidate')
+          wrapper=wrapper.replace('v1.18 1.18','v1.18.1-candidate')
+          wrapper=wrapper.replace('mingpai-v118-formal-manifest-version','mingpai-v1181-candidate-manifest-version')
+          wrapper=wrapper.replace('20261114-v118-formal','20261114-v1181-candidate')
+          (dest/'index.html').write_text(wrapper,encoding='utf-8')
+          sw=(root/'coi-serviceworker.js').read_text(encoding='utf-8')
+          sw=sw.replace('mingpai-shell-v118-formal','mingpai-shell-v1181-candidate')
+          sw=sw.replace('const APP_VERSION="1.18"','const APP_VERSION="1.18.1-candidate"')
+          (dest/'coi-serviceworker.js').write_text(sw,encoding='utf-8')
+          manifest=json.loads((root/'version-v118-test.json').read_text(encoding='utf-8'))
+          manifest.update(version='1.18.1-candidate',mainJs=js,runtimeFiles=[js],rules=rules)
+          (dest/'version-v118-test.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert js in (dest/'core.html').read_text(encoding='utf-8')
+          assert js in (dest/'version-v118-test.json').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v118-final-candidate.js' in (root/'core.html').read_text(encoding='utf-8')
+          print('PASS isolated 1.18.1 candidate; current formal v1.18 remains unchanged')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
