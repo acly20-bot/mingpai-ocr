@@ -1,0 +1,9 @@
+{
+  "name": "mingpai-feishu-export-scf",
+  "version": "1.0.7",
+  "private": true,
+  "main": "app.js",
+  "engines": {
+    "node": ">=20"
+  }
+}
