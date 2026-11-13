@@ -1,5 +1,5 @@
-const APP_VERSION="1.18-test.3.2.8";
-const SHELL_CACHE="mingpai-shell-v118-test-3-2-8";
+const APP_VERSION="1.18-test.3.2.9";
+const SHELL_CACHE="mingpai-shell-v118-test-3-2-9";
 const RUNTIME_CACHE="mingpai-runtime-long-v1";
 const COS_RUNTIME="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/";
 const scopeUrl=new URL(self.registration.scope);
@@ -37,8 +37,20 @@ async function runtime(req,url){
   const rel=url.pathname.slice(runtimePrefix.length);
   return fetchRuntimeByRel(rel,req);
 }
-async function shell(req){
+async function shell(req,event){
   const cache=await caches.open(SHELL_CACHE);
+  // Core HTML is versioned with the service worker. Serve its cached copy
+  // immediately; refreshing it must not block the first visible page.
+  const isCore=new URL(req.url).pathname.endsWith("/core.html");
+  if(isCore){
+    const cached=await cache.match(req,{ignoreSearch:true});
+    if(cached){
+      if(event)event.waitUntil(fetch(req,{cache:"no-store"}).then(async net=>{
+        if(net&&net.ok)await cache.put(req,net.clone());
+      }).catch(()=>{}));
+      return isolate(cached);
+    }
+  }
   try{
     const net=await fetch(req,{cache:"no-store"});
     if(net&&net.ok)try{await cache.put(req,net.clone())}catch{}
@@ -90,7 +102,7 @@ self.addEventListener("fetch",e=>{
       return;
     }
     if(req.mode==="navigate"||url.pathname.endsWith(".html")||url.pathname===scopeUrl.pathname){
-      e.respondWith(shell(req));
+      e.respondWith(shell(req,e));
       return;
     }
     e.respondWith(fetch(req).then(isolate).catch(async()=>{const c=await caches.open(SHELL_CACHE),r=await c.match(req,{ignoreSearch:true});if(r)return isolate(r);throw new Error("offline")}));
