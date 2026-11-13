@@ -61,7 +61,7 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.2 entry
+      - name: Build v1.18 test.3.2.3 entry
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
@@ -70,81 +70,21 @@ jobs:
           cp stable-wrapper/version-v118-test.json app/test-adaptive/version-v118-test.json
 
           # Test entry only: point to the v1.18 COS test bundle.
-          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test322.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.18-test.3.2.2/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test322-coi-reload/g' app/test-adaptive/core.html
+          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test323.js/g' app/test-adaptive/core.html
+          sed -i 's/1\.17/1.18-test.3.2.3/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test323-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611131015-v118-test322')
+                      './core.html?field=v12&rev=202611131055-v118-test323')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.18 test.3.2.2</title>')
+                      '<title>设备铭牌识别｜v1.18 test.3.2.3</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.3 COS bundle
-        run: |
-          python - <<'PY'
-          import urllib.request,pathlib,zipfile,hashlib,re
-          src='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test322.js'
-          data=urllib.request.urlopen(src,timeout=90).read().decode('utf-8')
-          def rep(old,new,label,count=1):
-              global data
-              n=data.count(old)
-              if n!=count: raise SystemExit(f'PATCH COUNT {label}: expected {count}, got {n}')
-              data=data.replace(old,new)
-              print('PATCH',label,n)
-
-          rep('left:50%;transform:translateX(-50%);z-index:99990;width:min(620px,calc(100% - 24px));box-sizing:border-box;padding:10px 14px;border-radius:12px;background:rgba(0,109,91,.94);color:#fff;font-size:14px;line-height:1.45;font-weight:650;',
-              'left:10px;right:110px;transform:none;z-index:99990;width:auto;max-width:560px;box-sizing:border-box;padding:7px 10px;border-radius:9px;background:rgba(0,109,91,.94);color:#fff;font-size:12px;line-height:1.35;font-weight:650;',
-              'floating-position-size')
-
-          rep('if(i.focusRecordTop){requestAnimationFrame(()=>{const card=v151FindRecordCard(N.id);(card||c("recordList"))?.scrollIntoView({block:"start",behavior:"smooth"})})}else v151KeepScroll(v151Y);',
-              'if(i.focusRecordTop){window.__v118FocusRecordTop=String(N.id)}else v151KeepScroll(v151Y);',
-              'defer-retake-focus')
-
-          anchor='try{await AI()}catch{}\nif(focusLatestAfterBatch){'
-          if data.count(anchor)!=1: raise SystemExit(f'PATCH COUNT final-focus-anchor: {data.count(anchor)}')
-          data=data.replace(anchor,'try{await AI()}catch{}\nif(window.__v118FocusRecordTop&&!focusLatestAfterBatch){const rid=String(window.__v118FocusRecordTop);window.__v118FocusRecordTop="";const go=()=>{const card=v151FindRecordCard(rid);if(card){const y=window.scrollY+card.getBoundingClientRect().top-8;window.scrollTo({top:Math.max(0,y),left:0,behavior:"auto"})}};go();requestAnimationFrame(go);setTimeout(go,120);setTimeout(go,320);setTimeout(go,650)}\nif(focusLatestAfterBatch){')
-          print('PATCH final-retake-focus 1')
-
-          rep('i.thumb=await cg(N),await PA(i),await AI(),requestAnimationFrame(()=>{const card=v151FindRecordCard(i.id);(card||c("recordList"))?.scrollIntoView({block:"start",behavior:"smooth"})}),UA(h?"重新识别完成，请核对字段后确认。":"重新识别失败，请查看该条记录的错误原因。")',
-              'i.thumb=await cg(N),await PA(i),await AI(),(()=>{const rid=String(i.id),go=()=>{const card=v151FindRecordCard(rid);if(card){const y=window.scrollY+card.getBoundingClientRect().top-8;window.scrollTo({top:Math.max(0,y),left:0,behavior:"auto"})}};go();requestAnimationFrame(go);setTimeout(go,120);setTimeout(go,320);setTimeout(go,650)})(),UA(h?"重新识别完成，请核对字段后确认。":"重新识别失败，请查看该条记录的错误原因。")',
-              'retry-stable-focus')
-
-          out=pathlib.Path('index-B81hyAdU-v118-test323.js')
-          out.write_text(data,encoding='utf-8')
-          print('SHA256',hashlib.sha256(out.read_bytes()).hexdigest())
-          with zipfile.ZipFile('mingpai-v1.18-test.3.2.3-COS.zip','w',zipfile.ZIP_DEFLATED) as z:
-              z.write(out,out.name)
-              z.writestr('README.txt','v1.18 test.3.2.3\nUpload index-B81hyAdU-v118-test323.js to Tencent COS assets/.\nFixes: delayed stable positioning for retake/re-recognize; smaller left floating status.\n')
-          PY
-          cp index-B81hyAdU-v118-test323.js /tmp/test323.mjs
-          node --check /tmp/test323.mjs
-
-      - name: Upload v1.18 test.3.2.3 COS bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: mingpai-v1.18-test.3.2.3-COS
-          path: mingpai-v1.18-test.3.2.3-COS.zip
-          retention-days: 7
-      - name: Build SCF v1.0.8 deploy ZIP
-        run: |
-          python - <<'PY'
-          import base64
-          b64='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'
-          open('mingpai-feishu-export-scf-v1.0.8.zip','wb').write(base64.b64decode(b64))
-          PY
-
-      - name: Upload SCF v1.0.8 deploy ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: mingpai-feishu-export-scf-v1.0.8
-          path: mingpai-feishu-export-scf-v1.0.8.zip
-          retention-days: 30
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
