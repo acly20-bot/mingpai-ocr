@@ -61,7 +61,7 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.7 entry
+      - name: Build v1.18 test.3.2.9 entry
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
@@ -81,28 +81,49 @@ jobs:
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
                       './core.html?field=v12&rev=202611132020-v118-test329')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.18 test.3.2.7</title>')
+                      '<title>设备铭牌识别｜v1.18 test.3.2.9</title>')
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 eight-fix candidate and run regression tests
+      - name: Verify uploaded COS candidate and build isolated v1.18 candidate site
         run: |
           python - <<'PY'
           from pathlib import Path
-          import urllib.request
-          url='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test326.js'
-          p=Path('index-B81hyAdU-v118-test326.js')
-          p.write_bytes(urllib.request.urlopen(url,timeout=120).read())
-          assert p.stat().st_size>10000000, 'Unexpected COS runtime size'
+          import urllib.request,json
+          name='index-B81hyAdU-v118-final-candidate.js'
+          url='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'+name
+          req=urllib.request.Request(url,method='HEAD')
+          with urllib.request.urlopen(req,timeout=45) as response:
+            length=int(response.headers.get('Content-Length','0'))
+            assert response.status==200 and length>10000000,(response.status,length)
+          print('Verified COS candidate',name,'bytes',length)
+          p=Path('app/candidate-v118')
+          p.mkdir(parents=True,exist_ok=True)
+          core=Path('app/core.html').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v117-final.js' in core
+          core=core.replace('index-B81hyAdU-v117-final.js',name)
+          core=core.replace('1.17','1.18-final-candidate')
+          core=core.replace('mingpai-stable117-coi-reload','mingpai-v118-final-candidate-coi-reload')
+          (p/'core.html').write_text(core,encoding='utf-8')
+          wrapper=Path('stable-wrapper/test-v118-test3.html').read_text(encoding='utf-8')
+          wrapper=wrapper.replace('test.3.2.9','final-candidate')
+          wrapper=wrapper.replace('mingpai-v118-manifest-version','mingpai-v118-candidate-manifest-version')
+          wrapper=wrapper.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
+                                  './core.html?field=v12&rev=20261114-v118-eight-fixes')
+          wrapper=wrapper.replace('<title>设备铭牌智能识别与审核</title>',
+                                  '<title>设备铭牌识别｜v1.18 正式候选版</title>')
+          (p/'index.html').write_text(wrapper,encoding='utf-8')
+          sw=Path('stable-wrapper/coi-serviceworker-v118-test.js').read_text(encoding='utf-8')
+          sw=sw.replace('1.18-test.3.2.9','1.18-final-candidate')
+          sw=sw.replace('mingpai-shell-v118-test-3-2-9','mingpai-shell-v118-final-candidate')
+          (p/'coi-serviceworker.js').write_text(sw,encoding='utf-8')
+          manifest=json.loads(Path('stable-wrapper/version-v118-test.json').read_text(encoding='utf-8'))
+          manifest.update(version='1.18-final-candidate',mainJs=name,runtimeFiles=[name])
+          (p/'version-v118-test.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert name in (p/'core.html').read_text(encoding='utf-8')
+          assert name in (p/'version-v118-test.json').read_text(encoding='utf-8')
+          print('Candidate test entry ready; formal root and test-adaptive unchanged')
           PY
-          python scripts/build-v118-final-candidate.py
-
-      - name: Upload v1.18 final candidate COS package
-        uses: actions/upload-artifact@v4
-        with:
-          name: mingpai-v1.18-final-candidate-COS
-          path: mingpai-v1.18-final-candidate-COS.zip
-          retention-days: 30
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
