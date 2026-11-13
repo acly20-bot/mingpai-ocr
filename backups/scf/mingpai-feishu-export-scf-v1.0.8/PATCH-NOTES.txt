@@ -1,0 +1,19 @@
+v1.0.6 -> v1.0.8
+
+1. searchRecordsV118(filters)
+   - require filters.unitName
+   - require filters.operatorName
+   - searchRecords({unitName, operatorName})
+   - defensive exact filter:
+       r.unitName === unitName
+       r.operatorName === operatorName
+   - latest date / previous 6 days rule remains unchanged
+
+2. /prepare-export-v118 signed token
+   before:
+     filters:{unitName:result.unitName}
+   after:
+     filters:{unitName:result.unitName,operatorName:result.operatorName}
+
+3. workbookBytesV118 / sheetXmlV118
+   unchanged from user-provided v1.0.6.
