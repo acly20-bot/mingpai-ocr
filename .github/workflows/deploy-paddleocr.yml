@@ -88,50 +88,20 @@ jobs:
       - name: Build and self-test v1.18 test.3.2.5 COS bundle
         run: |
           python - <<'PY'
-          import urllib.request,pathlib,zipfile,hashlib,subprocess
+          from pathlib import Path
+          import urllib.request
           src='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test324.js'
-          data=urllib.request.urlopen(src,timeout=90).read().decode('utf-8')
-          def rep(old,new,label,count=1):
-              global data
-              n=data.count(old)
-              if n!=count: raise SystemExit(f'PATCH COUNT {label}: expected {count}, got {n}')
-              data=data.replace(old,new)
-              print('PATCH',label,n)
-
-          rep('photoQueueV9.push({file:N,record:i,mode:U,label:h,queuedAt:Date.now(),focusRecordTop:h==="重拍照片"})',
-              'photoQueueV9.push({file:N,record:i,mode:U,label:h,queuedAt:Date.now(),focusRecordTop:h==="重拍照片"||/重识别|重新识别/.test(String(h||""))})',
-              'retry-focus-flag')
-
-          rep('d.onload=()=>{render(),U.hidden=!1,h.onpointerdown=',
-              'd.onload=()=>{render(),h.onpointerdown=',
-              'crop-delay-show')
-          rep('c("cropCancel").onclick=()=>{FA(),N(null)}}},d.onerror=',
-              'c("cropCancel").onclick=()=>{FA(),N(null)}}U.hidden=!1},d.onerror=',
-              'crop-show-after-layout')
-          data=data.replace('data-crop-action="close">关闭</button>','data-crop-action="close">取消</button>')
-
-          old='let v118StatusTimer=null;function v118StatusEl(){let e=document.getElementById("v118FloatingProgress");if(!e){e=document.createElement("div");e.id="v118FloatingProgress";e.style.cssText="position:fixed;top:calc(env(safe-area-inset-top) + 60px);left:10px;right:10px;transform:none;z-index:99990;width:auto;max-width:none;box-sizing:border-box;padding:5px 8px;border-radius:7px;background:rgba(0,109,91,.84);color:#fff;font-size:11.5px;line-height:1.3;font-weight:650;box-shadow:0 5px 18px rgba(0,0,0,.18);pointer-events:none;display:none;white-space:pre-wrap";document.body.appendChild(e)}return e}function UA(i){const p=c("progress");if(p){p.textContent="";p.style.display="none"}const e=v118StatusEl(),m=String(i||"").trim();if(v118StatusTimer){clearTimeout(v118StatusTimer);v118StatusTimer=null}e.textContent=m;e.style.display=m?"block":"none"}'
-          new='let v118StatusTimer=null;function v118StatusEl(){let e=document.getElementById("v118FloatingProgress");if(!e){e=document.createElement("div");e.id="v118FloatingProgress";e.style.cssText="position:fixed;left:10px;right:10px;transform:none;z-index:99990;width:auto;max-width:none;box-sizing:border-box;padding:3px 7px;border-radius:6px;background:rgba(0,109,91,.82);color:#fff;font-size:10.5px;line-height:1.2;font-weight:650;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;display:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";document.body.appendChild(e)}return e}function v118PlaceStatus(e){try{const h=document.querySelector(".brand-header");if(h){const r=h.getBoundingClientRect(),eh=Math.max(20,e.offsetHeight||20);e.style.top=Math.max(2,Math.round(r.bottom-eh-3))+"px";return}}catch{}e.style.top="48px"}function UA(i){const p=c("progress");if(p){p.textContent="";p.style.display="none"}const e=v118StatusEl(),m=String(i||"").trim();if(v118StatusTimer){clearTimeout(v118StatusTimer);v118StatusTimer=null}e.textContent=m;e.style.display=m?"block":"none";m&&requestAnimationFrame(()=>v118PlaceStatus(e))}'
-          rep(old,new,'status-dynamic-header')
-
-          checks={
-            'retry-focus':'/重识别|重新识别/.test(String(h||""))' in data,
-            'crop-hidden-before-final-layout':'d.onload=()=>{render(),U.hidden=!1' not in data and '}}U.hidden=!1},d.onerror=' in data,
-            'status-uses-header': 'document.querySelector(".brand-header")' in data and 'r.bottom-eh-3' in data,
-            'old-status-position-removed':'safe-area-inset-top) + 60px' not in data,
-          }
-          for k,v in checks.items(): print('SELFTEST',k,'PASS' if v else 'FAIL')
-          if not all(checks.values()): raise SystemExit('SELFTEST FAILED')
-
-          out=pathlib.Path('index-B81hyAdU-v118-test325.js')
-          out.write_text(data,encoding='utf-8')
-          subprocess.run(['node','--check',str(out)],check=True)
-          print('SHA256',hashlib.sha256(out.read_bytes()).hexdigest())
-          with zipfile.ZipFile('mingpai-v1.18-test.3.2.5-COS.zip','w',zipfile.ZIP_DEFLATED) as z:
-              z.write(out,out.name)
-              z.writestr('README.txt','v1.18 test.3.2.5\nSelf-tested fixes: all re-recognition queue entries get final card-top focus; crop modal is revealed only after final action layout; floating status uses actual brand-header geometry.\n')
+          Path('index-B81hyAdU-v118-test324.js').write_bytes(urllib.request.urlopen(src,timeout=90).read())
           PY
-
+          python scripts/build-v118-test325.py index-B81hyAdU-v118-test324.js index-B81hyAdU-v118-test325.js
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index-B81hyAdU-v118-test325.js').read_text()
+          assert 'focusRecordTop:h==="重拍照片"||/重识别|重新识别/' in s
+          assert 'U.hidden=!1},d.onerror=' in s
+          assert 'document.querySelector("label[for=unitName]")' in s
+          print('PASS: retry focus, crop pre-layout, status label bounds')
+          PY
       - name: Upload v1.18 test.3.2.5 COS bundle
         uses: actions/upload-artifact@v4
         with:
