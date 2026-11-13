@@ -94,6 +94,7 @@ jobs:
           Path('index-B81hyAdU-v118-test324.js').write_bytes(urllib.request.urlopen(src,timeout=90).read())
           PY
           python scripts/build-v118-test325.py index-B81hyAdU-v118-test324.js index-B81hyAdU-v118-test325.js
+          mv index-B81hyAdU-v118-test325.zip mingpai-v1.18-test.3.2.5-COS.zip
           python - <<'PY'
           from pathlib import Path
           s=Path('index-B81hyAdU-v118-test325.js').read_text()
