@@ -62,7 +62,7 @@ frame.addEventListener('load',async()=>{
   setTimeout(finalCandidateUi,500);
   setTimeout(finalCandidateUi,1500);
 
-  // v1.18 test.3.2.7 final iframe-side UI fixes.
+  // v1.18 test.3.2.8 final iframe-side UI fixes.
   const V118_SHORT_FOOTER='照片和记录保存在当前浏览器；删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载Excel留档。';
   const applyV118InnerFinal=()=>{
     // Footer/version are rendered inside core.html, so modify the iframe document directly.
@@ -76,7 +76,7 @@ frame.addEventListener('load',async()=>{
           continue;
         }
         if(/v1\.18-test\.1|v1\.18 test\.1/.test(t)){
-          n.nodeValue=t.replace(/v1\.18-test\.1/g,'v1.18-test.3.2.7').replace(/v1\.18 test\.1/g,'v1.18 test.3.2.7');
+          n.nodeValue=t.replace(/v1\.18-test\.1/g,'v1.18-test.3.2.8').replace(/v1\.18 test\.1/g,'v1.18 test.3.2.8');
         }
       }
     }catch{}
@@ -816,7 +816,7 @@ frame.addEventListener('load',async()=>{
 
   `;
   d.head.appendChild(st);
-  // test.3.2.7: Keep the floating progress at the top of the viewport.
+  // test.3.2.8: Keep the floating progress at the top of the viewport.
   // Static header spacing avoids layout jumps when the status appears/disappears.
   if(!d.getElementById('v118ProgressTop327Style')){
     const p327=d.createElement('style');p327.id='v118ProgressTop327Style';
@@ -827,7 +827,7 @@ frame.addEventListener('load',async()=>{
         line-height:1.15!important;border-radius:0 0 6px 6px!important;
       }
       @media(max-width:700px){
-        .brand-header{padding-top:23px!important;padding-bottom:5px!important}
+        .brand-header{margin-top:-10px!important;padding-top:8px!important;padding-bottom:5px!important}
         .brand-header .weather-inline{
           grid-template-rows:16px 16px!important;row-gap:0!important;line-height:1!important;
         }
@@ -1230,7 +1230,7 @@ frame.addEventListener('load',async()=>{
   const cardsObserver=new MutationObserver(()=>decorateCards());
   const list=d.getElementById('recordList');if(list)cardsObserver.observe(list,{childList:true,subtree:true});
   decorateCards();
-  // v1.18-test.3.2.7 test: compact field UI + inline statistics
+  // v1.18-test.3.2.8 test: compact field UI + inline statistics
   async function openFieldStats(){
     d.getElementById('fieldStatsModalV1171')?.remove();
     const rows=(await allRecords()).filter(r=>r&&r.name);
@@ -1280,7 +1280,7 @@ frame.addEventListener('load',async()=>{
   };
   setTimeout(installDockStats,250);setTimeout(installDockStats,1000);
   // v1.18: tiny online version manifest check. Large COS files are only prefetched when version changes.
-  // v1.18 test.3.2.7: top metadata inputs use Done/Confirm instead of Next.
+  // v1.18 test.3.2.8: top metadata inputs use Done/Confirm instead of Next.
   const v118TopDone=()=>{
     ['unitName','dept','operatorName'].forEach(id=>{
       const el=d.getElementById(id); if(!el) return;
