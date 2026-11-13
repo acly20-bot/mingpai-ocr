@@ -85,6 +85,22 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
+      - name: Inspect v1.18 test.3.2.1 for test.3.2.2
+        run: |
+          python - <<'PY'
+          import urllib.request
+          u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v118-test321.js'
+          data=urllib.request.urlopen(u,timeout=90).read().decode('utf-8','replace')
+          pats=['prepare-export-v118','operatorName','unitName','v151RememberRecord','v151RestoreRecord','scrollIntoView','重拍照','重识别','正在识别','识别队列已处理完毕','function UA','function UAS']
+          for pat in pats:
+              print('\n###',pat)
+              pos=0;n=0
+              while True:
+                  i=data.find(pat,pos)
+                  if i<0 or n>=12: break
+                  print(data[max(0,i-1600):i+3600].replace('\n',' '))
+                  pos=i+len(pat);n+=1
+          PY
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
