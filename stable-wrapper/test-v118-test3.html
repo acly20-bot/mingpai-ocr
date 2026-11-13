@@ -1348,7 +1348,7 @@ frame.addEventListener('load',async()=>{
       let d;try{d=document.getElementById('app')?.contentDocument}catch{}
       const count=d?.getElementById('countAll')?.textContent||'';
       const visible=!!d?.querySelector('#recordList article.card');
-      const ready=/总记录[:：]\\s*\\d+/.test(count)&&visible;
+      const ready=count.includes('总记录')&&visible;
       return ready;
     };
     const started=Date.now();
