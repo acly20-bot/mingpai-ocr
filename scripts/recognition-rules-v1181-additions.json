@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "rulesVersion": "v1.18.1-20261114",
+  "base": "recognition-rules-v11714-test.json",
+  "rules": [
+    {
+      "id": "v1181-sontu100-dr",
+      "priority": 10080,
+      "match": {
+        "regex": "SONTU\\s*100\\s*[-–]\\s*RAD\\s*\\(?m\\)?",
+        "containsAny": [
+          "数字化X射线成像系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "SONTU100-RAD(m) DR"
+    },
+    {
+      "id": "v1181-lanying7100a-dr",
+      "priority": 10080,
+      "match": {
+        "regex": "\\b7100A\\b",
+        "containsAny": [
+          "数字化摄影X射线系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "蓝影7100A DR"
+    },
+    {
+      "id": "v1181-xh40mi-dr",
+      "priority": 10080,
+      "match": {
+        "regex": "XH40M\\s*[-–]\\s*I\\b",
+        "containsAny": [
+          "数字化车载X射线摄影系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "显浩XH40M-I DR"
+    },
+    {
+      "id": "v1181-mindray-me7",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bME7\\b",
+        "containsAll": [
+          "深圳迈瑞生物医疗电子股份有限公司"
+        ]
+      },
+      "set": {
+        "manufacturer": "深圳迈瑞生物医疗电子股份有限公司"
+      },
+      "note": "迈瑞ME7厂家"
+    },
+    {
+      "id": "v1181-hitachi-exavista",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bEXAVISTA\\b",
+        "containsAny": [
+          "数字X射线透视摄影系统",
+          "数字X射线透视摄影"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "manufacturer": "株式会社日立制作所",
+        "model": "EXAVISTA"
+      },
+      "note": "日立EXAVISTA三字段"
+    },
+    {
+      "id": "v1181-anjian-dtp573",
+      "priority": 10100,
+      "match": {
+        "regex": "\\bDTP\\s*573\\b",
+        "containsAny": [
+          "数字化透视摄影X射线系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "model": "DTP573"
+      },
+      "extract": {
+        "codeRegex": "\\b(DX\\d{10,20})\\b",
+        "codeFlags": "i"
+      },
+      "note": "安健DTP573主机及产品编码"
+    },
+    {
+      "id": "v1181-siemens-definitionas",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bSOMATOM\\s+Definition\\s+AS\\b",
+        "containsAny": [
+          "SIEMENS",
+          "128 Slice",
+          "128 层"
+        ]
+      },
+      "set": {
+        "model": "SOMATOM Definition AS"
+      },
+      "note": "西门子Definition AS型号"
+    },
+    {
+      "id": "v1181-ecg1150",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bECG\\s*[-–]\\s*1150\\b",
+        "containsAll": [
+          "上海光电医用电子仪器有限公司"
+        ]
+      },
+      "set": {
+        "manufacturer": "上海光电医用电子仪器有限公司"
+      },
+      "extract": {
+        "codeRegex": "(?:^|[\\r\\n])\\s*SN\\s*[:：]?\\s*(\\d{4,7}\\s*[A-Z])(?=\\s|$)",
+        "codeFlags": "im"
+      },
+      "note": "光电ECG-1150厂家与序列号"
+    }
+  ]
+}
