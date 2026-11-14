@@ -62,7 +62,7 @@ jobs:
           p.write_text(s,encoding='utf-8')
           PY
 
-      - name: Build v1.18 test.3.2.9 entry
+      - name: Build test-adaptive from verified v1.18.1 baseline
         run: |
           mkdir -p app/test-adaptive
           cp app/core.html app/test-adaptive/core.html
@@ -70,20 +70,31 @@ jobs:
           cp stable-wrapper/coi-serviceworker-v118-test.js app/test-adaptive/coi-serviceworker.js
           cp stable-wrapper/version-v118-test.json app/test-adaptive/version-v118-test.json
 
-          # Test entry only: point to the v1.18 COS test bundle.
-          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v118-test326.js/g' app/test-adaptive/core.html
-          sed -i 's/1\.17/1.18-test.3.2.9/g' app/test-adaptive/core.html
-          sed -i 's/mingpai-stable117-coi-reload/mingpai-v118-test326-coi-reload/g' app/test-adaptive/core.html
+          # Isolated test scope; do not change the formal root.
+          sed -i 's/index-B81hyAdU-v117-final.js/index-B81hyAdU-v1181-candidate.js/g' app/test-adaptive/core.html
+          sed -i 's/1\\.17/1.18.1-test-baseline/g' app/test-adaptive/core.html
+          sed -i 's/mingpai-stable117-coi-reload/mingpai-v1181-test-baseline-coi-reload/g' app/test-adaptive/core.html
 
           python - <<'PY'
           from pathlib import Path
+          import json
           p=Path('app/test-adaptive/index.html')
           s=p.read_text(encoding='utf-8')
           s=s.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
-                      './core.html?field=v12&rev=202611132020-v118-test329')
+                      './core.html?field=v12&rev=20261115-v1181-test-baseline')
           s=s.replace('<title>设备铭牌智能识别与审核</title>',
-                      '<title>设备铭牌识别｜v1.18 test.3.2.9</title>')
+                      '<title>设备铭牌识别｜v1.18.1 测试基线</title>')
           p.write_text(s,encoding='utf-8')
+          core=(Path('app/test-adaptive/core.html').read_text(encoding='utf-8'))
+          manifest=json.loads(Path('app/test-adaptive/version-v118-test.json').read_text(encoding='utf-8'))
+          sw=Path('app/test-adaptive/coi-serviceworker.js').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v1181-candidate.js' in core
+          assert manifest['mainJs']=='index-B81hyAdU-v1181-candidate.js'
+          assert manifest['rules']=='recognition-rules-v1181.json'
+          assert manifest['version']=='1.18.1-test-baseline'
+          assert 'mingpai-shell-v1181-test-baseline' in sw
+          assert 'index-B81hyAdU-v118-test326.js' not in core
+          print('PASS v1.18.1 test baseline uses validated runtime and 21-rule JSON')
           PY
 
       - name: Verify uploaded COS candidate and build isolated v1.18 candidate site
