@@ -45,7 +45,7 @@ async function scenario(errorType,initialCloudId){
    let rec=body.record;calls.push(rec);
    if(errorType==="permission")throw new Error("403 insufficient permission");
    if(errorType==="network")throw new Error("network timeout");
-   if(!rec.id.endsWith('__restored__'+String(initialCloudId).slice(-14))) {
+   if(!rec.id.endsWith('__restored__'+String(initialCloudId).replace(/[^a-z0-9]/gi,"").slice(-14))) {
      throw new Error("飞书接口错误 1254043: record not found,id = rec_deleted");
    }
    if(rec.feishuRecordId)throw new Error("stale cloud id leaked");
