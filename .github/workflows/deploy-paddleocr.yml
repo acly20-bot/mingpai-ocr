@@ -490,9 +490,11 @@ jobs:
           page=folder/'index.html'
           s=page.read_text(encoding='utf-8')
           # The validated source-side card patch supersedes the old DOM observer.
-          start=s.find('// v1.18.2 test.2.1: status is already saved correctly')
-          end=s.find("const st=d.createElement('style');",start)
-          assert start>=0 and end>start
+          marker=s.find('const v118221List=d.getElementById(\'recordList\');')
+          assert marker>=0, 'prior test.2.1 hook missing'
+          start=s.rfind('// v1.18.2 test.2',0,marker)
+          end=s.find("const st=d.createElement('style');",marker)
+          assert start>=0 and end>marker
           s=s[:start]+s[end:]
           s=s.replace('v1.18.2 test.2.1','v1.18.2 test.2.2')
           s=s.replace('1.18.2-test.2.1','1.18.2-test.2.2')
