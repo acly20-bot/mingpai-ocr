@@ -442,7 +442,7 @@ jobs:
           w=w.replace('1.18.2-test.2','1.18.2-test.2.1')
           sw.write_text(w,encoding='utf-8')
           manifest=folder/'version-v118-test.json'
-          m=json.loads(manifest.read_text(encoding='utf-8'))
+          m,_=json.JSONDecoder().raw_decode(manifest.read_text(encoding='utf-8'))
           assert m['mainJs']=='index-B81hyAdU-v1182-test2.js'
           m['version']='1.18.2-test.2.1'
           manifest.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
