@@ -392,37 +392,37 @@ jobs:
           anchor="  const st=d.createElement('style');"
           assert s.count(anchor)==1
           hook=r"""
-  // v1.18.2 test.2.1: status is already saved correctly, but an old error
-  // block survives v11713PatchCard() until a full page redraw.
-  const v118221List=d.getElementById('recordList');
-  if(v118221List){
-    let v118221Queued=false;
-    const v118221Clean=()=>{
-      v118221Queued=false;
-      for(const card of v118221List.querySelectorAll('article.card')){
-        const status=card.querySelector('.cardtitle small');
-        if(!status||!/飞书\s*[:：]\s*已同步/.test(status.textContent||''))continue;
-        for(const note of card.querySelectorAll('.errornote')){
-          if(/^飞书同步失败\s*[:：]/.test((note.textContent||'').trim()))note.remove();
-        }
-      }
-    };
-    new MutationObserver(records=>{
-      const shouldCheck=records.some(r=>{
-        const target=r.target?.nodeType===1?r.target:r.target?.parentElement;
-        if(target?.matches?.('.cardtitle small')||target?.closest?.('.cardtitle'))return true;
-        return [...r.addedNodes].some(n=>n.nodeType===1&&
-          (n.matches?.('article.card')||n.querySelector?.('article.card')));
-      });
-      if(shouldCheck&&!v118221Queued){
-        v118221Queued=true;
-        requestAnimationFrame(v118221Clean);
-      }
-    }).observe(v118221List,{childList:true,subtree:true});
-    v118221Clean();
-  }
-
-"""
+            // v1.18.2 test.2.1: status is already saved correctly, but an old error
+            // block survives v11713PatchCard() until a full page redraw.
+            const v118221List=d.getElementById('recordList');
+            if(v118221List){
+              let v118221Queued=false;
+              const v118221Clean=()=>{
+                v118221Queued=false;
+                for(const card of v118221List.querySelectorAll('article.card')){
+                  const status=card.querySelector('.cardtitle small');
+                  if(!status||!/飞书\s*[:：]\s*已同步/.test(status.textContent||''))continue;
+                  for(const note of card.querySelectorAll('.errornote')){
+                    if(/^飞书同步失败\s*[:：]/.test((note.textContent||'').trim()))note.remove();
+                  }
+                }
+              };
+              new MutationObserver(records=>{
+                const shouldCheck=records.some(r=>{
+                  const target=r.target?.nodeType===1?r.target:r.target?.parentElement;
+                  if(target?.matches?.('.cardtitle small')||target?.closest?.('.cardtitle'))return true;
+                  return [...r.addedNodes].some(n=>n.nodeType===1&&
+                    (n.matches?.('article.card')||n.querySelector?.('article.card')));
+                });
+                if(shouldCheck&&!v118221Queued){
+                  v118221Queued=true;
+                  requestAnimationFrame(v118221Clean);
+                }
+              }).observe(v118221List,{childList:true,subtree:true});
+              v118221Clean();
+            }
+          
+          """
           s=s.replace(anchor,hook+anchor,1)
           s=s.replace('v1.18.2 test.2','v1.18.2 test.2.1')
           s=s.replace('1.18.2-test.2','1.18.2-test.2.1')
