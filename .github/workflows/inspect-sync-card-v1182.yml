@@ -1,0 +1,22 @@
+name: Inspect sync card status rendering
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/inspect-sync-card-v1182.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Examine narrow runtime fragments
+        run: |
+          python - <<'PY'
+          import urllib.request,re
+          u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v1182-test2.js'
+          s=urllib.request.urlopen(u,timeout=120).read().decode()
+          for term in ['function v11713PatchCard(', 'function v151FindRecordCard(', 'i.syncStatus="synced",i.syncError=""','syncError','飞书同步失败：','function CI(']:
+              pos=[m.start() for m in re.finditer(re.escape(term),s)]
+              print('TERM',term,'COUNT',len(pos))
+              for i in pos[:4]:print('CODE',repr(s[max(0,i-400):i+2800]))
+          PY
