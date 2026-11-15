@@ -69,7 +69,7 @@ new_obs='''try{
 wrapper=patch(wrapper,old_obs,new_obs,"filter full-page modal observer work")
 
 # Non-blocking startup timings; no telemetry uploaded; read console/localStorage.
-boot_anchor="const frame=document.getElementById('app');"
+boot_anchor="const frame=document.getElementById('app');\nconst v11711BaseSrc="
 boot_extra='''const v1182StartAt=performance.now();
 window.__mingpaiBootMetrics={version:"1.18.2-test.1",startAt:v1182StartAt};
 frame.addEventListener('load',()=>{
@@ -93,7 +93,7 @@ frame.addEventListener('load',()=>{
  }catch(e){console.debug('startup diagnostics unavailable',e)}
 },{once:true});
 '''
-wrapper=patch(wrapper,boot_anchor,boot_anchor+"\n"+boot_extra,"passive startup timing")
+wrapper=patch(wrapper,boot_anchor,boot_anchor.replace("const v11711BaseSrc=",boot_extra+"const v11711BaseSrc="),"passive startup timing")
 wrapper=wrapper.replace("1.18.1-test-baseline","1.18.2-test.1").replace("v1.18.1 测试基线","v1.18.2 测试版")
 assert "setInterval(()=>{if(searchGuard.value" not in wrapper
 assert "v1182-stats-table" in wrapper
