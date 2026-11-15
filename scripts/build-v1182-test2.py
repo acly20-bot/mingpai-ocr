@@ -10,7 +10,7 @@ old=''' M=await JI("/sync",{record:{...v1182Record,feishuRecordId:""}});
 new=''' // The sync service can remember the stale mapping by LOCAL id, even when
  // feishuRecordId is blank. Use a deterministic new sync key for this ONE
  // deleted remote record. Keep i.id unchanged in local IndexedDB.
- const v11822RecoveryKey=String(i.id)+"__restored__"+String(v1182Record.feishuRecordId).replace(/[^a-z0-9]/gi,"").slice(-14);
+ const v11822RecoveryKey=String(i.id)+"__restored__"+String(v1182Record.feishuRecordId||"missing-cloud-id").replace(/[^a-z0-9]/gi,"").slice(-14);
  try{
    M=await JI("/sync",{record:{...v1182Record,id:v11822RecoveryKey,feishuRecordId:"",remoteRecordId:""}});
  }catch(secondError){
@@ -19,6 +19,12 @@ new=''' // The sync service can remember the stale mapping by LOCAL id, even whe
  if(!M||!M.recordId)throw new Error("飞书重建未返回新记录ID；旧本地映射已保留，请检查后重试。");
  M.action="recreated";'''
 assert s.count(old)==1,s.count(old)
+# Backend may still map LOCAL id to deleted Feishu record when old cloud ID
+# was not stored in IndexedDB.
+guard='if(!v1182Record.feishuRecordId||!/1254043/.test(message)'
+assert s.count(guard)==1,("stale cloud guard",s.count(guard))
+s=s.replace(guard,'if(!/1254043/.test(message)',1)
+
 s=s.replace(old,new,1)
 assert s.count('function v118RetryStatusNoRender(rec)')==1
 assert s.count('function v1188CorrectNameplate(rec)')==1
@@ -45,7 +51,7 @@ async function scenario(errorType,initialCloudId){
    let rec=body.record;calls.push(rec);
    if(errorType==="permission")throw new Error("403 insufficient permission");
    if(errorType==="network")throw new Error("network timeout");
-   if(!rec.id.endsWith('__restored__'+String(initialCloudId).replace(/[^a-z0-9]/gi,"").slice(-14))) {
+   if(!rec.id.endsWith('__restored__'+String(initialCloudId||'missing-cloud-id').replace(/[^a-z0-9]/gi,"").slice(-14))) {
      throw new Error("飞书接口错误 1254043: record not found,id = rec_deleted");
    }
    if(rec.feishuRecordId)throw new Error("stale cloud id leaked");
@@ -71,7 +77,7 @@ async function scenario(errorType,initialCloudId){
  for(const type of ["network","permission"]){
    let x=await scenario(type,"rec_deleted");assert(!x.ok);assert.equal(x.calls.length,1);
  }
- let x=await scenario("success","");assert(!x.ok);assert.equal(x.calls.length,1);
+ let x=await scenario("success","");assert(x.ok,x.error);assert.equal(x.calls.length,2);
  console.log("PASS: deterministic recovery ID, fail-closed retry, never change local ID and no retry on network/permission");
 })().catch(e=>{console.error(e);process.exit(1)});
 '''
