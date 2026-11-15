@@ -328,6 +328,59 @@ jobs:
           print('PASS isolated test.1 site and unmodified v1.18.1 formal entry')
           PY
 
+      - name: Promote verified v1.18.2 test.2 to test-adaptive only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import urlopen
+          import hashlib,json,time
+          base='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'
+          name='index-B81hyAdU-v1182-test2.js'
+          expected='76199c50a439b1f27fb6e6ad0dd48fea53f834a51b5d307366fa0aa94c9a4ebb'
+          for attempt in range(1,4):
+              try:
+                  data=urlopen(base+name,timeout=60).read()
+                  break
+              except Exception as e:
+                  if attempt==3: raise
+                  print('COS retry',attempt,str(e))
+                  time.sleep(attempt*2)
+          actual=hashlib.sha256(data).hexdigest()
+          assert actual==expected,(actual,len(data))
+          print('PASS v1.18.2 test.2 uploaded SHA256',actual,len(data))
+          test=Path('app/test-adaptive')
+          core=(test/'core.html').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v1182-test1.js' in core
+          core=core.replace('index-B81hyAdU-v1182-test1.js',name)
+          core=core.replace('1.18.2-test.1','1.18.2-test.2')
+          core=core.replace('mingpai-v1182-test1-coi-reload','mingpai-v1182-test2-coi-reload')
+          # This label was inherited from the historical base HTML; runtime was
+          # already upgraded. Fix footer text as well as the browser title.
+          core=core.replace('版本：v1.17','版本：v1.18.2 test.2')
+          core=core.replace('版本: v1.17','版本: v1.18.2 test.2')
+          (test/'core.html').write_text(core,encoding='utf-8')
+          page=(test/'index.html').read_text(encoding='utf-8')
+          page=page.replace('v1.18.2 test.1','v1.18.2 test.2')
+          page=page.replace('1.18.2-test.1','1.18.2-test.2')
+          page=page.replace('20261115-v1182-test1','20261116-v1182-test2')
+          (test/'index.html').write_text(page,encoding='utf-8')
+          sw=(test/'coi-serviceworker.js').read_text(encoding='utf-8')
+          assert 'mingpai-shell-v1182-test1' in sw
+          sw=sw.replace('mingpai-shell-v1182-test1','mingpai-shell-v1182-test2')
+          sw=sw.replace('1.18.2-test.1','1.18.2-test.2')
+          (test/'coi-serviceworker.js').write_text(sw,encoding='utf-8')
+          manifest=json.loads((test/'version-v118-test.json').read_text(encoding='utf-8'))
+          assert manifest['mainJs']=='index-B81hyAdU-v1182-test1.js'
+          manifest.update(version='1.18.2-test.2',mainJs=name,runtimeFiles=[name])
+          (test/'version-v118-test.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\\n',encoding='utf-8')
+          assert name in (test/'core.html').read_text(encoding='utf-8')
+          assert name in (test/'version-v118-test.json').read_text(encoding='utf-8')
+          assert 'v1182-stats-table' in (test/'index.html').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v1181-candidate.js' in Path('app/core.html').read_text(encoding='utf-8')
+          assert 'v1.18.1 正式版' in Path('app/index.html').read_text(encoding='utf-8')
+          print('PASS test.2 deployed in isolated test-adaptive; production v1.18.1 untouched')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
