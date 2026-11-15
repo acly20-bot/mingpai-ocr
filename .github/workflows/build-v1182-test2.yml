@@ -1,0 +1,35 @@
+name: Build Mingpai v1.18.2 test.2 Feishu recovery
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-v1182-test2.yml'
+      - 'scripts/build-v1182-test2.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch prior test.1 runtime from COS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import urlopen
+          from hashlib import sha256
+          name='index-B81hyAdU-v1182-test1.js'
+          data=urlopen('https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'+name,timeout=120).read()
+          assert len(data)>10000000
+          Path(name).write_bytes(data)
+          print(name,len(data),sha256(data).hexdigest())
+          PY
+      - name: Build and run Feishu recovery regression tests
+        run: python scripts/build-v1182-test2.py
+      - name: Upload COS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18.2-test.2-COS
+          path: mingpai-v1.18.2-test.2-COS.zip
+          retention-days: 30
