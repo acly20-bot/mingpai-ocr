@@ -101,6 +101,14 @@ assert "v1182StartAt" in wrapper
 
 # Versioned test shell will be deployed separately after COS upload.
 Path("test-v1182-test1.html").write_text(wrapper,encoding="utf-8")
+# Verify embedded browser scripts as actual JavaScript, not just HTML text.
+for index,part in enumerate(re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>",wrapper,re.I),1):
+    if not part.strip():continue
+    script=Path(f"verify-v1182-inline-{index}.js")
+    script.write_text(part,encoding="utf-8")
+    subprocess.run(["node","--check",str(script)],check=True)
+print("PASS inline wrapper JS syntax")
+
 subprocess.run(["node","--check",str(Path("test-v1182-test1.html"))],check=False) if False else None
 
 # Offline unit testing of recovery guard without any Feishu network calls.
