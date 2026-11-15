@@ -268,6 +268,59 @@ jobs:
           print('PASS: v1.18.1 formal root uses tested candidate JS and rules; v1.18 rollback retained')
           PY
 
+      - name: Verify v1.18.2 COS upload and deploy isolated test.1
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import urlopen
+          import hashlib
+          base='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'
+          current='index-B81hyAdU-v1181-candidate.js'
+          test='index-B81hyAdU-v1182-test1.js'
+          old=urlopen(base+current,timeout=120).read()
+          assert len(old)>10_000_000
+          Path(current).write_bytes(old)
+          data=urlopen(base+test,timeout=120).read()
+          sha=hashlib.sha256(data).hexdigest()
+          assert sha=='8006f4b2509bfe7f424ecd2c9b1940794da2b653f7157e53135f5a21ff1de0da',(len(data),sha)
+          print('PASS uploaded COS JS SHA256',sha,'bytes',len(data))
+          PY
+          python scripts/build-v1182-test.py
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          dest=Path('app/test-adaptive')
+          test_js='index-B81hyAdU-v1182-test1.js'
+          core=(dest/'core.html').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v1181-candidate.js' in core
+          core=core.replace('index-B81hyAdU-v1181-candidate.js',test_js)
+          core=core.replace('1.18.1-test-baseline','1.18.2-test.1')
+          core=core.replace('mingpai-v1181-test-baseline-coi-reload','mingpai-v1182-test1-coi-reload')
+          (dest/'core.html').write_text(core,encoding='utf-8')
+          page=Path('test-v1182-test1.html').read_text(encoding='utf-8')
+          page=page.replace('./core.html?field=v12&rev=202611082322-v1534444-status',
+                            './core.html?field=v12&rev=20261115-v1182-test1')
+          page=page.replace('20261115-v1181-test-baseline','20261115-v1182-test1')
+          page=page.replace('<title>设备铭牌智能识别与审核</title>',
+                            '<title>设备铭牌识别｜v1.18.2 test.1</title>')
+          (dest/'index.html').write_text(page,encoding='utf-8')
+          sw=(dest/'coi-serviceworker.js').read_text(encoding='utf-8')
+          assert 'mingpai-shell-v1181-test-baseline' in sw
+          sw=sw.replace('mingpai-shell-v1181-test-baseline','mingpai-shell-v1182-test1')
+          sw=sw.replace('1.18.1-test-baseline','1.18.2-test.1')
+          (dest/'coi-serviceworker.js').write_text(sw,encoding='utf-8')
+          manifest=json.loads((dest/'version-v118-test.json').read_text(encoding='utf-8'))
+          manifest.update(version='1.18.2-test.1',mainJs=test_js,
+                          runtimeFiles=[test_js],rules='recognition-rules-v1181.json')
+          (dest/'version-v118-test.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert test_js in (dest/'core.html').read_text(encoding='utf-8')
+          assert 'v1182-stats-table' in (dest/'index.html').read_text(encoding='utf-8')
+          assert 'mingpai-shell-v1182-test1' in (dest/'coi-serviceworker.js').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v1181-candidate.js' in Path('app/core.html').read_text(encoding='utf-8')
+          assert 'v1.18.1 正式版' in Path('app/index.html').read_text(encoding='utf-8')
+          print('PASS isolated test.1 site and unmodified v1.18.1 formal entry')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
