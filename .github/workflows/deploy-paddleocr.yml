@@ -527,6 +527,52 @@ jobs:
           print('PASS isolated test.2.2 update; production v1.18.1 untouched')
           PY
 
+      - name: Promote validated v1.18.2 test.2.2 to formal production
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,subprocess,urllib.request,hashlib
+          root=Path('app')
+          verified=root/'test-adaptive'
+          name='index-B81hyAdU-v1182-test22.js'
+          assert name in (verified/'core.html').read_text(encoding='utf-8')
+          assert 'v1182-stats-table' in (verified/'index.html').read_text(encoding='utf-8')
+          assert 'v118221Clean' not in (verified/'index.html').read_text(encoding='utf-8')
+          # Promote *exactly* the real-device-tested test.2.2 implementation.
+          core=(verified/'core.html').read_text(encoding='utf-8')
+          core=core.replace('v1.18.2 test.2.2','v1.18.2')
+          core=core.replace('1.18.2-test.2.2','1.18.2')
+          core=core.replace('mingpai-v1182-test222-coi-reload','mingpai-v1182-formal-coi-reload')
+          (root/'core.html').write_text(core,encoding='utf-8')
+          wrapper=(verified/'index.html').read_text(encoding='utf-8')
+          wrapper=wrapper.replace('v1.18.2 test.2.2','v1.18.2 正式版')
+          wrapper=wrapper.replace('1.18.2-test.2.2','1.18.2')
+          wrapper=wrapper.replace('20261116-v1182-test222','20261116-v1182-formal')
+          wrapper=wrapper.replace('v1.18.2 1.18.2','v1.18.2')
+          (root/'index.html').write_text(wrapper,encoding='utf-8')
+          sw=(verified/'coi-serviceworker.js').read_text(encoding='utf-8')
+          sw=sw.replace('mingpai-shell-v1182-test222','mingpai-shell-v1182-formal')
+          sw=sw.replace('1.18.2-test.2.2','1.18.2')
+          (root/'coi-serviceworker.js').write_text(sw,encoding='utf-8')
+          m,_=json.JSONDecoder().raw_decode((verified/'version-v118-test.json').read_text(encoding='utf-8'))
+          assert m['mainJs']==name and m['rules']=='recognition-rules-v1181.json'
+          m['version']='1.18.2'
+          (root/'version-v118-test.json').write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          assert name in (root/'core.html').read_text(encoding='utf-8')
+          assert '版本：v1.18.2' in (root/'core.html').read_text(encoding='utf-8') or 'v1.18.2' in (root/'core.html').read_text(encoding='utf-8')
+          assert 'v1.18.2 正式版' in (root/'index.html').read_text(encoding='utf-8')
+          assert 'v1182-stats-table' in (root/'index.html').read_text(encoding='utf-8')
+          assert 'mingpai-shell-v1182-formal' in (root/'coi-serviceworker.js').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',wrapper,re.I|re.S)
+          for i,script in enumerate(scripts):
+              if script.strip():
+                  p=Path(f'verify-v1182-formal-{i}.js')
+                  p.write_text(script,encoding='utf-8')
+                  subprocess.run(['node','--check',str(p)],check=True)
+          assert 'index-B81hyAdU-v1181-candidate.js' in (root/'candidate-v1181'/'core.html').read_text(encoding='utf-8')
+          print('PASS: v1.18.2 formal promotion with validated test.2.2 JS and 21-rule JSON')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
