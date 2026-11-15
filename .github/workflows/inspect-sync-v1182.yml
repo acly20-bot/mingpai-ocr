@@ -1,0 +1,24 @@
+name: Inspect Feishu sync client for v1.18.2 test.2
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/inspect-sync-v1182.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect sanitized sync code paths
+        run: |
+          python - <<'PY'
+          import urllib.request,re
+          u='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v1182-test1.js'
+          s=urllib.request.urlopen(u,timeout=120).read().decode()
+          terms=['async function JI(', 'function JI(', 'async function F(', 'async function ZI(', 'JI("/sync"', '1254043','function WN(', 'feishuRecordId','remoteRecordId', 'record not found', 'async function v1174ApplyExternalRules(']
+          for term in terms:
+              ms=list(re.finditer(re.escape(term),s))
+              print('\\nTERM',term,'COUNT',len(ms))
+              for m in ms[:3]:
+                  print('SOURCE',repr(s[max(0,m.start()-1300):m.start()+5000]))
+          PY
