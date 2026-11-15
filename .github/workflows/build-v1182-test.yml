@@ -1,0 +1,40 @@
+name: Build Mingpai v1.18.2 isolated test bundle
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-v1182-test.yml'
+      - 'scripts/build-v1182-test.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch current validated runtime from COS
+        run: |
+          python - <<'PY'
+          from urllib.request import urlopen
+          from pathlib import Path
+          name='index-B81hyAdU-v1181-candidate.js'
+          data=urlopen('https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'+name,timeout=120).read()
+          assert len(data)>10000000
+          Path(name).write_bytes(data)
+          print('Downloaded runtime bytes:',len(data))
+          PY
+      - name: Patch, check and audit isolated test
+        run: python scripts/build-v1182-test.py
+      - name: Upload test COS package
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18.2-test.1-COS
+          path: mingpai-v1.18.2-test.1-COS.zip
+          retention-days: 30
+      - name: Upload wrapper preview for later deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: mingpai-v1.18.2-test.1-wrapper
+          path: test-v1182-test1.html
+          retention-days: 30
