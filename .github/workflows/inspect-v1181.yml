@@ -1,5 +1,9 @@
 name: Inspect v1.18.1 runtime for safe next test update
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-v1181.yml'
   workflow_dispatch:
 permissions:
   contents: read
