@@ -10,6 +10,8 @@ on:
       - '.github/workflows/deploy-paddleocr.yml'
       - 'stable-wrapper/**'
       - 'scripts/apply-v11821-onopen-version.py'
+      - 'scripts/deploy-v1183-test1.py'
+      - 'scripts/v1183-field-review.js'
   workflow_dispatch:
 
 permissions:
@@ -713,6 +715,10 @@ jobs:
       - name: Apply guarded on-open version check to formal and test entries
         run: |
           python scripts/apply-v11821-onopen-version.py
+
+      - name: Deploy isolated v1.18.3 test.1 field accuracy review
+        run: |
+          python scripts/deploy-v1183-test1.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
