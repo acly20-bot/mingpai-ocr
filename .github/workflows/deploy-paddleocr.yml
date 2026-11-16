@@ -582,49 +582,49 @@ jobs:
           page=folder/'index.html'
           html=page.read_text(encoding='utf-8')
           anchor="""    const v1182SyncTrusted=()=>{if(searchGuard.value!==trustedSearch)searchGuard.value=trustedSearch;};
-    searchGuard.addEventListener('change',v1182SyncTrusted);
-    searchGuard.addEventListener('blur',v1182SyncTrusted);"""
+              searchGuard.addEventListener('change',v1182SyncTrusted);
+              searchGuard.addEventListener('blur',v1182SyncTrusted);"""
           assert html.count(anchor)==1,("search anchor",html.count(anchor))
           replacement="""    const v1182SyncTrusted=()=>{if(searchGuard.value!==trustedSearch)searchGuard.value=trustedSearch;};
-    searchGuard.addEventListener('change',v1182SyncTrusted);
-    searchGuard.addEventListener('blur',v1182SyncTrusted);
-    // v1.18.2.1: search is independent of status, unit and department
-    // fields. Preserve only a search typed intentionally in this tab.
-    const v11821SearchKey='mingpai-v11821-explicit-search';
-    let v11821Explicit='';
-    try{v11821Explicit=sessionStorage.getItem(v11821SearchKey)||''}catch{}
-    let v11821UserEdited=false;
-    searchGuard.setAttribute('enterkeyhint','done');
-    searchGuard.enterKeyHint='done';
-    searchGuard.setAttribute('autocorrect','off');
-    searchGuard.setAttribute('spellcheck','false');
-    const v11821Restore=()=>{
-      if(v11821UserEdited||d.activeElement===searchGuard)return;
-      // A browser may restore the department name into the search field.
-      // Any value without explicit search history is treated as autofill.
-      if(searchGuard.value && searchGuard.value!==v11821Explicit){
-        searchGuard.value='';
-        trustedSearch='';
-        searchGuard.dispatchEvent(new Event('input',{bubbles:true}));
-      }
-    };
-    searchGuard.addEventListener('input',e=>{
-      if(!e.isTrusted)return;
-      v11821UserEdited=true;
-      v11821Explicit=searchGuard.value;
-      try{sessionStorage.setItem(v11821SearchKey,v11821Explicit)}catch{}
-    },true);
-    // Enterkeyhint is advisory: explicitly blur on the IME action so mobile
-    // browsers that still label the key "Go" also close the keyboard.
-    searchGuard.addEventListener('keydown',e=>{
-      if(e.key==='Enter'||e.key==='NumpadEnter'){
-        e.preventDefault();
-        searchGuard.blur();
-      }
-    },true);
-    v11821Restore();
-    setTimeout(v11821Restore,120);
-    setTimeout(v11821Restore,650);"""
+              searchGuard.addEventListener('change',v1182SyncTrusted);
+              searchGuard.addEventListener('blur',v1182SyncTrusted);
+              // v1.18.2.1: search is independent of status, unit and department
+              // fields. Preserve only a search typed intentionally in this tab.
+              const v11821SearchKey='mingpai-v11821-explicit-search';
+              let v11821Explicit='';
+              try{v11821Explicit=sessionStorage.getItem(v11821SearchKey)||''}catch{}
+              let v11821UserEdited=false;
+              searchGuard.setAttribute('enterkeyhint','done');
+              searchGuard.enterKeyHint='done';
+              searchGuard.setAttribute('autocorrect','off');
+              searchGuard.setAttribute('spellcheck','false');
+              const v11821Restore=()=>{
+                if(v11821UserEdited||d.activeElement===searchGuard)return;
+                // A browser may restore the department name into the search field.
+                // Any value without explicit search history is treated as autofill.
+                if(searchGuard.value && searchGuard.value!==v11821Explicit){
+                  searchGuard.value='';
+                  trustedSearch='';
+                  searchGuard.dispatchEvent(new Event('input',{bubbles:true}));
+                }
+              };
+              searchGuard.addEventListener('input',e=>{
+                if(!e.isTrusted)return;
+                v11821UserEdited=true;
+                v11821Explicit=searchGuard.value;
+                try{sessionStorage.setItem(v11821SearchKey,v11821Explicit)}catch{}
+              },true);
+              // Enterkeyhint is advisory: explicitly blur on the IME action so mobile
+              // browsers that still label the key "Go" also close the keyboard.
+              searchGuard.addEventListener('keydown',e=>{
+                if(e.key==='Enter'||e.key==='NumpadEnter'){
+                  e.preventDefault();
+                  searchGuard.blur();
+                }
+              },true);
+              v11821Restore();
+              setTimeout(v11821Restore,120);
+              setTimeout(v11821Restore,650);"""
           html=html.replace(anchor,replacement,1)
           html=html.replace('v1.18.2 test.2.2','v1.18.2.1 测试版').replace('1.18.2-test.2.2','1.18.2.1-test')
           html=html.replace('20261116-v1182-test222','20261116-v11821-search')
