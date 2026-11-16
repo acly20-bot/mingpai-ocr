@@ -660,6 +660,55 @@ jobs:
           print('PASS v1.18.2.1 test-only search/IME fix; v1.18.2 production untouched')
           PY
 
+      - name: Promote validated v1.18.2.1 to formal root
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,subprocess
+          root=Path('app')
+          test=root/'test-adaptive'
+          js='index-B81hyAdU-v1182-test22.js'
+          rule='recognition-rules-v1181.json'
+          test_core=(test/'core.html').read_text(encoding='utf-8')
+          test_html=(test/'index.html').read_text(encoding='utf-8')
+          test_sw=(test/'coi-serviceworker.js').read_text(encoding='utf-8')
+          manifest,_=json.JSONDecoder().raw_decode((test/'version-v118-test.json').read_text(encoding='utf-8'))
+          assert js in test_core and manifest['mainJs']==js
+          assert manifest['rules']==rule and manifest['version']=='1.18.2.1-test'
+          assert 'v11821Restore' in test_html
+          assert "enterkeyhint','done" in test_html
+          assert 'v1182-stats-table' in test_html
+          assert 'mingpai-shell-v11821-search' in test_sw
+          # Promote the same tested interface, without modifying the JS, rules,
+          # local storage schema, or Feishu backend.
+          formal_core=test_core.replace('v1.18.2.1 测试版','v1.18.2.1 正式版')
+          formal_core=formal_core.replace('1.18.2.1-test','1.18.2.1')
+          formal_core=formal_core.replace('mingpai-v11821-search-coi-reload','mingpai-v11821-formal-coi-reload')
+          formal_html=test_html.replace('v1.18.2.1 测试版','v1.18.2.1 正式版')
+          formal_html=formal_html.replace('1.18.2.1-test','1.18.2.1')
+          formal_html=formal_html.replace('20261116-v11821-search','20261116-v11821-formal')
+          formal_sw=test_sw.replace('mingpai-shell-v11821-search','mingpai-shell-v11821-formal')
+          formal_sw=formal_sw.replace('1.18.2.1-test','1.18.2.1')
+          manifest['version']='1.18.2.1'
+          (root/'core.html').write_text(formal_core,encoding='utf-8')
+          (root/'index.html').write_text(formal_html,encoding='utf-8')
+          (root/'coi-serviceworker.js').write_text(formal_sw,encoding='utf-8')
+          (root/'version-v118-test.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',formal_html,re.I|re.S)
+          assert scripts
+          for i,source in enumerate(scripts):
+              if source.strip():
+                  filename=Path(f'verify-v11821-formal-{i}.js')
+                  filename.write_text(source,encoding='utf-8')
+                  subprocess.run(['node','--check',str(filename)],check=True)
+          assert js in (root/'core.html').read_text(encoding='utf-8')
+          assert 'v1.18.2.1 正式版' in (root/'index.html').read_text(encoding='utf-8')
+          assert 'v11821Restore' in (root/'index.html').read_text(encoding='utf-8')
+          assert 'v1.18.2.1 正式版' not in (test/'index.html').read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v1181-candidate.js' in (root/'candidate-v1181'/'core.html').read_text(encoding='utf-8')
+          print('PASS v1.18.2.1: formal and test use tested JS and separate SW cache scopes')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
