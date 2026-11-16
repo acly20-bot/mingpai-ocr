@@ -39,7 +39,7 @@ bootstrap=r"""<script id="mingpai-open-version-check">
       let coreOutdated=false;
       try{
         const frame=document.getElementById('app');
-        if(frame&&!frame.contentDocument?.body){
+        if(frame&&frame.contentDocument?.readyState!=='complete'){
           await Promise.race([
             new Promise(resolve=>frame.addEventListener('load',resolve,{once:true})),
             timeout(4500)
