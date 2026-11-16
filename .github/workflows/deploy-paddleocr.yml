@@ -9,6 +9,7 @@ on:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
       - 'stable-wrapper/**'
+      - 'scripts/apply-v11821-onopen-version.py'
   workflow_dispatch:
 
 permissions:
