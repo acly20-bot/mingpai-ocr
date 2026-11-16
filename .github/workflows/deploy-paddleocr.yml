@@ -709,6 +709,10 @@ jobs:
           print('PASS v1.18.2.1: formal and test use tested JS and separate SW cache scopes')
           PY
 
+      - name: Apply guarded on-open version check to formal and test entries
+        run: |
+          python scripts/apply-v11821-onopen-version.py
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
