@@ -46,7 +46,7 @@ bootstrap=r"""<script id="mingpai-open-version-check">
           ]);
         }
         const text=frame?.contentDocument?.body?.innerText||'';
-        const footer=[...text.matchAll(/版本\\s*[:：]\\s*v?(\\d+(?:\\.\\d+)+)/g)];
+        const footer=[...text.matchAll(/版本\s*[:：]\s*v?(\d+(?:\.\d+)+)/g)];
         const actual=footer.length?footer[footer.length-1][1]:'';
         if(actual&&actual!==remote.replace(/-test$/, ''))coreOutdated=true;
       }catch(error){console.debug('[铭牌版本] 无法读取内页版本',error)}
