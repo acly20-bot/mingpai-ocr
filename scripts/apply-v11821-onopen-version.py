@@ -33,7 +33,24 @@ bootstrap=r"""<script id="mingpai-open-version-check">
       const remote=String(manifest?.version||'').trim();
       if(!remote||!manifest?.mainJs)return;
       const marker=ATTEMPT_PREFIX+remote;
-      if(remote===CLIENT_VERSION){
+      // Even when the top-level HTML is current, the previous service
+      // worker may have served a stale cached core.html to the iframe.
+      // Compare the actual rendered footer version, not only wrapper version.
+      let coreOutdated=false;
+      try{
+        const frame=document.getElementById('app');
+        if(frame&&!frame.contentDocument?.body){
+          await Promise.race([
+            new Promise(resolve=>frame.addEventListener('load',resolve,{once:true})),
+            timeout(4500)
+          ]);
+        }
+        const text=frame?.contentDocument?.body?.innerText||'';
+        const footer=[...text.matchAll(/版本\\s*[:：]\\s*v?(\\d+(?:\\.\\d+)+)/g)];
+        const actual=footer.length?footer[footer.length-1][1]:'';
+        if(actual&&actual!==remote.replace(/-test$/, ''))coreOutdated=true;
+      }catch(error){console.debug('[铭牌版本] 无法读取内页版本',error)}
+      if(remote===CLIENT_VERSION&&!coreOutdated){
         clear(marker);
         return;
       }
