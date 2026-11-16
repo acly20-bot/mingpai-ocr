@@ -573,6 +573,93 @@ jobs:
           print('PASS: v1.18.2 formal promotion with validated test.2.2 JS and 21-rule JSON')
           PY
 
+      - name: Test-only v1.18.2.1 search restore and keyboard Done
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re,subprocess,json
+          folder=Path('app/test-adaptive')
+          page=folder/'index.html'
+          html=page.read_text(encoding='utf-8')
+          anchor="""    const v1182SyncTrusted=()=>{if(searchGuard.value!==trustedSearch)searchGuard.value=trustedSearch;};
+    searchGuard.addEventListener('change',v1182SyncTrusted);
+    searchGuard.addEventListener('blur',v1182SyncTrusted);"""
+          assert html.count(anchor)==1,("search anchor",html.count(anchor))
+          replacement="""    const v1182SyncTrusted=()=>{if(searchGuard.value!==trustedSearch)searchGuard.value=trustedSearch;};
+    searchGuard.addEventListener('change',v1182SyncTrusted);
+    searchGuard.addEventListener('blur',v1182SyncTrusted);
+    // v1.18.2.1: search is independent of status, unit and department
+    // fields. Preserve only a search typed intentionally in this tab.
+    const v11821SearchKey='mingpai-v11821-explicit-search';
+    let v11821Explicit='';
+    try{v11821Explicit=sessionStorage.getItem(v11821SearchKey)||''}catch{}
+    let v11821UserEdited=false;
+    searchGuard.setAttribute('enterkeyhint','done');
+    searchGuard.enterKeyHint='done';
+    searchGuard.setAttribute('autocorrect','off');
+    searchGuard.setAttribute('spellcheck','false');
+    const v11821Restore=()=>{
+      if(v11821UserEdited||d.activeElement===searchGuard)return;
+      // A browser may restore the department name into the search field.
+      // Any value without explicit search history is treated as autofill.
+      if(searchGuard.value && searchGuard.value!==v11821Explicit){
+        searchGuard.value='';
+        trustedSearch='';
+        searchGuard.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+    };
+    searchGuard.addEventListener('input',e=>{
+      if(!e.isTrusted)return;
+      v11821UserEdited=true;
+      v11821Explicit=searchGuard.value;
+      try{sessionStorage.setItem(v11821SearchKey,v11821Explicit)}catch{}
+    },true);
+    // Enterkeyhint is advisory: explicitly blur on the IME action so mobile
+    // browsers that still label the key "Go" also close the keyboard.
+    searchGuard.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key==='NumpadEnter'){
+        e.preventDefault();
+        searchGuard.blur();
+      }
+    },true);
+    v11821Restore();
+    setTimeout(v11821Restore,120);
+    setTimeout(v11821Restore,650);"""
+          html=html.replace(anchor,replacement,1)
+          html=html.replace('v1.18.2 test.2.2','v1.18.2.1 测试版').replace('1.18.2-test.2.2','1.18.2.1-test')
+          html=html.replace('20261116-v1182-test222','20261116-v11821-search')
+          page.write_text(html,encoding='utf-8')
+          core=folder/'core.html'
+          c=core.read_text(encoding='utf-8')
+          assert 'index-B81hyAdU-v1182-test22.js' in c
+          c=c.replace('v1.18.2 test.2.2','v1.18.2.1 测试版')
+          c=c.replace('1.18.2-test.2.2','1.18.2.1-test')
+          c=c.replace('mingpai-v1182-test222-coi-reload','mingpai-v11821-search-coi-reload')
+          core.write_text(c,encoding='utf-8')
+          sw=folder/'coi-serviceworker.js'
+          w=sw.read_text(encoding='utf-8')
+          assert 'mingpai-shell-v1182-test222' in w
+          w=w.replace('mingpai-shell-v1182-test222','mingpai-shell-v11821-search')
+          w=w.replace('1.18.2-test.2.2','1.18.2.1-test')
+          sw.write_text(w,encoding='utf-8')
+          manifest=folder/'version-v118-test.json'
+          m,_=json.JSONDecoder().raw_decode(manifest.read_text(encoding='utf-8'))
+          assert m['mainJs']=='index-B81hyAdU-v1182-test22.js'
+          m['version']='1.18.2.1-test'
+          manifest.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',html,re.I|re.S)
+          assert scripts and 'v11821Restore' in html
+          for i,script in enumerate(scripts):
+            if script.strip():
+              check=Path(f'verify-v11821-{i}.js')
+              check.write_text(script,encoding='utf-8')
+              subprocess.run(['node','--check',str(check)],check=True)
+          assert 'index-B81hyAdU-v1182-test22.js' in Path('app/core.html').read_text(encoding='utf-8')
+          assert 'v1.18.2 正式版' in Path('app/index.html').read_text(encoding='utf-8')
+          assert 'v1182-stats-table' in html
+          print('PASS v1.18.2.1 test-only search/IME fix; v1.18.2 production untouched')
+          PY
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
