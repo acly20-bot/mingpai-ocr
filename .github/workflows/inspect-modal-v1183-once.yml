@@ -1,0 +1,24 @@
+name: Inspect preview controls read-only
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/inspect-modal-v1183-once.yml']
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect current public OCR runtime and rule loader
+        run: |
+          python - <<'PY'
+          from urllib.request import urlopen
+          import re
+          root="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/"
+          s=urlopen(root+"index-B81hyAdU-v1182-test22.js",timeout=120).read().decode("utf-8","replace")
+          needles=["保存/转发","Paddle重识别","OCR.space重识别","保存 / 转发","打开图片","imageViewer","imageModal","imgModal","photoModal","photoViewer","v151Viewer","viewerOverlay","viewer-modal","viewerModal","previewModal","v1174LoadRules","recognition-rules-v1181.json","addEventListener(\"popstate\"","onpopstate","history.pushState"]
+          for w in needles:
+            matches=[m.start() for m in re.finditer(re.escape(w),s)]
+            print("TERM",repr(w),"COUNT",len(matches))
+            for i in matches[:3]:
+              print("SRC",repr(s[max(0,i-1200):i+2400]))
+          PY
