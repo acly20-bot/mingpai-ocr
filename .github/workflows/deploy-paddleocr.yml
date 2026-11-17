@@ -12,6 +12,8 @@ on:
       - 'scripts/apply-v11821-onopen-version.py'
       - 'scripts/deploy-v1183-test1.py'
       - 'scripts/v1183-field-review.js'
+      - 'scripts/deploy-v1183-test2.py'
+      - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
 permissions:
@@ -719,6 +721,10 @@ jobs:
       - name: Deploy isolated v1.18.3 test.1 field accuracy review
         run: |
           python scripts/deploy-v1183-test1.py
+
+      - name: Apply v1.18.3 test.2 rule fixes and Back-to-close preview (test only)
+        run: |
+          python scripts/deploy-v1183-test2.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
