@@ -1,0 +1,25 @@
+name: Inspect test runtime loader and viewer
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/inspect-v1183-source-temporary.yml']
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read public COS runtime and base rules
+        run: |
+          python - <<'PY'
+          from urllib.request import urlopen
+          import re,json
+          base="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/"
+          s=urlopen(base+"index-B81hyAdU-v1182-test22.js",timeout=120).read().decode("utf-8","replace")
+          for needle in ["async function v1174LoadRules(","function v1174LoadRules(","v1174RulesURL","v1174RulesUrl","recognition-rules-v1181.json","function v155ClosePreview(","function v155OpenPreview("]:
+            hits=[m.start() for m in re.finditer(re.escape(needle),s)]
+            print("TERM",repr(needle),"hits",len(hits))
+            for i in hits[:2]:print("SRC",repr(s[max(0,i-480):i+1850]))
+          r=json.loads(urlopen(base+"recognition-rules-v1181.json",timeout=90).read())
+          print("BASE",r.get("rulesVersion"),"COUNT",len(r.get("rules",[])))
+          for x in r["rules"]:print("BASE_RULE",x.get("id"),"MATCH",json.dumps(x.get("match"),ensure_ascii=False),"SET",json.dumps(x.get("set"),ensure_ascii=False))
+          PY
