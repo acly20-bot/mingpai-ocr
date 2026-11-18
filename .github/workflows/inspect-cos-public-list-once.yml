@@ -1,0 +1,40 @@
+name: Read-only COS public object inventory once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/inspect-cos-public-list-once.yml']
+permissions: {contents: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Attempt anonymous COS prefix list (read-only)
+        run: |
+          python - <<'PY'
+          from urllib.request import urlopen,Request
+          from urllib.error import HTTPError,URLError
+          from urllib.parse import urlencode
+          import xml.etree.ElementTree as ET
+          base='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/'
+          for prefix in ('','assets/','knowledge/','models/'):
+              query=urlencode({'list-type':'2','prefix':prefix,'max-keys':'1000'})
+              u=base+'?'+query
+              print('PREFIX',prefix or 'ROOT',flush=True)
+              try:
+                  with urlopen(Request(u,headers={'User-Agent':'mingpai-public-cos-inventory/1.0'}),timeout=40) as r:
+                      body=r.read()
+                      print('HTTP',r.status,'BYTES',len(body),flush=True)
+                  root=ET.fromstring(body)
+                  def field(node,key):
+                      for child in node:
+                          if child.tag.rsplit('}',1)[-1]==key:return child.text or ''
+                      return ''
+                  contents=[x for x in root if x.tag.rsplit('}',1)[-1]=='Contents']
+                  print('LISTED',len(contents),'TRUNCATED',field(root,'IsTruncated'),flush=True)
+                  for x in contents:
+                      print('COS_OBJECT',field(x,'Key'),'BYTES',field(x,'Size'),'UPDATED',field(x,'LastModified'),flush=True)
+              except HTTPError as e:
+                  print('ACCESS_UNAVAILABLE',e.code,e.read(300).decode('utf-8','replace'),flush=True)
+              except (URLError,TimeoutError,ET.ParseError) as e:
+                  print('LIST_UNAVAILABLE',str(e)[:220],flush=True)
+          PY
