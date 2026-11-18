@@ -13,6 +13,7 @@ on:
       - 'scripts/deploy-v1183-test1.py'
       - 'scripts/v1183-field-review.js'
       - 'scripts/deploy-v1183-test2.py'
+      - 'scripts/deploy-v1183-test21.py'
       - 'scripts/v1183-preview-back.js'
       - 'scripts/network-diagnostics.html'
   workflow_dispatch:
@@ -726,6 +727,10 @@ jobs:
       - name: Apply v1.18.3 test.2 rule fixes and Back-to-close preview (test only)
         run: |
           python scripts/deploy-v1183-test2.py
+
+      - name: Apply v1.18.3 test.2.1 Canon OCR hint and preview Close first-frame style
+        run: |
+          python scripts/deploy-v1183-test21.py
 
       - name: Build isolated GitHub vs COS network diagnostics
         run: |
