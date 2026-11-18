@@ -53,7 +53,7 @@ weather_start=s.index('  function refreshWeather(force=false){')
 weather_end=s.index('  function syncLabel(rec){',weather_start)
 weather_body=s[weather_start:weather_end]
 # Preserve all existing options including timeout and cache mode.
-weather_body,fetch_matches=re.subn(r'await\\s+fetch\\s*\\(\\s*url\\s*,', 'await fetchWeatherReliable(url,', weather_body, count=1)
+weather_body,fetch_matches=re.subn(r'await\s+fetch\s*\(\s*url\s*,', 'await fetchWeatherReliable(url,', weather_body, count=1)
 assert fetch_matches==1,('weather request shape', [line for line in weather_body.splitlines() if 'fetch(' in line][:12])
 s=s[:weather_start]+weather_body+s[weather_end:]
 # 2: A saved environment edit is a new review, not an automatic Feishu sync.
