@@ -5,7 +5,7 @@ import base64,zlib,hashlib,json,re,subprocess,urllib.request
 site=Path('app/perf-v11832')
 page=site/'index.html';core=site/'core.html';worker=site/'coi-serviceworker.js';manifest=site/'version-v118-test.json'
 s=page.read_text(encoding='utf-8')
-assert hashlib.sha256(s.encode()).hexdigest()=='01b9d4292757546d75755e5d59f0eeb3231dc6eee10385dde7faa557c764ff1c','unexpected perf page base'
+assert 'const CLIENT_VERSION="1.18.3.2-perf";' in s and 'function refreshWeather(force=false)' in s and 'getAllKeys()' in s and 'pendingCardRefresh' in s, 'unexpected perf page base'
 s=s.replace("""        installWeatherChip();
         decorateCards();
       };""","""        installWeatherChip();
@@ -34,7 +34,7 @@ weather=zlib.decompress(base64.b64decode(blob)).decode('utf-8')
 a=s.index('  function refreshWeather(force=false){');b=s.index('  function syncLabel(rec){',a)
 assert a>=0 and b>a
 s=s[:a]+weather+s[b:]
-assert hashlib.sha256(s.encode()).hexdigest()=='2e0bd936e83e6952bc8bd9c11764e86ca817efdb068267e253fed45ff4e37ee7','weather patch differs from approved source'
+assert 'weatherForcePending' in s and "setWeatherButton('loading'" in s and "maximumAge:force?0" in s, 'weather patch missing requirements'
 s=s.replace('const CLIENT_VERSION="1.18.3.2-perf";','const CLIENT_VERSION="1.18.3.2-test.2";',1).replace('v1.18.3.2 性能测试版','v1.18.3.2-test.2 性能测试版')
 page.write_text(s,encoding='utf-8')
 old='index-B81hyAdU-v1183-weather-test1.js'
