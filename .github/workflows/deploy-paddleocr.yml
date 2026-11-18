@@ -23,11 +23,12 @@ on:
       - 'scripts/apply-v11842-reconfirm-test.py'
       - 'scripts/apply-v11843-confirm-rehydrate-test.py'
       - 'scripts/apply-v11844-native-env-review-test.py'
+      - 'scripts/promote-v11844-formal.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -783,6 +784,25 @@ jobs:
       - name: Use native review state on temperature/humidity edits (v1.18.4.4 test)
         run: |
           python scripts/apply-v11844-native-env-review-test.py
+
+      - name: Promote verified v1.18.4.4 test to formal
+        run: |
+          python scripts/promote-v11844-formal.py
+
+      - name: Pin exact published v1.18.4.4 site on immutable release baseline branch
+        run: |
+          set -euo pipefail
+          test "$(python -c "import json;print(json.load(open('app/version-v118-test.json'))['version'])")" = "1.18.4.4"
+          test "$(python -c "import json;print(json.load(open('app/test-adaptive/version-v118-test.json'))['version'])")" = "1.18.4.4-test"
+          BASE="$RUNNER_TEMP/mingpai-v11844-baseline"
+          git worktree add -b release-baseline/v11844 "$BASE" HEAD
+          mkdir -p "$BASE/site-baseline"
+          cp -a app/. "$BASE/site-baseline/"
+          cd "$BASE"
+          git add site-baseline
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'baseline: verified v1.18.4.4 full Pages site'
+          git push origin HEAD:refs/heads/release-baseline/v11844
+          sha256sum site-baseline/index.html site-baseline/test-adaptive/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
