@@ -119,12 +119,12 @@ modal_js=r"""<script id="v11841-modal-back">
   if(!frame)return;
   const marker='__mingpaiModalBack11841';
   let armed=false,doc=null,observer=null,cropWatcher=null,syncTimer=0;
-  const visible=(el)=>{
+  const visible=(el,control=false)=>{
     if(!el||!el.isConnected)return false;
     const w=el.ownerDocument.defaultView,style=w.getComputedStyle(el);
     if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity||1)===0)return false;
     const rect=el.getBoundingClientRect();
-    if(rect.width<140||rect.height<100)return false;
+    if(control?(rect.width<8||rect.height<8):(rect.width<140||rect.height<100))return false;
     for(let parent=el.parentElement;parent&&parent!==el.ownerDocument.body;parent=parent.parentElement){
       const css=w.getComputedStyle(parent);
       if(css.display==='none'||css.visibility==='hidden')return false;
@@ -133,9 +133,9 @@ modal_js=r"""<script id="v11841-modal-back">
   };
   const closeControl=(modal)=>{
     const buttons=[...modal.querySelectorAll('button,.btn,[role="button"]')]
-      .filter(el=>!el.disabled&&visible(el));
+      .filter(el=>!el.disabled&&visible(el,true));
     const keyed=modal.querySelector('#cropCancel,[data-close-stats],[data-crop-action="close"],[data-action="cancel"],[data-action="close"]');
-    if(keyed&&!keyed.disabled&&visible(keyed))return keyed;
+    if(keyed&&!keyed.disabled&&visible(keyed,true))return keyed;
     return buttons.find(b=>/^(关闭|取消|返回|退出|放弃|取消裁剪)$/.test((b.textContent||'').trim()))||null;
   };
   const findModal=()=>{
