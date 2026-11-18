@@ -957,6 +957,11 @@ frame.addEventListener('load',async()=>{
   // V4 weather + per-record environment persistence
   const DB_NAME='mingpai-free-v1', STORE='records', WEATHER_KEY='mingpai-field-weather-v2', OLD_WEATHER_KEY='mingpai-field-weather-v1';
   let currentWeather=null;
+  const WEATHER_TTL_MS=60*60*1000;
+  let weatherFetching=false,weatherSeq=0;
+  function weatherDate(){const n=new Date(),p=x=>String(x).padStart(2,'0');return d.getElementById('workdate')?.value||[n.getFullYear(),p(n.getMonth()+1),p(n.getDate())].join('-')}
+  function numeric(v){if(String(v??'').trim()==='')return null;const n=Number(v);return Number.isFinite(n)?n:null}
+  function validWeather(w){const t=numeric(w?.temperature),h=numeric(w?.humidity);return t!==null&&t>=-100&&t<=70&&h!==null&&h>=0&&h<=100}
   function openDb(){
     return new Promise((resolve,reject)=>{
       const req=indexedDB.open(DB_NAME,2);
@@ -972,7 +977,7 @@ frame.addEventListener('load',async()=>{
   let envCaptureRunning=false;
   async function captureEnvironmentForAllNewRecords(){
     if(envCaptureRunning)return;
-    if(!currentWeather||!Number.isFinite(+currentWeather.temperature)||!Number.isFinite(+currentWeather.humidity))return;
+    if(!validWeather(currentWeather))return;
     envCaptureRunning=true;
     try{
       const rows=await allRecords();
@@ -989,7 +994,7 @@ frame.addEventListener('load',async()=>{
     }finally{envCaptureRunning=false}
   }
 
-  function weatherText(w){return w&&Number.isFinite(+w.temperature)&&Number.isFinite(+w.humidity)?`${(+w.temperature).toFixed(1)}℃/${Math.round(+w.humidity)}%RH`:'--℃/--%RH'}
+  function weatherText(w){return validWeather(w)?`${(+w.temperature).toFixed(1)}℃/${Math.round(+w.humidity)}%RH`:'--℃/--%RH'}
 
   function installWeatherChip(){
     if(!brand)return;
@@ -1005,19 +1010,22 @@ frame.addEventListener('load',async()=>{
 
       const saveManual=()=>{
         const t=inline.querySelector('.temp').value.trim(),h=inline.querySelector('.hum').value.trim();
-        currentWeather={...(currentWeather||{}),temperature:Number(t),humidity:Number(h),savedAt:Date.now(),manual:true,dateKey:(d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10))};
+        const temperature=numeric(t),humidity=numeric(h);
+        if(temperature===null||temperature< -100||temperature>70||humidity===null||humidity<0||humidity>100)return;
+        weatherSeq++; // user edit outranks an in-flight automatic request
+        currentWeather={...(currentWeather||{}),temperature,humidity,savedAt:Date.now(),manual:true,dateKey:weatherDate()};
         localStorage.setItem(WEATHER_KEY,JSON.stringify(currentWeather));
       };
       inline.querySelectorAll('input').forEach(inp=>{
         ['click','pointerdown','touchstart'].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));
         inp.addEventListener('change',saveManual);inp.addEventListener('blur',saveManual);
       });
-      refresh.addEventListener('click',()=>{if(currentWeather)currentWeather.manual=false;refreshWeather(true);});
+      refresh.addEventListener('click',()=>{refreshWeather(true);});
     }
     const inline=wrap.querySelector('.weather-inline');
     const ti=inline.querySelector('.temp'),hi=inline.querySelector('.hum');
-    if(d.activeElement!==ti)ti.value=currentWeather&&Number.isFinite(+currentWeather.temperature)?Number(currentWeather.temperature).toFixed(1):'';
-    if(d.activeElement!==hi)hi.value=currentWeather&&Number.isFinite(+currentWeather.humidity)?String(Math.round(+currentWeather.humidity)):'';
+    if(d.activeElement!==ti)ti.value=validWeather(currentWeather)?Number(currentWeather.temperature).toFixed(1):'';
+    if(d.activeElement!==hi)hi.value=validWeather(currentWeather)?String(Math.round(+currentWeather.humidity)):'';
     const fitWeatherInput=inp=>{
       const n=Math.max(2.2,Math.min(5.5,String(inp.value||'').length+0.35));
       inp.style.width=n+'ch';
@@ -1028,7 +1036,7 @@ frame.addEventListener('load',async()=>{
   }
   function loadWeatherCache(){
     try{
-      const todayKey=d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10);
+      const todayKey=weatherDate();
       let w=JSON.parse(localStorage.getItem(WEATHER_KEY)||'null');
       if(!w){
         const old=JSON.parse(localStorage.getItem(OLD_WEATHER_KEY)||'null');
@@ -1037,23 +1045,36 @@ frame.addEventListener('load',async()=>{
       if(w) currentWeather=w;
     }catch{}
   }
-  async function refreshWeather(force=false){
+  function refreshWeather(force=false){
     installWeatherChip();
-    const currentDateKey=d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10); if(!force&&currentWeather&&currentWeather.dateKey===currentDateKey&&Number.isFinite(+currentWeather.temperature)&&Number.isFinite(+currentWeather.humidity)){decorateCards();return}
-    if(!navigator.geolocation)return;
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      try{
-        const {latitude,longitude}=pos.coords;
-        const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
-        const resp=await fetch(url,{cache:'no-store'}); if(!resp.ok)throw new Error('weather HTTP '+resp.status);
-        const js=await resp.json();
-        currentWeather={temperature:Number(js?.current?.temperature_2m),humidity:Number(js?.current?.relative_humidity_2m),savedAt:Date.now(),latitude,longitude,manual:false,dateKey:(d.getElementById('workdate')?.value||new Date().toISOString().slice(0,10))};
-        localStorage.setItem(WEATHER_KEY,JSON.stringify(currentWeather));
-         installWeatherChip(); decorateCards();
-      }catch(e){console.warn('weather fetch failed',e)}
-    },err=>console.warn('geolocation failed',err),{enableHighAccuracy:false,timeout:10000,maximumAge:60*60*1000});
+    const old=currentWeather,day=weatherDate();
+    if(!force&&validWeather(old)&&old.dateKey===day){
+      const age=Date.now()-Number(old.savedAt||0);
+      if(old.manual||(age>=0&&age<WEATHER_TTL_MS)){decorateCards();return}
+    }
+    if(!navigator.geolocation||weatherFetching)return;
+    weatherFetching=true;
+    const requestSeq=++weatherSeq;
+    const finish=()=>{weatherFetching=false};
+    try{
+      navigator.geolocation.getCurrentPosition(async pos=>{
+        try{
+          const {latitude,longitude}=pos.coords;
+          const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
+          const resp=await fetch(url,{cache:'no-store'});
+          if(!resp.ok)throw Error('weather HTTP '+resp.status);
+          const js=await resp.json();
+          const next={temperature:numeric(js?.current?.temperature_2m),humidity:numeric(js?.current?.relative_humidity_2m),savedAt:Date.now(),latitude,longitude,manual:false,dateKey:weatherDate()};
+          if(!validWeather(next))throw Error('invalid weather response');
+          if(requestSeq!==weatherSeq)return; // manual input was newer
+          currentWeather=next;
+          localStorage.setItem(WEATHER_KEY,JSON.stringify(next));
+          installWeatherChip();decorateCards();
+        }catch(e){console.warn('weather fetch failed',e)}
+        finally{finish()}
+      },err=>{finish();console.warn('geolocation failed',err)},{enableHighAccuracy:false,timeout:10000,maximumAge:60*60*1000});
+    }catch(e){finish();console.warn('geolocation failed',e)}
   }
-
   function syncLabel(rec){
     const s=rec?.syncStatus;
     return s==='synced'?'已同步':s==='syncing'?'同步中':s==='error'?'失败待重试':s==='pending'?'有修改待同步':s==='local-only'?'仅本机保存':rec?.status==='confirmed'?'尚未同步':'待确认';
@@ -1066,13 +1087,16 @@ frame.addEventListener('load',async()=>{
     try{
       let rec=await getRecord(id); if(!rec)return;
 
-      // 只在本次页面新生成记录时复制顶部当前温湿度一次
-      if(!baselineIds.has(id)&&(rec.temperature==null||rec.temperature==='')&&(rec.humidity==null||rec.humidity==='')){
-        rec.temperature=currentWeather&&Number.isFinite(+currentWeather.temperature)?Number(currentWeather.temperature).toFixed(1):'';
-        rec.humidity=currentWeather&&Number.isFinite(+currentWeather.humidity)?String(Math.round(+currentWeather.humidity)):'';
-        rec.envCapturedAt=Date.now();
-        await putRecord(rec);
-        baselineIds.add(id);
+      // Leave records with empty environment eligible until weather is available.
+      if(!baselineIds.has(id)){
+        const blankT=String(rec.temperature??'').trim()==='',blankH=String(rec.humidity??'').trim()==='';
+        if(blankT&&blankH&&validWeather(currentWeather)){
+          rec.temperature=Number(currentWeather.temperature).toFixed(1);
+          rec.humidity=String(Math.round(+currentWeather.humidity));
+          rec.envCapturedAt=Date.now();
+          await putRecord(rec);
+        }
+        if(!(blankT&&blankH)||validWeather(currentWeather))baselineIds.add(id);
       }
 
       const title=card.querySelector('.cardtitle');
@@ -1224,6 +1248,10 @@ frame.addEventListener('load',async()=>{
 
   loadWeatherCache(); installWeatherChip(); refreshWeather(false);
   d.getElementById('workdate')?.addEventListener('change',()=>refreshWeather(false));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshWeather(false)});
+  window.addEventListener('online',()=>refreshWeather(false));
+  const weatherTimer=window.setInterval(()=>{if(!document.hidden)refreshWeather(false)},10*60*1000);
+  window.addEventListener('pagehide',()=>window.clearInterval(weatherTimer),{once:true});
   const progressEl=d.getElementById('progress');
   const syncProgressVisibility=()=>{if(progressEl)progressEl.style.display=(progressEl.textContent||'').trim()?'':'none';};
   if(progressEl){syncProgressVisibility();new MutationObserver(syncProgressVisibility).observe(progressEl,{childList:true,subtree:true,characterData:true});}
