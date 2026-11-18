@@ -736,6 +736,10 @@ jobs:
         run: |
           python scripts/promote-v1183-stable.py
 
+      - name: Prepare v1.18.3.1 weather formal release (guarded)
+        run: |
+          python scripts/release-v11831-weather.py
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
