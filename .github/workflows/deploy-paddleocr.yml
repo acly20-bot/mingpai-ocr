@@ -20,6 +20,7 @@ on:
       - 'scripts/apply-v11832-test4.py'
       - 'scripts/release-v1184-formal.py'
       - 'scripts/apply-v11841-fixes-test.py'
+      - 'scripts/apply-v11842-reconfirm-test.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
@@ -768,6 +769,10 @@ jobs:
       - name: Apply v1.18.4.1 weather and modal corrections to test only
         run: |
           python scripts/apply-v11841-fixes-test.py
+
+      - name: Fix missing Confirm button after environment edits in v1.18.4.2 test
+        run: |
+          python scripts/apply-v11842-reconfirm-test.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
