@@ -5,7 +5,7 @@
 - 正式版：https://acly20-bot.github.io/mingpai-ocr/
 - 测试版：https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
 - 部署工作流：[deploy-paddleocr.yml](.github/workflows/deploy-paddleocr.yml)
-- 完整基线分支：[`release-baseline/v11844`](../../tree/release-baseline/v11844)，精简前的全部构建源、历史脚本和产物均保留于该分支以及 Git 历史。
+- 完整基线分支：[`release-baseline/v11844`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11844)，精简前的全部构建源、历史脚本和产物均保留于该分支以及 Git 历史。
 
 ## 当前部署原则
 
