@@ -962,18 +962,34 @@ frame.addEventListener('load',async()=>{
   function weatherDate(){const n=new Date(),p=x=>String(x).padStart(2,'0');return d.getElementById('workdate')?.value||[n.getFullYear(),p(n.getMonth()+1),p(n.getDate())].join('-')}
   function numeric(v){if(String(v??'').trim()==='')return null;const n=Number(v);return Number.isFinite(n)?n:null}
   function validWeather(w){const t=numeric(w?.temperature),h=numeric(w?.humidity);return t!==null&&t>=-100&&t<=70&&h!==null&&h>=0&&h<=100}
+  let sharedDbPromise=null;
   function openDb(){
-    return new Promise((resolve,reject)=>{
+    if(sharedDbPromise)return sharedDbPromise;
+    sharedDbPromise=new Promise((resolve,reject)=>{
       const req=indexedDB.open(DB_NAME,2);
       req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'});};
-      req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+      req.onsuccess=()=>{const db=req.result;db.onversionchange=()=>{db.close();sharedDbPromise=null};resolve(db)};
+      req.onerror=()=>{sharedDbPromise=null;reject(req.error)};
     });
+    return sharedDbPromise;
   }
   async function getRecord(id){const db=await openDb();return new Promise((res,rej)=>{const q=db.transaction(STORE,'readonly').objectStore(STORE).get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}
   async function putRecord(rec){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(rec);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
   async function allRecords(){const db=await openDb();return new Promise((res,rej)=>{const q=db.transaction(STORE,'readonly').objectStore(STORE).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)})}
   const baselineIds=new Set((await allRecords()).map(r=>r.id));
   const envDrafts=new Map();
+  const envSyncTimers=new Map();
+  function scheduleEnvironmentResync(id){
+    const prior=envSyncTimers.get(id);if(prior)clearTimeout(prior);
+    envSyncTimers.set(id,setTimeout(async()=>{
+      envSyncTimers.delete(id);
+      try{
+        const rec=await getRecord(id);
+        if(!rec||rec.status!=='confirmed'||rec.syncStatus!=='pending'||!navigator.onLine)return;
+        await d.defaultView?.mingpaiResyncEnvironmentV1183?.(id);
+      }catch(e){console.warn('environment resync attempt failed',e)}
+    },1100));
+  }
   let envCaptureRunning=false;
   async function captureEnvironmentForAllNewRecords(){
     if(envCaptureRunning)return;
@@ -1015,6 +1031,8 @@ frame.addEventListener('load',async()=>{
         weatherSeq++; // user edit outranks an in-flight automatic request
         currentWeather={...(currentWeather||{}),temperature,humidity,savedAt:Date.now(),manual:true,dateKey:weatherDate()};
         localStorage.setItem(WEATHER_KEY,JSON.stringify(currentWeather));
+        installWeatherChip();
+        decorateCards();
       };
       inline.querySelectorAll('input').forEach(inp=>{
         ['click','pointerdown','touchstart'].forEach(ev=>inp.addEventListener(ev,e=>e.stopPropagation()));
@@ -1050,7 +1068,7 @@ frame.addEventListener('load',async()=>{
     const old=currentWeather,day=weatherDate();
     if(!force&&validWeather(old)&&old.dateKey===day){
       const age=Date.now()-Number(old.savedAt||0);
-      if(old.manual||(age>=0&&age<WEATHER_TTL_MS)){decorateCards();return}
+      if(old.manual||(age>=0&&age<WEATHER_TTL_MS))return
     }
     if(!navigator.geolocation||weatherFetching)return;
     weatherFetching=true;
@@ -1118,14 +1136,24 @@ frame.addEventListener('load',async()=>{
           });
           const persist=async e=>{
             e.stopPropagation();
-            const draft=envDrafts.get(id)||{temperature:ti.value,humidity:hi.value};
-            const r=await getRecord(id);if(!r)return;
-            r.temperature=String(draft.temperature??'').trim();
-            r.humidity=String(draft.humidity??'').trim();
-            r.envCapturedAt=r.envCapturedAt||Date.now();
-            await putRecord(r);
-            envDrafts.delete(id);
-            ti.value=r.temperature;hi.value=r.humidity;
+            try{
+              const draft=envDrafts.get(id)||{temperature:ti.value,humidity:hi.value};
+              const temp=String(draft.temperature??'').trim(),hum=String(draft.humidity??'').trim();
+              const tn=parseWeatherNumber(temp),hn=parseWeatherNumber(hum);
+              if((temp!==''&&(tn===null||tn< -100||tn>70))||(hum!==''&&(hn===null||hn<0||hn>100))){
+                alert('温湿度输入无效：温度应为数字，湿度应在 0～100 之间。');
+                return;
+              }
+              const r=await getRecord(id);if(!r)return;
+              if(String(r.temperature??'').trim()===temp&&String(r.humidity??'').trim()===hum){envDrafts.delete(id);return}
+              r.temperature=temp;r.humidity=hum;r.envCapturedAt=Date.now();
+              if(r.status==='confirmed'){r.syncStatus='pending';r.syncError=''}
+              await putRecord(r);
+              envDrafts.delete(id);
+              ti.value=r.temperature;hi.value=r.humidity;
+              d.defaultView?.mingpaiEnvironmentChangedV1183?.(id,temp,hum,r.envCapturedAt);
+              if(r.status==='confirmed')scheduleEnvironmentResync(id);
+            }catch(err){console.warn('failed to save environment change',err);alert('温湿度保存失败，请稍后重试。')}
           };
           ti.addEventListener('blur',persist);hi.addEventListener('blur',persist);
         }
@@ -1255,7 +1283,12 @@ frame.addEventListener('load',async()=>{
   const progressEl=d.getElementById('progress');
   const syncProgressVisibility=()=>{if(progressEl)progressEl.style.display=(progressEl.textContent||'').trim()?'':'none';};
   if(progressEl){syncProgressVisibility();new MutationObserver(syncProgressVisibility).observe(progressEl,{childList:true,subtree:true,characterData:true});}
-  const cardsObserver=new MutationObserver(()=>decorateCards());
+  let envCardsScheduled=false;
+  const cardsObserver=new MutationObserver(()=>{
+    if(envCardsScheduled)return;
+    envCardsScheduled=true;
+    setTimeout(()=>{envCardsScheduled=false;decorateCards()},80);
+  });
   const list=d.getElementById('recordList');if(list)cardsObserver.observe(list,{childList:true,subtree:true});
   decorateCards();
   // v1.18.1-test-baseline test: compact field UI + inline statistics
