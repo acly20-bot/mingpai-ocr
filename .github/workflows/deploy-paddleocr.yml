@@ -21,6 +21,7 @@ on:
       - 'scripts/release-v1184-formal.py'
       - 'scripts/apply-v11841-fixes-test.py'
       - 'scripts/apply-v11842-reconfirm-test.py'
+      - 'scripts/apply-v11843-confirm-rehydrate-test.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
@@ -773,6 +774,10 @@ jobs:
       - name: Fix missing Confirm button after environment edits in v1.18.4.2 test
         run: |
           python scripts/apply-v11842-reconfirm-test.py
+
+      - name: Rehydrate native confirm controls after pending environment edits v1.18.4.3 test
+        run: |
+          python scripts/apply-v11843-confirm-rehydrate-test.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
