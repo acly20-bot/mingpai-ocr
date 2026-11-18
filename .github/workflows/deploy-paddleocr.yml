@@ -4,7 +4,7 @@ name: Deploy PaddleOCR Mingpai to GitHub Pages
 
 on:
   push:
-    branches: [main, 'fix/v11832-test2-weather-scroll-20261118']
+    branches: [main, 'fix/v11832-test3-stable-ui-20261118']
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
@@ -16,6 +16,7 @@ on:
       - 'scripts/deploy-v1183-test21.py'
       - 'scripts/promote-v1183-stable.py'
       - 'scripts/apply-v11832-test2.py'
+      - 'scripts/apply-v11832-test3.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
@@ -748,6 +749,10 @@ jobs:
       - name: Apply v1.18.3.2-test.2 weather and batch correction (isolated)
         run: |
           python scripts/apply-v11832-test2.py
+
+      - name: Fix v1.18.3.2-test.3 weather and card layout regressions
+        run: |
+          python scripts/apply-v11832-test3.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
