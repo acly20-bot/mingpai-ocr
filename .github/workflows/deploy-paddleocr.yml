@@ -19,6 +19,7 @@ on:
       - 'scripts/apply-v11832-test3.py'
       - 'scripts/apply-v11832-test4.py'
       - 'scripts/release-v1184-formal.py'
+      - 'scripts/apply-v11841-fixes-test.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
@@ -763,6 +764,10 @@ jobs:
       - name: Promote user-verified performance build and six OCR correction cases to v1.18.4
         run: |
           python scripts/release-v1184-formal.py
+
+      - name: Apply v1.18.4.1 weather and modal corrections to test only
+        run: |
+          python scripts/apply-v11841-fixes-test.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
