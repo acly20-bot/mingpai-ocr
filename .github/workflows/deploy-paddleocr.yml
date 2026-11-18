@@ -4,7 +4,7 @@ name: Deploy PaddleOCR Mingpai to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'fix/v1183-weather-refresh-stage1-20261118']
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
@@ -746,6 +746,7 @@ jobs:
           path: app
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     environment:
