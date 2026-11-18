@@ -15,6 +15,7 @@ on:
       - 'scripts/deploy-v1183-test2.py'
       - 'scripts/deploy-v1183-test21.py'
       - 'scripts/promote-v1183-stable.py'
+      - 'scripts/apply-v11832-test2.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
