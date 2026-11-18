@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#086c5c">
+<title>铭牌识别｜GitHub / COS 国内网络对照测试</title>
+<style>
+:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;color:#183831;background:#f4f8f7;font-size:15px}
+*{box-sizing:border-box}
+body{max-width:760px;margin:0 auto;padding:16px 14px 38px}
+header{background:#076957;color:#fff;padding:18px;border-radius:16px}
+h1{font-size:20px;margin:0 0 8px}h2{font-size:17px;margin:0 0 12px}
+header p{margin:0;line-height:1.65;color:#e0f4ee}
+.panel{margin-top:14px;border:1px solid #d8e6e1;background:#fff;border-radius:15px;padding:15px}
+p,li{line-height:1.68;margin:8px 0}
+.small{font-size:13px;color:#577369}
+button{appearance:none;border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:650;background:#078a74;color:white;cursor:pointer}
+button.secondary{background:#e7f4ef;color:#08614f}button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+.item{border:1px solid #e2eee9;border-radius:12px;padding:12px;margin-top:12px}
+.item strong{display:block;margin-bottom:5px}
+.item .desc{font-size:12px;color:#698077}
+.status-row{display:grid;grid-template-columns:92px 1fr;gap:8px;align-items:start;padding-top:9px}
+.site{font-size:12px;font-weight:bold;color:#527367}
+.result{font-size:13px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
+.ok{color:#087855}.bad{color:#b33333}.warn{color:#92630a}.pending{color:#7b8583}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f8f7;border:1px solid #e0e7e4;border-radius:9px;padding:10px;font-size:12px;max-height:240px;overflow-y:auto}
+a{color:#057f70}details{margin-top:8px}summary{cursor:pointer}
+@media(min-width:510px){.actions{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>铭牌识别 · 国内网络对照测试</h1>
+<p>分别向 GitHub Pages 和腾讯云 COS 请求<strong>同一份文件</strong>，检查当前手机网络实际是否能读取。测试过程不修改正式版、测试版、设备记录或飞书数据。</p>
+</header>
+<section class="panel">
+<h2>测试前说明</h2>
+<p>建议在<strong>国内手机、不使用 VPN</strong>的情况下测试。首次测试尽量使用新浏览器，或清除<strong>这个测试页的站点缓存</strong>；不要清除铭牌识别正式版的数据。</p>
+<p class="small">每项测试均主动绕过 HTTP 缓存；但 CDN、运营商线路、跨域策略仍会影响结果。测试只会在你点击按钮时下载资源，不会自动下载几十 MB 的文件。</p>
+<div class="actions">
+<button id="btn-small" data-test="small">① 小规则 JSON：约 20 KB</button>
+<button id="btn-medium" data-test="main">② 主 JS：约 20 MB 总流量</button>
+<button id="btn-large" data-test="wasm">③ WASM：约 54 MB 总流量</button>
+<button id="btn-copy" class="secondary">复制测试结果</button>
+</div>
+</section>
+<section class="panel" id="results">
+<h2>测试结果</h2>
+<p class="small" id="environment">网页入口：已加载（GitHub Pages）</p>
+<div class="item" id="card-small">
+<strong>小型规则 JSON（同一份旧规则）</strong>
+<div class="desc">小文件，用来判断是否有必要把新识别规则 JSON 迁回 COS。</div>
+<div class="status-row"><div class="site">GitHub Pages</div><div id="small-gh" class="result pending">未测试</div></div>
+<div class="status-row"><div class="site">腾讯云 COS</div><div id="small-cos" class="result pending">未测试</div></div>
+</div>
+<div class="item" id="card-main">
+<strong>OCR 主 JS（同一份约 10 MB 文件）</strong>
+<div class="desc">GitHub 的一份临时镜像仅用于下载测试，绝不会执行这份 JS。</div>
+<div class="status-row"><div class="site">GitHub Pages</div><div id="main-gh" class="result pending">未测试</div></div>
+<div class="status-row"><div class="site">腾讯云 COS</div><div id="main-cos" class="result pending">未测试</div></div>
+</div>
+<div class="item" id="card-wasm">
+<strong>多线程 WASM（同一份约 27 MB 文件，可选）</strong>
+<div class="desc">流量较大；请在 Wi-Fi 下测试。不运行 OCR 模型，只检查文件能否完整读取。</div>
+<div class="status-row"><div class="site">GitHub Pages</div><div id="wasm-gh" class="result pending">未测试</div></div>
+<div class="status-row"><div class="site">腾讯云 COS</div><div id="wasm-cos" class="result pending">未测试</div></div>
+</div>
+</section>
+<section class="panel">
+<h2>怎样判断结果</h2>
+<p>如果 GitHub 和 COS 均能读取小规则 JSON，可以继续让 JSON 留在 GitHub；但要多测试几台国内手机和不同网络。若 GitHub 大 JS 或 WASM 慢、超时而 COS 正常，就应继续保持主程序和 WASM 在 COS。</p>
+<p class="small">如果出现“跨域/CORS 或网络失败”，不能仅凭这一次判定国内网络不通：这也可能是 COS 的跨域设置或浏览器隔离策略导致。单纯在地址栏打开后提示下载，不等于网页能够正确执行它。</p>
+<details><summary>本页测试能证明什么，不能证明什么？</summary>
+<p>本页检测下载成功率、完整字节数及耗时；不执行 OCR，也不测试 WebGPU、Worker 初始化、COEP/CORP 或模型运行。正式变更服务器前，还需要测试实际页面完整识别 9 张、断网恢复和首次打开。</p>
+</details>
+<pre id="report">尚未运行测试。</pre>
+<p class="small">检测页面为独立路径，不会动已有记录。可把测试结果复制发给我。</p>
+</section>
+<script>
+(function(){
+  "use strict";
+  const base="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/";
+  const cases={
+    small:{asset:"recognition-rules-v1181.json",local:"rules-small.json",sizeMin:1000,timeout:25000,label:"小型规则JSON"},
+    main:{asset:"index-B81hyAdU-v1182-test22.js",local:"main-10mb.js",sizeMin:5000000,timeout:70000,label:"OCR主JS"},
+    wasm:{asset:"ort-wasm-simd-threaded.jsep-MDYUKy93.wasm",local:"wasm-27mb.wasm",sizeMin:20000000,timeout:140000,label:"WASM"}
+  };
+  let running=false;
+  let runId=0;
+  const results={};
+  const el=id=>document.getElementById(id);
+  const update=(id,label,cls)=>{
+    const node=el(id);node.textContent=label;node.className="result "+cls;
+  };
+  const time=()=>performance.now();
+  const suffix=()=>{
+    if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();
+    return String(Date.now())+"-"+String(Math.random()).slice(2);
+  };
+  async function check(url,minSize,timeout,id){
+    const started=time();
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),timeout);
+    try{
+      const src=url+(url.includes("?")?"&":"?")+"nettest="+suffix();
+      // mode:cors forces the exact cross-origin rules needed for JS-driven
+      // access; an unreadable opaque 200 response is NOT accepted as success.
+      const response=await fetch(src,{mode:"cors",credentials:"omit",cache:"no-store",signal:ctrl.signal});
+      if(!response.ok)throw new Error("HTTP "+response.status);
+      if(response.type==="opaque")throw new Error("不透明响应：无法核验内容");
+      let total=0;
+      if(response.body&&response.body.getReader){
+        const reader=response.body.getReader();
+        let prev=0;
+        while(true){
+          const part=await reader.read();
+          if(part.done)break;
+          total+=part.value.byteLength;
+          if(time()-prev>400){
+            update(id,"下载中 "+(total/1048576).toFixed(2)+" MB","pending");
+            prev=time();
+          }
+        }
+      }else{
+        total=(await response.arrayBuffer()).byteLength;
+      }
+      if(total<minSize)throw new Error("数据不完整："+total+" 字节");
+      const ms=Math.round(time()-started);
+      const sec=(ms/1000).toFixed(2);
+      const ok={state:"成功",bytes:total,ms:ms};
+      update(id,"✓ 完整读取 "+(total/1048576).toFixed(2)+" MB，"+sec+" 秒","ok");
+      return ok;
+    }catch(e){
+      const ms=Math.round(time()-started);
+      const reason=e.name==="AbortError"?"超时："+Math.round(timeout/1000)+"秒":(e&&e.message)||String(e);
+      const fail={state:"失败",reason:reason,ms:ms};
+      update(id,"✕ "+reason+"（网络、CORS 或浏览器策略，需要区分）","bad");
+      return fail;
+    }finally{clearTimeout(timer)}
+  }
+  async function test(group){
+    if(running)return;
+    running=true;
+    document.querySelectorAll("button[data-test]").forEach(b=>b.disabled=true);
+    const conf=cases[group];
+    runId++;
+    results[group]={};
+    el("environment").textContent="网页入口：GitHub Pages 已加载；本轮请求跳过浏览器 HTTP 缓存；测试序号："+runId;
+    const order=runId%2?["gh","cos"]:["cos","gh"];
+    for(const site of order){
+      const id=group+"-"+site;
+      update(id,"正在准备请求…","pending");
+      const url=site==="gh"?"./"+conf.local:base+conf.asset;
+      results[group][site]=await check(url,conf.sizeMin,conf.timeout,id);
+      results[group][site].url=site==="gh"?"GitHub Pages":"腾讯云 COS";
+    }
+    report();
+    document.querySelectorAll("button[data-test]").forEach(b=>b.disabled=false);
+    running=false;
+  }
+  function report(){
+    let lines=[
+      "铭牌识别·国内网络资源对照测试",
+      "时间："+new Date().toLocaleString(),
+      "网络：请补充 Wi-Fi / 移动数据、是否使用 VPN",
+      "浏览器：请补充微信 / Edge / 小米自带 / 三星自带 / 其他",
+      "GitHub Pages 网页入口：已成功打开"
+    ];
+    for(const key of ["small","main","wasm"]){
+      lines.push("【"+cases[key].label+"】");
+      for(const site of ["gh","cos"]){
+        const res=results[key]?.[site];
+        lines.push((site==="gh"?"GitHub":"COS")+"："+(!res?"未测试":res.state==="成功"?
+          ("成功、"+(res.bytes/1048576).toFixed(2)+"MB、"+(res.ms/1000).toFixed(2)+"秒"):
+          ("失败、"+res.reason)));
+      }
+    }
+    el("report").textContent=lines.join("\n");
+    return lines.join("\n");
+  }
+  document.querySelectorAll("button[data-test]").forEach(btn=>
+    btn.addEventListener("click",()=>test(btn.dataset.test)));
+  el("btn-copy").addEventListener("click",async()=>{
+    const value=report();
+    try{await navigator.clipboard.writeText(value);el("btn-copy").textContent="✓ 已复制"}
+    catch(e){
+      const ta=document.createElement("textarea");ta.value=value;document.body.appendChild(ta);
+      ta.select();try{document.execCommand("copy");el("btn-copy").textContent="✓ 已复制"}catch(err){el("btn-copy").textContent="请长按下方报告复制"}
+      ta.remove();
+    }
+    setTimeout(()=>el("btn-copy").textContent="复制测试结果",1800);
+  });
+})();
+</script>
+</body></html>
