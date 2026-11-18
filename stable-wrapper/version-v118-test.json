@@ -1,9 +1,0 @@
-{
-  "version": "1.18.1-test-baseline",
-  "publishedAt": "2026-11-15T00:29:00+08:00",
-  "mainJs": "index-B81hyAdU-v1181-candidate.js",
-  "runtimeFiles": [
-    "index-B81hyAdU-v1181-candidate.js"
-  ],
-  "rules": "recognition-rules-v1181.json"
-}
