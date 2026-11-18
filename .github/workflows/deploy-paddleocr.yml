@@ -1,6 +1,6 @@
 name: Deploy Mingpai OCR (pinned stable baseline)
 
-# v1.18.4.4: restore the exact, user-verified Pages site. No historical rebuild.
+# v1.18.4.5: restore the exact, user-verified Pages site. No historical rebuild.
 # When publishing future changes, create a NEW reviewed baseline branch and
 # update PINNED_COMMIT only after the candidate has passed device tests.
 on:
@@ -26,13 +26,13 @@ jobs:
       - name: Checkout release workflow
         uses: actions/checkout@v4
 
-      - name: Restore verified v1.18.4.4 site (no old version build steps)
+      - name: Restore verified v1.18.4.5 site (no old version build steps)
         env:
-          PINNED_COMMIT: 780c368e4b3fc3460db3b39d68720e80cc2e5780
+          PINNED_COMMIT: 721b4b06c770b5d3faf79b1ebf1060fb05025dce
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11844:refs/remotes/origin/release-baseline/v11844
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11844)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845:refs/remotes/origin/release-baseline/v11845
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -44,15 +44,15 @@ jobs:
           from pathlib import Path
           root=Path('app')
           expected={
-            'index.html':'cb4c91582292aedc35333f43b96631ad359d627dd51fa1616402522b1403aa6d',
-            'test-adaptive/index.html':'c87655a9fa4fbb7b1beb5db64d5ed33eebcc3f68f563d36dabe05d7b5acae44c',
+            'index.html':'da804762e3c04f8b2140e43c6f7d4aec980539961d2bce326a82ca3801401368',
+            'test-adaptive/index.html':'13ac4beb1a7a6aa0fd82cfcb7809bd9296f4fff03537c557be505640a4cc6bf7',
             'recognition-rules-v1184.json':'90c5314b67f228d1a74f5be9d18ddc9367f6e967a772c0b6f9f7dd699b108cc6'}
           for name,sha in expected.items():
             got=hashlib.sha256((root/name).read_bytes()).hexdigest()
             assert got==sha,(name,got,sha)
           formal=json.loads((root/'version-v118-test.json').read_text())
           test=json.loads((root/'test-adaptive/version-v118-test.json').read_text())
-          assert formal['version']=='1.18.4.4' and test['version']=='1.18.4.4-test'
+          assert formal['version']=='1.18.4.5' and test['version']=='1.18.4.5-test'
           assert formal['mainJs']==test['mainJs']=='index-B81hyAdU-v11832-viewport-test2.js'
           assert formal['rules']==test['rules']=='recognition-rules-v1184.json'
           assert len(json.loads((root/'recognition-rules-v1184.json').read_text())['rules'])==76
@@ -60,7 +60,7 @@ jobs:
             outer=(root/entry/'index.html').read_text()
             core=(root/entry/'core.html').read_text()
             worker=(root/entry/'coi-serviceworker.js').read_text()
-            assert 'nativeField.dispatchEvent(new Event' in outer
+            assert "nativeChange('temperature',temp)" in outer and "nativeChange('humidity',hum)" in outer
             assert 'view?.location?.reload()' not in outer
             assert 'v11841-modal-back' in outer
             assert 'recognition-rules-v1184.json' in core
@@ -74,7 +74,7 @@ jobs:
             f=Path('/tmp')/('mingpai-release-'+entry.replace('/','-')+'sw.js')
             f.write_text(worker)
             subprocess.run(['node','--check',str(f)],check=True)
-          print('PASS pinned v1.18.4.4 Pages release, rules, JS syntax; formal/test isolated')
+          print('PASS pinned v1.18.4.5 Pages release, rules, JS syntax; formal/test isolated')
           PY
 
       - name: Upload verified site
