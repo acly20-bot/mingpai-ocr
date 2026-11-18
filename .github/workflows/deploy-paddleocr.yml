@@ -14,6 +14,7 @@ on:
       - 'scripts/v1183-field-review.js'
       - 'scripts/deploy-v1183-test2.py'
       - 'scripts/v1183-preview-back.js'
+      - 'scripts/network-diagnostics.html'
   workflow_dispatch:
 
 permissions:
@@ -725,6 +726,33 @@ jobs:
       - name: Apply v1.18.3 test.2 rule fixes and Back-to-close preview (test only)
         run: |
           python scripts/deploy-v1183-test2.py
+
+      - name: Build isolated GitHub vs COS network diagnostics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import urllib.request,shutil
+          dest=Path('app/network-test')
+          dest.mkdir(parents=True,exist_ok=True)
+          shutil.copy2('scripts/network-diagnostics.html',dest/'index.html')
+          base='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/'
+          assets={
+            'rules-small.json':('recognition-rules-v1181.json',1000),
+            'main-10mb.js':('index-B81hyAdU-v1182-test22.js',5000000),
+            'wasm-27mb.wasm':('ort-wasm-simd-threaded.jsep-MDYUKy93.wasm',20000000),
+          }
+          for target,(name,minimum) in assets.items():
+            url=base+name
+            print('Downloading same binary to GitHub Pages:',name,flush=True)
+            request=urllib.request.Request(url,headers={'User-Agent':'mingpai-network-comparison/1.0'})
+            with urllib.request.urlopen(request,timeout=150) as response, (dest/target).open('wb') as out:
+              shutil.copyfileobj(response,out)
+            size=(dest/target).stat().st_size
+            if size<minimum:raise ValueError(f'incomplete mirror: {target} {size} bytes')
+            print('NETWORK_DIAG_ASSET',target,size,flush=True)
+          assert (dest/'index.html').stat().st_size>5000
+          print('PASS isolated network test. No production or test-adaptive modification.',flush=True)
+          PY
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
