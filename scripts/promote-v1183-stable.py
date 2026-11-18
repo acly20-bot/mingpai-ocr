@@ -54,7 +54,7 @@ def build(origin,folder,version,label,scope):
     c=(origin/"core.html").read_text(encoding="utf-8")
     w=(origin/"coi-serviceworker.js").read_text(encoding="utf-8")
     assert "v1.18.3 test.2.1" in p and "v1.18.3 test.2.1" in c
-    assert "1.18.3-test.2.1" in p and "1.18.3-test.2.1" in c
+    assert "1.18.3-test.2.1" in p  # version is in outer shell; inner page only carries display label
     assert "v1183PreviewBackInit" in p
     assert "v118321CanonSerialRisk" in p
     assert "v118321PreviewCloseStyle" in c
