@@ -14,6 +14,7 @@ on:
       - 'scripts/v1183-field-review.js'
       - 'scripts/deploy-v1183-test2.py'
       - 'scripts/deploy-v1183-test21.py'
+      - 'scripts/promote-v1183-stable.py'
       - 'scripts/v1183-preview-back.js'
       - 'scripts/network-diagnostics.html'
   workflow_dispatch:
@@ -758,6 +759,10 @@ jobs:
           assert (dest/'index.html').stat().st_size>5000
           print('PASS isolated network test. No production or test-adaptive modification.',flush=True)
           PY
+
+      - name: Promote validated v1.18.3 test.2.1 to formal v1.18.3 and stable test mirror
+        run: |
+          python scripts/promote-v1183-stable.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
