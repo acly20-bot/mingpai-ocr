@@ -4,7 +4,7 @@ name: Deploy PaddleOCR Mingpai to GitHub Pages
 
 on:
   push:
-    branches: [main, 'fix/v1183-weather-refresh-stage1-20261118']
+    branches: [main, 'perf/v11832-targeted-dom-idb-20261118']
     paths:
       - 'github-pages-cos-models.zip'
       - '.github/workflows/deploy-paddleocr.yml'
@@ -739,6 +739,10 @@ jobs:
       - name: Prepare v1.18.3.1 weather formal release (guarded)
         run: |
           python scripts/release-v11831-weather.py
+
+      - name: Build isolated v1.18.3.2 performance test route
+        run: |
+          python scripts/release-v11832-perf.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
