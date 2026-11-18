@@ -1139,7 +1139,7 @@ frame.addEventListener('load',async()=>{
             try{
               const draft=envDrafts.get(id)||{temperature:ti.value,humidity:hi.value};
               const temp=String(draft.temperature??'').trim(),hum=String(draft.humidity??'').trim();
-              const tn=parseWeatherNumber(temp),hn=parseWeatherNumber(hum);
+              const tn=numeric(temp),hn=numeric(hum);
               if((temp!==''&&(tn===null||tn< -100||tn>70))||(hum!==''&&(hn===null||hn<0||hn>100))){
                 alert('温湿度输入无效：温度应为数字，湿度应在 0～100 之间。');
                 return;
