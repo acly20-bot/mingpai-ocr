@@ -22,6 +22,7 @@ on:
       - 'scripts/apply-v11841-fixes-test.py'
       - 'scripts/apply-v11842-reconfirm-test.py'
       - 'scripts/apply-v11843-confirm-rehydrate-test.py'
+      - 'scripts/apply-v11844-native-env-review-test.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
@@ -778,6 +779,10 @@ jobs:
       - name: Rehydrate native confirm controls after pending environment edits v1.18.4.3 test
         run: |
           python scripts/apply-v11843-confirm-rehydrate-test.py
+
+      - name: Use native review state on temperature/humidity edits (v1.18.4.4 test)
+        run: |
+          python scripts/apply-v11844-native-env-review-test.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
