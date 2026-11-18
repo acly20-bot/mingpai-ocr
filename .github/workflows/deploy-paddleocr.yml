@@ -18,6 +18,7 @@ on:
       - 'scripts/apply-v11832-test2.py'
       - 'scripts/apply-v11832-test3.py'
       - 'scripts/apply-v11832-test4.py'
+      - 'scripts/release-v1184-formal.py'
       - 'scripts/v1183-preview-back.js'
   workflow_dispatch:
 
@@ -758,6 +759,10 @@ jobs:
       - name: Apply v1.18.3.2-test.4 top floating weather indicator
         run: |
           python scripts/apply-v11832-test4.py
+
+      - name: Promote user-verified performance build and six OCR correction cases to v1.18.4
+        run: |
+          python scripts/release-v1184-formal.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
