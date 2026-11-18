@@ -1,0 +1,73 @@
+name: Publish verified v1.18.4.5 and pin stable release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v11845.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Restore frozen v1.18.4.4 baseline
+        env:
+          PINNED_COMMIT: 780c368e4b3fc3460db3b39d68720e80cc2e5780
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11844:refs/remotes/origin/release-baseline/v11844
+          test "$(git rev-parse refs/remotes/origin/release-baseline/v11844)" = "$PINNED_COMMIT"
+          mkdir -p app
+          git archive "$PINNED_COMMIT":site-baseline | tar -xf - -C app
+
+      - name: Apply user-tested native temperature/humidity fix to test
+        run: |
+          python scripts/apply-v11845-native-environment-test.py
+
+      - name: Promote verified v1.18.4.5 to formal
+        run: |
+          python scripts/promote-v11845-formal.py
+
+      - name: Freeze full v1.18.4.5 formal/test baseline for rollback and future deploys
+        run: |
+          set -euo pipefail
+          BASE="$RUNNER_TEMP/mingpai-v11845-baseline"
+          git worktree add -b release-baseline/v11845 "$BASE" HEAD
+          mkdir -p "$BASE/site-baseline"
+          cp -a app/. "$BASE/site-baseline/"
+          cd "$BASE"
+          git add site-baseline
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'baseline: user-approved v1.18.4.5 formal/test'
+          git push origin HEAD:refs/heads/release-baseline/v11845
+          echo "PINNED_BASELINE_SHA=$(git rev-parse HEAD)"
+          sha256sum site-baseline/index.html site-baseline/test-adaptive/index.html site-baseline/recognition-rules-v1184.json
+
+      - name: Upload GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
