@@ -1,0 +1,73 @@
+name: Promote tested dock fix to formal (same v1.18.4.5 version)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-mobile-dock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore frozen v1.18.4.5 baseline
+        env:
+          PINNED_COMMIT: 721b4b06c770b5d3faf79b1ebf1060fb05025dce
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845:refs/remotes/origin/release-baseline/v11845
+          test "$(git rev-parse refs/remotes/origin/release-baseline/v11845)" = "$PINNED_COMMIT"
+          mkdir -p app
+          git archive "$PINNED_COMMIT":site-baseline | tar -xf - -C app
+
+      - name: Apply already approved test hotfix
+        run: |
+          python scripts/fix-mobile-dock-after-camera-test.py
+
+      - name: Promote same UI fix to formal with unchanged version
+        run: |
+          python scripts/promote-mobile-dock-fix-formal.py
+
+      - name: Snapshot immutable full Pages baseline
+        run: |
+          set -euo pipefail
+          BASE="$RUNNER_TEMP/mingpai-v11845-dock-baseline"
+          git worktree add -b release-baseline/v11845-dockfix "$BASE" HEAD
+          mkdir -p "$BASE/site-baseline"
+          cp -a app/. "$BASE/site-baseline/"
+          cd "$BASE"
+          git add site-baseline
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'baseline: validated dock fix v1.18.4.5 unchanged version'
+          git push origin HEAD:refs/heads/release-baseline/v11845-dockfix
+          echo "PINNED_BASELINE_SHA=$(git rev-parse HEAD)"
+          sha256sum site-baseline/index.html site-baseline/test-adaptive/index.html site-baseline/recognition-rules-v1184.json
+
+      - name: Upload Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
