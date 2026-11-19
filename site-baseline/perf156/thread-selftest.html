@@ -1,0 +1,20 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>v1.156.2 ORT 多线程自检</title><style>body{font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;margin:0;background:#f5f8f7;color:#17352e}.box{max-width:760px;margin:32px auto;padding:20px}.card{background:#fff;border:1px solid #d7e7e1;border-radius:14px;padding:18px;margin:12px 0}.ok{color:#087a55;font-weight:700}.bad{color:#b42318;font-weight:700}a,button{display:inline-block;margin:6px 8px 6px 0;padding:10px 14px;border-radius:10px;border:1px solid #16805f;background:#fff;color:#12694f;text-decoration:none}pre{white-space:pre-wrap;word-break:break-word;background:#f6f8f7;padding:12px;border-radius:10px}</style></head><body><div class="box"><h2>v1.156.1 ORT 多线程核心自检</h2><div class="card"><div id="cap">正在检查……</div><p><a href="?threads=2">测试 2线程</a><a href="?threads=4">测试 4线程</a><a href="./">返回性能测试页</a></p></div><div class="card"><pre id="result">请选择 2线程或4线程；页面会创建真实 ONNX WASM 会话并执行 Identity 推理。</pre></div></div><script type="module">
+const cap=document.getElementById('cap'), out=document.getElementById('result');
+const n=Number(new URL(location.href).searchParams.get('threads')||0);
+cap.textContent=`CPU逻辑核心 ${navigator.hardwareConcurrency||'?'}；crossOriginIsolated=${crossOriginIsolated}；SharedArrayBuffer=${typeof SharedArrayBuffer}`;
+if(n===2||n===4){
+  const t0=performance.now();
+  try{
+    if(!crossOriginIsolated) throw new Error('crossOriginIsolated=false，多线程条件未满足');
+    const ort=await import('./cos/ort/ort.bundle.min-DkPMIImt.js');
+    ort.env.wasm.numThreads=n; ort.env.wasm.proxy=false;
+    ort.env.wasm.wasmPaths={wasm:new URL('./cos/ort/ort-wasm-simd-threaded.jsep-MDYUKy93.wasm',location.href).href};
+    const model=new Uint8Array(await (await fetch('./tiny.onnx',{cache:'no-store'})).arrayBuffer());
+    const s=await ort.InferenceSession.create(model,{executionProviders:['wasm'],graphOptimizationLevel:'all'});
+    const y=await s.run({X:new ort.Tensor('float32',new Float32Array([7]),[1])});
+    const v=Array.from(y.Y.data)[0];
+    out.className='ok'; out.textContent=`SUCCESS：WASM ${n}线程会话已创建并完成真实推理。输出=${v}；耗时=${Math.round(performance.now()-t0)} ms`;
+    await s.release?.();
+  }catch(e){out.className='bad';out.textContent=`FAILED：WASM ${n}线程自检失败\n${e?.stack||e?.message||String(e)}`;}
+}
+</script></body></html>

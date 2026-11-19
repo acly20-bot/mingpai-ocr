@@ -1,0 +1,12 @@
+{
+  "version": "1.18.3",
+  "sourceTestVersion": "1.18.3-test.2.1",
+  "mainJs": "index-B81hyAdU-v1182-test22.js",
+  "ruleCount": 69,
+  "ruleSource": "GitHub Pages (local to each entry)",
+  "ruleFingerprint": "6b4eab274045388d1fbe806761429b6b27e1827d278de0a0152f7188ba3ed1c0",
+  "feishuSCF": "unchanged",
+  "indexedDB": "unchanged",
+  "formerStable": "1.18.2.1",
+  "futureReviewDevelopment": "independent new route; keep formal and test-adaptive unchanged"
+}
