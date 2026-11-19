@@ -28,11 +28,11 @@ jobs:
 
       - name: Restore verified v1.18.4.5 site (no old version build steps)
         env:
-          PINNED_COMMIT: 721b4b06c770b5d3faf79b1ebf1060fb05025dce
+          PINNED_COMMIT: a146f14352630726ef9ddcc581d075cb936a4ce8
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845:refs/remotes/origin/release-baseline/v11845
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-dockfix:refs/remotes/origin/release-baseline/v11845-dockfix
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-dockfix)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -44,8 +44,8 @@ jobs:
           from pathlib import Path
           root=Path('app')
           expected={
-            'index.html':'da804762e3c04f8b2140e43c6f7d4aec980539961d2bce326a82ca3801401368',
-            'test-adaptive/index.html':'13ac4beb1a7a6aa0fd82cfcb7809bd9296f4fff03537c557be505640a4cc6bf7',
+            'index.html':'75dfa4c5dac9cf4b983f4d7e8affb4412651046a2ed54551748d72aac6af58fd',
+            'test-adaptive/index.html':'56efde27f61e96c206d24e3088bf6d54d762852cf7b8ecdbfa119446244531d7',
             'recognition-rules-v1184.json':'90c5314b67f228d1a74f5be9d18ddc9367f6e967a772c0b6f9f7dd699b108cc6'}
           for name,sha in expected.items():
             got=hashlib.sha256((root/name).read_bytes()).hexdigest()
@@ -63,6 +63,8 @@ jobs:
             assert "nativeChange('temperature',temp)" in outer and "nativeChange('humidity',hum)" in outer
             assert 'view?.location?.reload()' not in outer
             assert 'v11841-modal-back' in outer
+            assert 'dockModalSelectors' in outer and 'trulyOpen' in outer
+            assert "attributeFilter:['hidden','style','class','aria-hidden']" in outer
             assert 'recognition-rules-v1184.json' in core
             assert formal['mainJs'] in core
             for label,source in (('outer',outer),('core',core)):
