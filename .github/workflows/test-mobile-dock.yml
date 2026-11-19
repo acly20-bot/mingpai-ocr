@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/test-mobile-dock.yml'
+      - 'scripts/fix-mobile-dock-after-camera-test.py'
   workflow_dispatch:
 
 permissions:
