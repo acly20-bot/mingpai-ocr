@@ -96,6 +96,20 @@ stable=trial.replace('const CLIENT_VERSION="1.18.4.5-test";',
                      'const CLIENT_VERSION="1.18.4.5";',1)
 stable=stable.replace('v1.18.4.5 测试版','v1.18.4.5 正式版')
 assert 'const CLIENT_VERSION="1.18.4.5";' in stable
+# Preserve formal-only dock self-recovery from the last user-verified stable
+# baseline. The tested stats template deliberately lacks these formal guards.
+current_formal=(root/'index.html').read_text(encoding='utf-8')
+guard_start='  const v118ModalDockGuard=()=>{'
+guard_end='\n\n  /* v1.18.4.5 '
+fa=current_formal.index(guard_start);fb=current_formal.index(guard_end,fa)
+sa=stable.index(guard_start);sb=stable.index(guard_end,sa)
+guard=current_formal[fa:fb]
+assert 'scheduleHiddenDockRecovery' in guard
+assert "dock.style.getPropertyPriority('display')" in guard
+assert "(t.id==='mobileDock' && rec.attributeName==='style')" in guard
+stable=stable[:sa]+guard+stable[sb:]
+assert 'scheduleHiddenDockRecovery' in stable
+assert 'v11845-stats-unit-label' in stable
 (root/'index.html').write_text(stable,encoding='utf-8')
 formal_sw=root/'coi-serviceworker.js'
 fw=formal_sw.read_text(encoding='utf-8')
