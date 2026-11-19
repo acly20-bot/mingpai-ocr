@@ -1,0 +1,81 @@
+name: Test mobile dock recovery (same v1.18.4.5 version)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/test-mobile-dock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore pinned v1.18.4.5 baseline
+        env:
+          PINNED_COMMIT: 721b4b06c770b5d3faf79b1ebf1060fb05025dce
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845:refs/remotes/origin/release-baseline/v11845
+          test "$(git rev-parse refs/remotes/origin/release-baseline/v11845)" = "$PINNED_COMMIT"
+          mkdir -p app
+          git archive "$PINNED_COMMIT":site-baseline | tar -xf - -C app
+
+      - name: Fix dock visibility in test only without version change
+        run: |
+          python scripts/fix-mobile-dock-after-camera-test.py
+
+      - name: Verify formal byte identity, dock behavior and version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('app')
+          hashes={
+            'index.html':'da804762e3c04f8b2140e43c6f7d4aec980539961d2bce326a82ca3801401368',
+            'recognition-rules-v1184.json':'90c5314b67f228d1a74f5be9d18ddc9367f6e967a772c0b6f9f7dd699b108cc6'
+          }
+          for p,h in hashes.items():
+            assert hashlib.sha256((root/p).read_bytes()).hexdigest()==h,(p,h)
+          formal=json.loads((root/'version-v118-test.json').read_text())
+          test=json.loads((root/'test-adaptive/version-v118-test.json').read_text())
+          assert formal['version']=='1.18.4.5' and test['version']=='1.18.4.5-test'
+          assert formal['mainJs']==test['mainJs']
+          assert formal['rules']==test['rules']=='recognition-rules-v1184.json'
+          s=(root/'test-adaptive/index.html').read_text()
+          assert 'dockModalSelectors' in s and 'trulyOpen' in s
+          assert "attributeFilter:['hidden','style','class','aria-hidden']" in s
+          assert 'modalOpen?' not in s[s.index('const v118ModalDockGuard=()=>{'):s.index('const dockModalSelectors=')]
+          assert 'nativeChange(\'temperature\',temp)' in s and 'nativeChange(\'humidity\',hum)' in s
+          assert 'v11841-modal-back' in s
+          print('PASS unchanged version, unchanged formal, isolated modal guard, native review intact')
+          PY
+
+      - name: Upload GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
