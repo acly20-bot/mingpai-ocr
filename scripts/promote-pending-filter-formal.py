@@ -30,7 +30,7 @@ assert "nativeChange('temperature',temp)" in a and "nativeChange('humidity',hum)
 assert 'v11845-stats-unit-label' in a
 assert 'const CLIENT_VERSION="1.18.4.5";' in a
 a=a.replace(end,block+end,1)
-assert a.count('pendingConfirmRefreshBound')==1
+assert a.count('pendingConfirmRefreshBound')==2
 assert 'scheduleHiddenDockRecovery' in a
 assert 'v11845-stats-unit-label' in a
 formal.write_text(a,encoding='utf-8')
