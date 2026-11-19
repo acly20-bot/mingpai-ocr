@@ -1,0 +1,74 @@
+name: Test pending filter after Confirm (v1.18.4.5 unchanged)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/test-pending-filter.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Restore pinned current stable baseline
+        env:
+          PINNED_COMMIT: 458318188f8ffc787f709b3422a1f45bf78948eb
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-stats-restored-safe:refs/remotes/origin/release-baseline/v11845-stats-restored-safe
+          test "$(git rev-parse refs/remotes/origin/release-baseline/v11845-stats-restored-safe)" = "$PINNED_COMMIT"
+          mkdir -p app
+          git archive "$PINNED_COMMIT":site-baseline | tar -xf - -C app
+
+      - name: Restore native pending filter after confirmed record
+        run: |
+          python scripts/fix-pending-filter-after-confirm-test.py
+
+      - name: Verify formal remains byte-identical, no visible version bump
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('app')
+          expected={'index.html':'c17357d03c00655c4d007fb3ee30107bf7d42ba7c2688c9c768d83465df0bc9c',
+                    'recognition-rules-v1184.json':'90c5314b67f228d1a74f5be9d18ddc9367f6e967a772c0b6f9f7dd699b108cc6'}
+          for p,sha in expected.items():
+            assert hashlib.sha256((root/p).read_bytes()).hexdigest()==sha,p
+          assert json.loads((root/'version-v118-test.json').read_text())['version']=='1.18.4.5'
+          assert json.loads((root/'test-adaptive/version-v118-test.json').read_text())['version']=='1.18.4.5-test'
+          s=(root/'test-adaptive/index.html').read_text()
+          assert 'pendingConfirmRefreshBound' in s
+          assert "pendingStatusSelect.dispatchEvent(new Event('change',{bubbles:true}))" in s
+          assert 'dockModalSelectors' in s and 'v11845-stats-unit-label' in s
+          print('PASS pending filter corrected in test only; formal untouched')
+          PY
+
+      - name: Upload Pages site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
