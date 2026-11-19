@@ -66,7 +66,7 @@ s=s.replace(anchor,enhancement+anchor,1)
 assert 'v11845-stats-unit-label' in s
 assert 'width:20%' not in s[s.index("const headers=mode==="):s.index("modal.querySelectorAll('[data-mode]')")]
 assert 'nativeChange(\'temperature\',temp)' in s
-assert 'scheduleHiddenDockRecovery' in s
+assert 'dockModalSelectors' in s and 'trulyOpen' in s
 p.write_text(s)
 sw=test/'coi-serviceworker.js';w=sw.read_text()
 old_cache='const SHELL_CACHE="mingpai-shell-v11845-dockfix-test";'
