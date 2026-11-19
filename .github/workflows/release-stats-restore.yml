@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/release-stats-restore.yml'
+      - 'scripts/restore-stats-layout-formal-test.py'
   workflow_dispatch:
 
 permissions:
@@ -41,13 +42,13 @@ jobs:
         run: |
           set -euo pipefail
           BASE="$RUNNER_TEMP/mingpai-stats-restore-baseline"
-          git worktree add -b release-baseline/v11845-stats-restored "$BASE" HEAD
+          git worktree add -b release-baseline/v11845-stats-restored-safe "$BASE" HEAD
           mkdir -p "$BASE/site-baseline"
           cp -a app/. "$BASE/site-baseline/"
           cd "$BASE"
           git add site-baseline
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'baseline: v1.18.4.5 restored previous stats layout in formal and test'
-          git push origin HEAD:refs/heads/release-baseline/v11845-stats-restored
+          git push origin HEAD:refs/heads/release-baseline/v11845-stats-restored-safe
           echo "PINNED_BASELINE_SHA=$(git rev-parse HEAD)"
           sha256sum site-baseline/index.html site-baseline/test-adaptive/index.html site-baseline/recognition-rules-v1184.json
 
