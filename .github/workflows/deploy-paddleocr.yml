@@ -28,11 +28,11 @@ jobs:
 
       - name: Restore verified v1.18.4.5 site (no old version build steps)
         env:
-          PINNED_COMMIT: 0843351521afe85b62722198349cd29489586500
+          PINNED_COMMIT: bd5f7e50d61afd31a41f1bbddadbde73b33371e4
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-dock-recovery:refs/remotes/origin/release-baseline/v11845-dock-recovery
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-dock-recovery)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-stats-restored:refs/remotes/origin/release-baseline/v11845-stats-restored
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-stats-restored)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -44,8 +44,8 @@ jobs:
           from pathlib import Path
           root=Path('app')
           expected={
-            'index.html':'12153339d77125c2168a16366b279325539085d929c8c26e22b67eadb9aaef73',
-            'test-adaptive/index.html':'56efde27f61e96c206d24e3088bf6d54d762852cf7b8ecdbfa119446244531d7',
+            'index.html':'899b5ff3e59bc0d24e6c7f129636458dbccb9e3a29241a5a31649491089b726b',
+            'test-adaptive/index.html':'c74081e71b491f1e3386a5a21062bac317a182929fa5a5d3b589a7dffd7f9b27',
             'recognition-rules-v1184.json':'90c5314b67f228d1a74f5be9d18ddc9367f6e967a772c0b6f9f7dd699b108cc6'}
           for name,sha in expected.items():
             got=hashlib.sha256((root/name).read_bytes()).hexdigest()
@@ -64,6 +64,7 @@ jobs:
             assert 'view?.location?.reload()' not in outer
             assert 'v11841-modal-back' in outer
             assert 'dockModalSelectors' in outer and 'trulyOpen' in outer
+            assert 'v11845-stats-unit-label' in outer
             if not entry:
               assert 'scheduleHiddenDockRecovery' in outer
             assert "attributeFilter:['hidden','style','class','aria-hidden']" in outer
