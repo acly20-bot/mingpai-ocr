@@ -88,6 +88,15 @@ assert s.count('const CLIENT_VERSION="1.18.4.5-test";')==1
 assert "nativeChange('temperature',temp)" in s and "nativeChange('humidity',hum)" in s
 assert "view?.location?.reload()" not in s
 f.write_text(s,encoding='utf-8')
+# Internal cache revision only; do NOT modify page/version manifest display labels.
+sw=test/'coi-serviceworker.js'
+w=sw.read_text(encoding='utf-8')
+assert 'const SHELL_CACHE="mingpai-shell-v11845-test";' in w
+w=w.replace('const SHELL_CACHE="mingpai-shell-v11845-test";','const SHELL_CACHE="mingpai-shell-v11845-dockfix-test";',1)
+sw.write_text(w,encoding='utf-8')
+temp=Path('/tmp/dock-11845-sw.js')
+temp.write_text(w,encoding='utf-8')
+subprocess.run(['node','--check',str(temp)],check=True)
 for label,html in [('outer',s),('core',(test/'core.html').read_text(encoding='utf-8'))]:
     for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',html,re.I|re.S)):
         if js.strip():
