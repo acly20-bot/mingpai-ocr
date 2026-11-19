@@ -11,7 +11,7 @@ f=test/'index.html';s=f.read_text(encoding='utf-8')
 m=json.loads((test/'version-v118-test.json').read_text(encoding='utf-8'))
 assert m['version']=='1.18.4.5-test' and json.loads((root/'version-v118-test.json').read_text())['version']=='1.18.4.5'
 a=s.index('  const v118ModalDockGuard=()=>{')
-b=s.index('\n\n  /* v1.18.4.5 正式版:',a)
+b=s.index('\n\n  /* v1.18.4.5 测试版:',a)
 old=s[a:b]
 assert "modalOpen?'none':'grid'" in old
 assert "position!=='fixed'" in old
