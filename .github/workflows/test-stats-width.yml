@@ -48,8 +48,8 @@ jobs:
           assert json.loads((root/'version-v118-test.json').read_text())['version']=='1.18.4.5'
           assert json.loads((root/'test-adaptive/version-v118-test.json').read_text())['version']=='1.18.4.5-test'
           test=(root/'test-adaptive/index.html').read_text()
-          assert '--stats-unit-width' in test
-          assert 'v11845-stats-unit-label' in test
+          assert 'stats-compact-hint' in test
+          assert 'stats-priority-equipment' in test
           assert 'dockModalSelectors' in test and 'trulyOpen' in test
           print('PASS adaptive statistics test, formal unchanged, current baseline intact')
           PY
