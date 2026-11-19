@@ -1,0 +1,61 @@
+name: Promote verified pending-list refresh (unchanged v1.18.4.5)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-pending-filter.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Restore verified previous baseline
+        env:
+          PINNED_COMMIT: 458318188f8ffc787f709b3422a1f45bf78948eb
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-stats-restored-safe:refs/remotes/origin/release-baseline/v11845-stats-restored-safe
+          test "$(git rev-parse refs/remotes/origin/release-baseline/v11845-stats-restored-safe)" = "$PINNED_COMMIT"
+          mkdir -p app
+          git archive "$PINNED_COMMIT":site-baseline | tar -xf - -C app
+      - name: Apply user-tested pending filter behavior to test
+        run: python scripts/fix-pending-filter-after-confirm-test.py
+      - name: Promote tested behavior into formal without dropping dock recovery
+        run: python scripts/promote-pending-filter-formal.py
+      - name: Freeze independent stable baseline
+        run: |
+          set -euo pipefail
+          BASE="$RUNNER_TEMP/mingpai-v11845-pending-filter-baseline"
+          git worktree add -b release-baseline/v11845-pending-confirm "$BASE" HEAD
+          mkdir -p "$BASE/site-baseline"
+          cp -a app/. "$BASE/site-baseline/"
+          cd "$BASE"
+          git add site-baseline
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'baseline: reviewed pending list refresh v1.18.4.5'
+          git push origin HEAD:refs/heads/release-baseline/v11845-pending-confirm
+          echo "PINNED_BASELINE_SHA=$(git rev-parse HEAD)"
+          sha256sum site-baseline/index.html site-baseline/test-adaptive/index.html site-baseline/recognition-rules-v1184.json
+      - name: Upload Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
