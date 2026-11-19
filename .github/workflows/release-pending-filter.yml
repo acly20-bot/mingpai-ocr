@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/release-pending-filter.yml'
+      - 'scripts/promote-pending-filter-formal.py'
   workflow_dispatch:
 permissions:
   contents: write
