@@ -44,7 +44,7 @@ jobs:
           from pathlib import Path
           root=Path('app')
           expected={
-            'index.html':'12153339d77125c2168a16366b279325539085d929c8c26e22b67eadb9aaef73,
+            'index.html':'12153339d77125c2168a16366b279325539085d929c8c26e22b67eadb9aaef73',
             'test-adaptive/index.html':'56efde27f61e96c206d24e3088bf6d54d762852cf7b8ecdbfa119446244531d7',
             'recognition-rules-v1184.json':'90c5314b67f228d1a74f5be9d18ddc9367f6e967a772c0b6f9f7dd699b108cc6'}
           for name,sha in expected.items():
