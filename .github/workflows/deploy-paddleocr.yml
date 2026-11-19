@@ -28,11 +28,11 @@ jobs:
 
       - name: Restore verified v1.18.4.5 site (no old version build steps)
         env:
-          PINNED_COMMIT: bd5f7e50d61afd31a41f1bbddadbde73b33371e4
+          PINNED_COMMIT: 458318188f8ffc787f709b3422a1f45bf78948eb
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-stats-restored:refs/remotes/origin/release-baseline/v11845-stats-restored
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-stats-restored)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-stats-restored-safe:refs/remotes/origin/release-baseline/v11845-stats-restored-safe
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-stats-restored-safe)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -44,7 +44,7 @@ jobs:
           from pathlib import Path
           root=Path('app')
           expected={
-            'index.html':'899b5ff3e59bc0d24e6c7f129636458dbccb9e3a29241a5a31649491089b726b',
+            'index.html':'c17357d03c00655c4d007fb3ee30107bf7d42ba7c2688c9c768d83465df0bc9c',
             'test-adaptive/index.html':'c74081e71b491f1e3386a5a21062bac317a182929fa5a5d3b589a7dffd7f9b27',
             'recognition-rules-v1184.json':'90c5314b67f228d1a74f5be9d18ddc9367f6e967a772c0b6f9f7dd699b108cc6'}
           for name,sha in expected.items():
