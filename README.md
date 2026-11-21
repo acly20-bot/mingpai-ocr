@@ -6,9 +6,9 @@
 
 ## 当前基线（2026-11-21）
 
-- 正式版稳定分支：[`release-baseline/v11845-rules-20261121`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-rules-20261121)
-- 正式版固定提交：`4d2f4f5b49a0d71b2bf5a51e060b51a3ec768a08`
-- 正式版规则：`recognition-rules-v1184.json`，**84 条**，规则修订号 `v1.18.4-20261121-r8`。
+- 正式版稳定分支：[`release-baseline/v11845-rules-cpap-r9`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-rules-cpap-r9)
+- 正式版固定提交：`505a09ba03730c2de1d72cddbc1bcfea5b7ef1ee`
+- 正式版规则：`recognition-rules-v1184.json`，**85 条**，规则修订号 `v1.18.4-20261121-r9`，新增鸽子小儿CPAP产品编号 `20126III012` 纠偏（OCR数字1/字母I混淆）。
 - 正式版保留已验证的底栏自恢复、温湿度审核与飞书同步、待审核筛选确认后自动移除、用户选定的统计布局。
 - **正在实机测试的独立分支**：[`release-baseline/v11845-bootfix-test`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-bootfix-test)；仅测试入口引入 Huawei/QQ/UC 首次加载超时与重试、减少大 JS 重复预缓存、已确认记录隐藏字段警告。该部分尚未合入正式版。
 
