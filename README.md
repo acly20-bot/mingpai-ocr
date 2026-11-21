@@ -1,24 +1,24 @@
-# 铭牌识别｜v1.18.4.5 稳定发布
+# 铭牌识别｜当前发布状态
 
-**正式版 v1.18.4.5**：https://acly20-bot.github.io/mingpai-ocr/
+正式版：**v1.18.4.5** — https://acly20-bot.github.io/mingpai-ocr/
 
-**测试版 v1.18.4.5-test**：https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
+性能测试版：**v1.18.5-test.1** — https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
 
-## 当前基线（2026-11-21）
+## 固定基线与发布策略
 
-- 正式版稳定分支：[`release-baseline/v11845-rules-cpap-r9`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-rules-cpap-r9)
-- 正式版固定提交：`505a09ba03730c2de1d72cddbc1bcfea5b7ef1ee`
-- 正式版规则：`recognition-rules-v1184.json`，**85 条**，规则修订号 `v1.18.4-20261121-r9`，新增鸽子小儿CPAP产品编号 `20126III012` 纠偏（OCR数字1/字母I混淆）。
-- 正式版保留已验证的底栏自恢复、温湿度审核与飞书同步、待审核筛选确认后自动移除、用户选定的统计布局。
-- **正在实机测试的独立分支**：[`release-baseline/v11845-bootfix-test`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-bootfix-test)；仅测试入口引入 Huawei/QQ/UC 首次加载超时与重试、减少大 JS 重复预缓存、已确认记录隐藏字段警告。该部分尚未合入正式版。
+- 正式版固定基线：[`release-baseline/v11845-boot-closeout`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-boot-closeout)，SHA `ae214f4a11b0c5c107e97fa4b50deb3a562e7200`。
+- 性能测试线基线：[`release-baseline/v1185-test1`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v1185-test1)，SHA `9da8b1c51521a1a6b2ec1e0813fec5484f579374`。
+- 识别规则：**85 条**，独立 JSON（`recognition-rules-v1184.json`），规则修订号 `v1.18.4-20261121-r9`，保持原有优先级。已包括鸽子小儿CPAP正确产品编号 `20126III012`。
+- 正式版已合入用户在 Edge 上验证的启动恢复及已确认记录隐藏风险提示；两个入口已移除临时启动诊断条。正式版保留底部快捷栏自恢复保护、原生温湿度审核和飞书同步、待审核确认后自动移除及选定的统计布局。
+- 精简部署工作流：[`deploy-paddleocr.yml`](.github/workflows/deploy-paddleocr.yml)，从稳定 SHA 直接恢复完整 Pages 发布产物，不执行旧版本连续补丁。
 
-## 发布规则
+## 当前性能测试（尚未合入正式版）
 
-- **独立识别规则**：样本和负例自动检查通过后，规则直接同步正式版与测试版，**网页显示版本号不变**；需换用新规则重新识别历史记录，不自动覆盖人工审核数据。
-- **页面 Bug/启动/界面修改**：先在测试版回归，再合入正式版，确认不覆盖现有稳定审核和同步功能。
-- 记录修改优先使用主程序已有编辑、确认及同步事件，不重新实现第二套状态。
-- 完整 Pages 发布来自固定基线分支；精简版工作流在 [`.github/workflows/deploy-paddleocr.yml`](.github/workflows/deploy-paddleocr.yml)。
+`v1.18.5-test.1` 只调整记录卡片装饰的 DOM 观察器：只在记录卡片确实插入或重建时进行原来的温湿度卡片检查，不再对无关子节点变化进行全量扫描。原生记录保存、IndexedDB 数据格式、OCR、飞书 SCF 均不改变。需要 Edge 上验证记录编辑、确认、筛选、批量识别及重开恢复后，才能进入下一阶段。
 
-## 回退
+## 开发与回退
 
-将部署工作流固定 SHA 恢复到上一稳定分支提交并运行发布。历史版本保存在 Git 记录及 `release-baseline/v11845-pending-confirm` 分支。不要删除腾讯云 COS 现用 OCR 主程序和模型。
+- 网页 Bug、性能、UI 变更先更新测试版，用户实机回归通过后再推广正式版、固定新基线；识别规则按约定直接同步正式版与测试版并在发布后实测，网页版本号不随规则修改。
+- 后续记录界面优先使用主程序已验证的原生编辑与审核机制。
+- 回退可将正式版工作流的固定 SHA 恢复至此前通过的完整基线，再重新部署；不会清空任何 IndexedDB 本地记录。
+- 尚未对小米自带浏览器启动进行新的兼容修复；以 Edge 为主要使用目标。
