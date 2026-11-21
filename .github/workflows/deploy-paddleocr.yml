@@ -28,11 +28,11 @@ jobs:
 
       - name: Restore verified v1.18.4.5 site (no old version build steps)
         env:
-          PINNED_COMMIT: 505a09ba03730c2de1d72cddbc1bcfea5b7ef1ee
+          PINNED_COMMIT: ae214f4a11b0c5c107e97fa4b50deb3a562e7200
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-rules-cpap-r9:refs/remotes/origin/release-baseline/v11845-rules-cpap-r9
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-rules-cpap-r9)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-boot-closeout:refs/remotes/origin/release-baseline/v11845-boot-closeout
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-boot-closeout)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -44,8 +44,8 @@ jobs:
           from pathlib import Path
           root=Path('app')
           expected={
-            'index.html':'0082a4f28591f5b2e2906a8b7fec6f94ec1247247467fa5fed02d0572cf7fa22',
-            'test-adaptive/index.html':'821809609e44b0236a1a990af7d13bb85c8ac0a66da851c872ffae9c27d18746',
+            'index.html':'50b80ba6955fd521b63c5851dbf09f5dbafecfbe2f4a854557c626d799cdb284',
+            'test-adaptive/index.html':'b90e9d3b3d2fef37cb1092814c75014f9843b8f176eda07ba3ddc75967809675',
             'recognition-rules-v1184.json':'56387ad6c2bd57ee39186a936e89298605535ef4c8f5702c57b84ebd862eed78'}
           for name,sha in expected.items():
             got=hashlib.sha256((root/name).read_bytes()).hexdigest()
@@ -66,12 +66,15 @@ jobs:
             assert 'dockModalSelectors' in outer and 'trulyOpen' in outer
             assert 'v11845-stats-unit-label' in outer
             assert 'pendingConfirmRefreshBound' in outer
+            assert 'const confirmed=/已确认/' in outer
+            assert 'mingpai-optin-boot-diagnosis' not in outer
             assert "pendingStatusSelect.dispatchEvent(new Event('change',{bubbles:true}))" in outer
             if not entry:
               assert 'scheduleHiddenDockRecovery' in outer
             assert "attributeFilter:['hidden','style','class','aria-hidden']" in outer
             assert 'recognition-rules-v1184.json' in core
             assert formal['mainJs'] in core
+            assert 'if(resumedController?.scriptURL?.includes' in core
             for label,source in (('outer',outer),('core',core)):
               for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',source,re.I|re.S)):
                 if js.strip():
