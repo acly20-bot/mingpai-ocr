@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/test-boot-huawei-20261121.yml'
+      - 'scripts/fix-startup-resume-browser-test2.py'
   workflow_dispatch:
 permissions:
   contents: write
@@ -20,15 +21,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Restore current 84-rule stable baseline
         env:
-          PINNED_COMMIT: 4d2f4f5b49a0d71b2bf5a51e060b51a3ec768a08
+          PINNED_COMMIT: 4a95343410230cdb86b4a9712452206aa0202f12
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-rules-20261121:refs/remotes/origin/release-baseline/v11845-rules-20261121
-          test "$(git rev-parse refs/remotes/origin/release-baseline/v11845-rules-20261121)" = "$PINNED_COMMIT"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-bootfix-test:refs/remotes/origin/release-baseline/v11845-bootfix-test
+          test "$(git rev-parse refs/remotes/origin/release-baseline/v11845-bootfix-test)" = "$PINNED_COMMIT"
           mkdir -p app
           git archive "$PINNED_COMMIT":site-baseline | tar -xf - -C app
-      - name: Apply first-load recovery and native confirmed-hint fix to test ONLY
-        run: python scripts/fix-boot-huawei-and-confirmed-hints-test.py
+      - name: Optimize already controlled browser reopen and cached shell fallback in test
+        run: python scripts/fix-startup-resume-browser-test2.py
       - name: Verify no formal changes, version unchanged and 84 rules
         run: |
           python - <<'PY'
@@ -48,18 +49,22 @@ jobs:
           assert 'const confirmed=/已确认/' in s
           core=(root/'test-adaptive/core.html').read_text()
           assert 'deadline(navigator.serviceWorker.ready,4200' in core
+          assert 'if(resumedController?.scriptURL?.includes' in core
+          sw=(root/'test-adaptive/coi-serviceworker.js').read_text()
+          assert 'const timer=cached?setTimeout(()=>ctrl.abort(),2400):null' in sw
+          assert 'cache.match("./index.html")' not in sw
           print('PASS test startup and warning fix; formal byte-identical')
           PY
       - name: Freeze candidate test baseline for rollback
         run: |
           set -euo pipefail
           BASE="$RUNNER_TEMP/mingpai-v11845-boot-test"
-          git worktree add -b release-baseline/v11845-bootfix-test "$BASE" HEAD
+          git worktree add -b release-baseline/v11845-bootfix-test2 "$BASE" HEAD
           mkdir -p "$BASE/site-baseline"
           cp -a app/. "$BASE/site-baseline/"
           cd "$BASE"
           git add site-baseline
-          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'test baseline: bounded Huawei startup and confirmed hint correction'
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'test baseline: controlled browser resume and bounded shell network wait'
           git push origin HEAD:refs/heads/release-baseline/v11845-bootfix-test
           echo "PINNED_BASELINE_SHA=$(git rev-parse HEAD)"
       - name: Upload Pages
