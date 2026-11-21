@@ -51,7 +51,7 @@ for folder in sites:
     content=content.replace(prev,"recognition-rules-v1184.json?r=20261121-r9",1)
     # Rotate only this versioned rule-storage key to guarantee existing
     # users do not reuse old JSON from localStorage after cache bust.
-    prevKey="mingpai-recognition-rules-v1184-"+("formal" if folder==root else "test")+"-cache"
+    prevKey="mingpai-recognition-rules-v1184-test-cache"
     assert content.count(prevKey)==1
     content=content.replace(prevKey,prevKey+"-r9",1)
     core.write_text(content,encoding="utf-8")
