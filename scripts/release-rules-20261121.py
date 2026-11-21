@@ -41,7 +41,8 @@ assert len(newrules)==8 and len(set(x["id"] for x in newrules))==8
 assert not ({x["id"] for x in newrules}&{x["id"] for x in data["rules"]})
 def matches(rec,text):
     m=rec["match"];up=text.upper()
-    return all(str(word).upper() in up for word in m["containsAll"])
+    if not m.get("containsAll"):return False
+    return all(str(word).upper() in up for word in m["containsAll"]) and (not m.get("containsAny") or any(str(w).upper() in up for w in m["containsAny"]))
 positives=[
     ("KUANTENG\n称：数字化车载X射线机\n型\n号：RayNova\na DRvs\n率：2.5kVA","kuanteng-raynova"),
     ("口腔内成像X射线机\n规格型号:Planmeca ProX\n序列号：\nIPX016891","planmeca-prox-code"),
