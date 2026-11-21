@@ -2,19 +2,19 @@
 
 正式版：**v1.18.4.5** — https://acly20-bot.github.io/mingpai-ocr/
 
-性能测试版：**v1.18.5-test.2** — https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
+性能测试版：**v1.18.5-test.3** — https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
 
 ## 固定基线与发布策略
 
 - 正式版固定基线：[`release-baseline/v11845-boot-closeout`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-boot-closeout)，SHA `ae214f4a11b0c5c107e97fa4b50deb3a562e7200`。
-- 性能测试线基线：[`release-baseline/v1185-test2`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v1185-test2)，SHA `25ddd5634fdf28b8531930fd04a08791153b3fb7`。
+- 性能测试线基线：[`release-baseline/v1185-test3`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v1185-test3)，SHA `2b845968ed8d4e43ec63e104e63af9c45e9d4f09`。
 - 识别规则：**85 条**，独立 JSON（`recognition-rules-v1184.json`），规则修订号 `v1.18.4-20261121-r9`，保持原有优先级。已包括鸽子小儿CPAP正确产品编号 `20126III012`。
 - 正式版已合入用户在 Edge 上验证的启动恢复及已确认记录隐藏风险提示；两个入口已移除临时启动诊断条。正式版保留底部快捷栏自恢复保护、原生温湿度审核和飞书同步、待审核确认后自动移除及选定的统计布局。
 - 精简部署工作流：[`deploy-paddleocr.yml`](.github/workflows/deploy-paddleocr.yml)，从稳定 SHA 直接恢复完整 Pages 发布产物，不执行旧版本连续补丁。
 
 ## 当前性能测试（尚未合入正式版）
 
-`v1.18.5-test.2` 在 test.1 基础上，记录列表新增或重建卡片时只装饰新卡片，不再对当前页所有卡片反复读取 IndexedDB；第一次加载仍完整初始化，温湿度审核依旧采用成熟原生机制。原生记录保存、IndexedDB 数据格式、OCR、飞书 SCF 均不改变。需要 Edge 上验证列表新增/分页/筛选、温湿度修改确认、批量识别、飞书同步等功能后再继续。Edge 旧标签页静态预览兼容问题单独保留，不作为本阶段性能回归失败依据。
+`v1.18.5-test.3` 在 test.2 基础上，移除已经废弃的 v1.18.2 启动耗时诊断观察器（最长观察20秒），并将黄色字段提醒改为只检查新加入的卡片，不再因单条插入而重扫全部卡片。此前的增量 IndexedDB 处理继续保留，温湿度审核仍使用原生机制。原生记录保存、IndexedDB 数据格式、OCR、飞书 SCF 均不改变。需要 Edge 上验证列表新增/分页/筛选、温湿度修改确认、批量识别、飞书同步等功能后再继续。Edge 旧标签页静态预览兼容问题单独保留，不作为本阶段性能回归失败依据。
 
 ## 开发与回退
 
