@@ -65,7 +65,7 @@ jobs:
           cd "$BASE"
           git add site-baseline
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'test baseline: controlled browser resume and bounded shell network wait'
-          git push origin HEAD:refs/heads/release-baseline/v11845-bootfix-test
+          git push origin HEAD:refs/heads/release-baseline/v11845-bootfix-test2
           echo "PINNED_BASELINE_SHA=$(git rev-parse HEAD)"
       - name: Upload Pages
         uses: actions/upload-pages-artifact@v3
