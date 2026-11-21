@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/release-rules-cpap-r9.yml'
+      - 'scripts/release-rules-cpap-serial-r9.py'
   workflow_dispatch:
 permissions:
   contents: write
