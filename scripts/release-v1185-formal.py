@@ -22,7 +22,7 @@ def move(start,end):
     a=a[:i]+b[x:y]+a[j:]
 # Remove only orphaned legacy v1.18.2 observer, not boot retry logic.
 legacy='const v1182StartAt=performance.now();'
-end='const v11711BaseSrc=frame.getAttribute(\\'src\\');'
+end="const v11711BaseSrc=frame.getAttribute('src');"
 assert a.count(legacy)==1 and b.count(legacy)==0
 a=a[:a.index(legacy)]+a[a.index(end,a.index(legacy)):]
 # Promoted risk-checking logic does not rescan all visible cards on every insertion.
