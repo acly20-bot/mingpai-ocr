@@ -84,7 +84,7 @@
 (async function(){
   const MAIN='./runtime/index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js?v=1.18.6-test.1-qqgpu-thumbfix';
   const MAIN_DIRECT='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js?v=1.18.6-test.1-qqgpu-thumbfix';
-  const SW='./coi-serviceworker.js?v=1.18.6-test.1-qqgpu-thumbfix';
+  const SW='./coi-serviceworker.js?v=1.18.7-test.1-card-compact';
   const FLAG='mingpai-v1186-test1-coi-reload';
   // Start app promptly even on browsers with slow/broken service-worker
   // registration (some first-run Huawei/QQ/UC browsers).
@@ -146,7 +146,7 @@
   // Do not wait 4.8s for register plus 4.2s for ready in that case.
   // Update the registration asynchronously for next navigation.
   const resumedController=navigator.serviceWorker.controller;
-  if(resumedController?.scriptURL?.includes('v=1.18.6-test.1-qqgpu-thumbfix')){
+  if(resumedController?.scriptURL?.includes('v=1.18.7-test.1-card-compact')){
     navigator.serviceWorker.getRegistration('./')
       .then(reg=>reg?.update()).catch(e=>console.debug('SW update on resume',e));
     await loadMain();
