@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>设备铭牌识别｜v1.18.5 正式版</title>
+<title>设备铭牌识别｜v1.18.6 正式版</title>
 <style>
 html,body{margin:0;height:100%;background:#f5f8f6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
 html,body{overflow:hidden}iframe{display:block;width:100%;height:100vh;height:100dvh;border:0;background:#fff}
@@ -11,7 +11,7 @@ html,body{overflow:hidden}iframe{display:block;width:100%;height:100vh;height:10
 <script id="mingpai-open-version-check">
 (()=>{
   'use strict';
-  const CLIENT_VERSION="1.18.5";
+  const CLIENT_VERSION="1.18.6";
   const MANIFEST='./version-v118-test.json';
   const ATTEMPT_PREFIX='mingpai-open-upgrade-';
   let checking=false;
@@ -44,9 +44,9 @@ html,body{overflow:hidden}iframe{display:block;width:100%;height:100vh;height:10
           ]);
         }
         const text=frame?.contentDocument?.body?.innerText||'';
-        const footer=[...text.matchAll(/版本\s*[:：]\s*v?(\d+(?:\.\d+)+)/g)];
+        const footer=[...text.matchAll(/版本\s*[:：]\s*v?(\d+(?:\.\d+)+(?:-test(?:\.\d+)*)?)/g)];
         const actual=footer.length?footer[footer.length-1][1]:'';
-        if(actual&&actual!==remote.replace(/-test(?:\.\d+)*$/, ''))coreOutdated=true;
+        if(actual&&actual!==remote)coreOutdated=true;
       }catch(error){console.debug('[铭牌版本] 无法读取内页版本',error)}
       if(remote===CLIENT_VERSION&&!coreOutdated){
         clear(marker);
@@ -359,7 +359,7 @@ function v1183FieldRisk(field, value) {
   const v=String(value||'').replace(/\s+/g,' ').trim();
   if (!v) return '';
   const electrical=/^(?:(?:AC|DC)\s*)?\d+(?:\.\d+)?\s*(?:Hz|kHz|V|kV|W|kW|VA|kVA|mA|A|Ω)(?:\s*[/／]\s*\d+(?:\.\d+)?\s*(?:Hz|kHz|V|kV|W|kW|VA|kVA|mA|A|Ω))?$/i;
-  if((field==='code'||field==='model')&&electrical.test(v))return field==='code'
+  if((field==='code'||field==='model')&&electrical.test(v.replace(/^[~～∼]\s*/,'')))return field==='code'
     ? '疑似电压、频率或功率，不像出厂编号，请核对铭牌中的 SN、序列号或产品编码。'
     : '疑似电气参数，不像设备型号，请核对铭牌中的“型号/Model”。';
   if(field==='code'&&/^(?:粤械注准|国械注准|国食药监械|沪食药监械|医疗器械注册证|生产许可)/i.test(v))
@@ -1837,10 +1837,14 @@ function v1183InstallFieldReview(d) {
     const modal=d.createElement('div');modal.id='fieldStatsModalV1171';modal.style.cssText='position:fixed;inset:0;z-index:100005;background:rgba(0,0,0,.42);display:flex;align-items:flex-end;justify-content:center;padding:12px;box-sizing:border-box';
     let mode='dept';
     const esc=v=>String(v??'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+    // Keep stored names untouched; normalize punctuation only for statistics.
+    const statsName=v=>String(v||'').trim()
+      .replace(/\s*[(（]\s*/g,'（').replace(/\s*[)）]\s*/g,'）')
+      .replace(/）\s+(?=[\u4e00-\u9fa5A-Za-z])/g,'）');
     const render=()=>{
       const map=new Map();
       rows.forEach(r=>{
-        const unit=r.unitName||r.batch||'',dept=r.dept||'',name=r.name||'';if(!name)return;
+        const unit=r.unitName||r.batch||'',dept=r.dept||'',name=statsName(r.name);if(!name)return;
         const k=mode==='dept'?[unit,dept,name].join('\u0001'):[unit,name].join('\u0001');
         map.set(k,(map.get(k)||0)+1);
       });
@@ -2023,9 +2027,14 @@ function v1183InstallFieldReview(d) {
   const MANIFEST='./version-v118-test.json',CACHE='mingpai-runtime-long-v1';let running=false;
   function mount(){const frame=document.getElementById('app');let td;try{td=frame?.contentDocument}catch{}if(!td||!td.body)return null;let box=td.getElementById('v118StandaloneUpgradeStatus');if(box)return box;box=td.createElement('div');box.id='v118StandaloneUpgradeStatus';box.style.cssText='display:none;margin:6px 0;padding:8px 10px;border-radius:8px;background:#eefaf5;color:#176b56;border:1px solid #cfeadf;font-size:14px;line-height:1.4;box-sizing:border-box';const target=td.getElementById('fieldRuntimeStatus')||td.getElementById('progress')||td.getElementById('queueStatus');if(target?.parentNode)target.parentNode.insertBefore(box,target.nextSibling);else(td.querySelector('.wrap')||td.body).prepend(box);return box}
   function flash(msg){const box=mount();if(!box)return;box.textContent=msg;box.style.display='';clearTimeout(flash.t);flash.t=setTimeout(()=>box.style.display='none',3000)}
-  async function has(rel){try{const c=await caches.open(CACHE),key=new Request(new URL('./runtime/'+rel,location.href),{method:'GET'});return!!(await c.match(key))}catch{return false}}
+  async function has(rel){try{const c=await caches.open(CACHE),key=new Request(new URL('./runtime/'+rel,location.href),{method:'GET'});return!!(await c.match(key,{ignoreSearch:true}))}catch{return false}}
   async function prefetch(sw,ver,files){return new Promise((resolve,reject)=>{const ch=new MessageChannel(),timer=setTimeout(()=>reject(new Error('后台缓存等待超时')),90000);ch.port1.onmessage=e=>{const x=e.data||{};if(x.type==='PREFETCH_VERSION_DONE'&&String(x.version||'')===ver){clearTimeout(timer);x.ok?resolve(x):reject(new Error(x.error||'后台缓存失败'))}};sw.postMessage({type:'PREFETCH_VERSION',version:ver,runtimeFiles:files},[ch.port2])})}
-  async function run(){if(running||!navigator.onLine)return;running=true;try{if(!('serviceWorker'in navigator))return;const reg=await navigator.serviceWorker.register('./coi-serviceworker.js',{scope:'./'});await navigator.serviceWorker.ready;const r=await fetch(MANIFEST+'?probe='+Date.now(),{cache:'no-store'});if(!r.ok)return;const m=await r.json(),ver=String(m.version||'').trim(),files=Array.isArray(m.runtimeFiles)?m.runtimeFiles:[m.mainJs].filter(Boolean),main=String(m.mainJs||files[0]||'');if(!ver||!main)return;if(await has(main)){localStorage.setItem('mingpai-v118-manifest-version',ver);return}const sw=reg.active||reg.waiting||reg.installing||navigator.serviceWorker.controller;if(!sw)return;await prefetch(sw,ver,files);if(!(await has(main)))return;localStorage.setItem('mingpai-v118-manifest-version',ver);flash('检测到新版本 '+ver+'，已后台缓存；下次打开使用。')}catch(err){console.warn('v1.18 background upgrade check',err)}finally{running=false}}
+  async function run(){if(running||!navigator.onLine)return;running=true;try{if(!('serviceWorker'in navigator))return;const reg=await navigator.serviceWorker.register('./coi-serviceworker.js',{scope:'./'});await navigator.serviceWorker.ready;const r=await fetch(MANIFEST+'?probe='+Date.now(),{cache:'no-store'});if(!r.ok)return;const m=await r.json(),ver=String(m.version||'').trim(),files=Array.isArray(m.runtimeFiles)?m.runtimeFiles:[m.mainJs].filter(Boolean),main=String(m.mainJs||files[0]||'');if(!ver||!main)return;const previously=localStorage.getItem('mingpai-v118-manifest-version');
+  // On first install the current core has already loaded the runtime;
+  // never prefetch the same huge JS a second time in the background.
+  if(!previously){localStorage.setItem('mingpai-v118-manifest-version',ver);return}
+  if(previously===ver)return;
+  if(await has(main)){localStorage.setItem('mingpai-v118-manifest-version',ver);return}const sw=reg.active||reg.waiting||reg.installing||navigator.serviceWorker.controller;if(!sw)return;await prefetch(sw,ver,files);if(!(await has(main)))return;localStorage.setItem('mingpai-v118-manifest-version',ver);flash('检测到新版本 '+ver+'，已后台缓存；下次打开使用。')}catch(err){console.warn('v1.18 background upgrade check',err)}finally{running=false}}
   // Cold-start priority: render the app and restore local records first.
   // Updating the large OCR runtime in the background must not contend with that work.
   const schedule=()=>{
