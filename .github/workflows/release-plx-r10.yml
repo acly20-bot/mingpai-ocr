@@ -1,0 +1,57 @@
+name: Publish PLX118F/a rule and test-only stats normalization
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-plx-r10.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore current v1.18.5 formal and test baseline
+        env:
+          PINNED_COMMIT: 4381fe256d288caa734a1bb9b9a576ce8c81b1d2
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1185-formal:refs/remotes/origin/release-baseline/v1185-formal
+          test "$(git rev-parse refs/remotes/origin/release-baseline/v1185-formal)" = "$PINNED_COMMIT"
+          mkdir -p app
+          git archive "$PINNED_COMMIT":site-baseline | tar -xf - -C app
+      - name: Publish independent PLX model rule, test stats normalization
+        run: python scripts/release-plx118fa-and-test-stats.py
+      - name: Save complete full-site rollback baseline
+        run: |
+          set -euo pipefail
+          BASE="$RUNNER_TEMP/mingpai-plx-r10"
+          git worktree add -b release-baseline/v1185-plx-r10 "$BASE" HEAD
+          mkdir -p "$BASE/site-baseline"
+          cp -a app/. "$BASE/site-baseline/"
+          cd "$BASE"
+          git add site-baseline
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'baseline: v1.18.5, PLX118F/a model rule, trial bracket normalization'
+          git push origin HEAD:refs/heads/release-baseline/v1185-plx-r10
+          echo "PINNED_BASELINE_SHA=$(git rev-parse HEAD)"
+          sha256sum site-baseline/index.html site-baseline/test-adaptive/index.html site-baseline/recognition-rules-v1184.json
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
