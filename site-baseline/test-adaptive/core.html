@@ -82,10 +82,10 @@
 </style>
 <script type="module">
 (async function(){
-  const MAIN='./runtime/index-B81hyAdU-v11832-viewport-test2.js?v=1.18.4-test';
-  const MAIN_DIRECT='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v11832-viewport-test2.js?v=1.18.4-test';
-  const SW='./coi-serviceworker.js?v=1.153.4.4';
-  const FLAG='mingpai-v1185-test3-coi-reload';
+  const MAIN='./runtime/index-B81hyAdU-v1186-test1-qqgpu.js?v=1.18.6-test.1-qqgpu';
+  const MAIN_DIRECT='https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/index-B81hyAdU-v1186-test1-qqgpu.js?v=1.18.6-test.1-qqgpu';
+  const SW='./coi-serviceworker.js?v=1.18.6-test.1-qqgpu';
+  const FLAG='mingpai-v1186-test1-coi-reload';
   // Start app promptly even on browsers with slow/broken service-worker
   // registration (some first-run Huawei/QQ/UC browsers).
   const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -146,7 +146,7 @@
   // Do not wait 4.8s for register plus 4.2s for ready in that case.
   // Update the registration asynchronously for next navigation.
   const resumedController=navigator.serviceWorker.controller;
-  if(resumedController?.scriptURL?.includes('v=1.153.4.4')){
+  if(resumedController?.scriptURL?.includes('v=1.18.6-test.1-qqgpu')){
     navigator.serviceWorker.getRegistration('./')
       .then(reg=>reg?.update()).catch(e=>console.debug('SW update on resume',e));
     await loadMain();
