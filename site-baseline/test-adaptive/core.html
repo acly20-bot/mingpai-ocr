@@ -256,7 +256,7 @@
     <input type="file" id="retryInput" accept="image/*" hidden>
   </details>
 
-  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.18.6-test.1 兼容性测试版</strong></div>
+  <div class="foot">OCR 与智能分类均需人工复核，尤其注意型号、出厂编号中的 0/O、1/I、5/S。照片缩略图和审核记录保存在当前浏览器；批量删除只删除本机记录，不删除飞书云端数据。已确认数据会自动同步飞书，建议按需定期下载 Excel 留档。 <strong>版本：v1.18.7-test.1 界面精简测试版</strong></div>
 </div>
 
 <nav class="mobile-dock" id="mobileDock" aria-label="手机快捷操作">
@@ -449,6 +449,48 @@ setTimeout(function(){
       button.disabled=false;
     }
   });
+})();
+</script>
+<style id="v1187-card-compact-test">
+/* Only record cards; keep editing fields, controls and image viewer intact. */
+#recordList article.card{padding:9px 10px;margin:6px 0}
+#recordList article.card .cardhead{margin-bottom:6px}
+#recordList article.card .grid{row-gap:6px}
+#recordList article.card .controls{margin-top:8px}
+#recordList article.card details.rawdetails{grid-column:1/-1;border-top:1px solid #e8eee9;padding-top:5px}
+#recordList article.card details.rawdetails summary{font-size:12px;color:#51776b}
+@media(max-width:520px){
+  #recordList article.card{padding:8px;margin:6px 0}
+  #recordList article.card .cardhead{gap:6px;margin-bottom:5px}
+  #recordList article.card .grid{row-gap:5px}
+}
+</style>
+<script id="v1187-raw-collapse-test">
+(function(){
+  /* New cards only; the user's manual expand/collapse is never overridden. */
+  const list=document.getElementById('recordList');
+  if(!list)return;
+  function prepare(card){
+    if(!card||card.dataset.v1187CardPrepared==='1')return;
+    card.dataset.v1187CardPrepared='1';
+    const raw=card.querySelector('details.rawdetails');
+    if(raw){
+      raw.removeAttribute('open');
+      const label=raw.querySelector('summary');
+      if(label)label.textContent='OCR 原文（点击展开核对或修改）';
+    }
+    const remark=card.querySelector('textarea[data-field="remark"]');
+    const caption=remark?.previousElementSibling;
+    if(caption?.tagName==='LABEL')caption.textContent='备注';
+  }
+  const observer=new MutationObserver(records=>{
+    for(const record of records)for(const node of record.addedNodes){
+      if(node.nodeType!==1)return;
+      if(node.matches?.('article.card'))prepare(node);
+    }
+  });
+  observer.observe(list,{childList:true});
+  list.querySelectorAll('article.card').forEach(prepare);
 })();
 </script>
 </body>
