@@ -1,6 +1,6 @@
 name: Deploy Mingpai OCR (pinned stable baseline)
 
-# v1.18.4.5: restore the exact, user-verified Pages site. No historical rebuild.
+# v1.18.5: restore the exact, user-verified Pages site. No historical rebuild.
 # When publishing future changes, create a NEW reviewed baseline branch and
 # update PINNED_COMMIT only after the candidate has passed device tests.
 on:
@@ -26,13 +26,13 @@ jobs:
       - name: Checkout release workflow
         uses: actions/checkout@v4
 
-      - name: Restore verified v1.18.4.5 site (no old version build steps)
+      - name: Restore verified v1.18.5 site (no old version build steps)
         env:
-          PINNED_COMMIT: ae214f4a11b0c5c107e97fa4b50deb3a562e7200
+          PINNED_COMMIT: 4381fe256d288caa734a1bb9b9a576ce8c81b1d2
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v11845-boot-closeout:refs/remotes/origin/release-baseline/v11845-boot-closeout
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v11845-boot-closeout)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1185-formal:refs/remotes/origin/release-baseline/v1185-formal
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v1185-formal)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -44,15 +44,15 @@ jobs:
           from pathlib import Path
           root=Path('app')
           expected={
-            'index.html':'50b80ba6955fd521b63c5851dbf09f5dbafecfbe2f4a854557c626d799cdb284',
-            'test-adaptive/index.html':'b90e9d3b3d2fef37cb1092814c75014f9843b8f176eda07ba3ddc75967809675',
+            'index.html':'ba3628844fd1b670044d9e7f3c90d5d3fdd9d1784469fdfd5c462364bc7a63d1',
+            'test-adaptive/index.html':'17d53e21695970eef7f7a0bd5f6dccca7c076d7d01c75126724ac9ca71e38e89',
             'recognition-rules-v1184.json':'56387ad6c2bd57ee39186a936e89298605535ef4c8f5702c57b84ebd862eed78'}
           for name,sha in expected.items():
             got=hashlib.sha256((root/name).read_bytes()).hexdigest()
             assert got==sha,(name,got,sha)
           formal=json.loads((root/'version-v118-test.json').read_text())
           test=json.loads((root/'test-adaptive/version-v118-test.json').read_text())
-          assert formal['version']=='1.18.4.5' and test['version']=='1.18.4.5-test'
+          assert formal['version']=='1.18.5' and test['version']=='1.18.5-test.3'
           assert formal['mainJs']==test['mainJs']=='index-B81hyAdU-v11832-viewport-test2.js'
           assert formal['rules']==test['rules']=='recognition-rules-v1184.json'
           assert len(json.loads((root/'recognition-rules-v1184.json').read_text())['rules'])==85
@@ -67,6 +67,9 @@ jobs:
             assert 'v11845-stats-unit-label' in outer
             assert 'pendingConfirmRefreshBound' in outer
             assert 'const confirmed=/已确认/' in outer
+            assert 'const addedRiskCards=new Set()' in outer
+            assert 'const addedEnvCards=new Set()' in outer
+            assert 'mingpai-startup-diagnostics-v1182' not in outer
             assert 'mingpai-optin-boot-diagnosis' not in outer
             assert "pendingStatusSelect.dispatchEvent(new Event('change',{bubbles:true}))" in outer
             if not entry:
@@ -84,7 +87,7 @@ jobs:
             f=Path('/tmp')/('mingpai-release-'+entry.replace('/','-')+'sw.js')
             f.write_text(worker)
             subprocess.run(['node','--check',str(f)],check=True)
-          print('PASS pinned v1.18.4.5 Pages release, rules, JS syntax; formal/test isolated')
+          print('PASS pinned v1.18.5 Pages release, rules, JS syntax; formal/test isolated')
           PY
 
       - name: Upload verified site
