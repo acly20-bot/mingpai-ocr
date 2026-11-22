@@ -1,6 +1,6 @@
-name: Deploy Mingpai OCR (pinned stable baseline)
+name: Deploy Mingpai OCR (pinned v1.18.6 stable baseline)
 
-# v1.18.5: restore the exact, user-verified Pages site. No historical rebuild.
+# v1.18.6: publish one pinned, user-verified stable baseline; retain v1.18.5 branch for rollback.
 # When publishing future changes, create a NEW reviewed baseline branch and
 # update PINNED_COMMIT only after the candidate has passed device tests.
 on:
@@ -26,13 +26,13 @@ jobs:
       - name: Checkout release workflow
         uses: actions/checkout@v4
 
-      - name: Restore verified v1.18.5 site (no old version build steps)
+      - name: Restore verified v1.18.6 site (no old version build steps)
         env:
-          PINNED_COMMIT: 37de7dee133a36f70e55b65dbd0ca4bac3bf53d6
+          PINNED_COMMIT: 91d795983fd8cd5a01cc758b2d54dbbf742be2c0
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1185-plx-r10:refs/remotes/origin/release-baseline/v1185-plx-r10
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v1185-plx-r10)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1186-verified:refs/remotes/origin/release-baseline/v1186-verified
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v1186-verified)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -43,17 +43,16 @@ jobs:
           import json,hashlib,re,subprocess
           from pathlib import Path
           root=Path('app')
-          expected={
-            'index.html':'ba3628844fd1b670044d9e7f3c90d5d3fdd9d1784469fdfd5c462364bc7a63d1',
-            'test-adaptive/index.html':'d1ebfaddd56e103930f5b81d70d79a97fdf32000cce7dd2518f2b5ead19cfe69',
-            'recognition-rules-v1184.json':'6e59267334fcae53058fad7d307d02ddc0b71ecd6c70ee97030579c67febbb22'}
+          # The pinned commit fixes all HTML/JS content; hash the shared rules as a
+          # second integrity check rather than retaining obsolete v1.18.5 shell hashes.
+          expected={'recognition-rules-v1184.json':'6e59267334fcae53058fad7d307d02ddc0b71ecd6c70ee97030579c67febbb22'}
           for name,sha in expected.items():
             got=hashlib.sha256((root/name).read_bytes()).hexdigest()
             assert got==sha,(name,got,sha)
           formal=json.loads((root/'version-v118-test.json').read_text())
           test=json.loads((root/'test-adaptive/version-v118-test.json').read_text())
-          assert formal['version']=='1.18.5' and test['version']=='1.18.5-test.3'
-          assert formal['mainJs']==test['mainJs']=='index-B81hyAdU-v11832-viewport-test2.js'
+          assert formal['version']=='1.18.6' and test['version']=='1.18.6-test.1'
+          assert formal['mainJs']==test['mainJs']=='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
           assert formal['rules']==test['rules']=='recognition-rules-v1184.json'
           assert len(json.loads((root/'recognition-rules-v1184.json').read_text())['rules'])==86
           for entry in ('','test-adaptive/'):
@@ -76,8 +75,13 @@ jobs:
               assert 'scheduleHiddenDockRecovery' in outer
             assert "attributeFilter:['hidden','style','class','aria-hidden']" in outer
             assert 'recognition-rules-v1184.json' in core
+            assert 'v1186-direct-image-save' in core
+            assert 'v1186QqProtected' in core
+            assert 'setTimeout(reload,1300)' not in core
             assert formal['mainJs'] in core
             assert 'if(resumedController?.scriptURL?.includes' in core
+            assert 'const CLIENT_VERSION="1.18.6' in outer
+            assert formal['mainJs'] in worker or formal['mainJs'] in core
             for label,source in (('outer',outer),('core',core)):
               for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',source,re.I|re.S)):
                 if js.strip():
@@ -87,7 +91,7 @@ jobs:
             f=Path('/tmp')/('mingpai-release-'+entry.replace('/','-')+'sw.js')
             f.write_text(worker)
             subprocess.run(['node','--check',str(f)],check=True)
-          print('PASS pinned v1.18.5 Pages release, rules, JS syntax; formal/test isolated')
+          print('PASS pinned v1.18.6 Pages release, rules, JS syntax; formal/test isolated')
           PY
 
       - name: Add isolated v1.18.6-test.1 QQ compatibility preview
@@ -107,7 +111,7 @@ jobs:
           preview=root/'test-v1186'
           formal=json.loads((root/'version-v118-test.json').read_text())
           test=json.loads((preview/'version-v118-test.json').read_text())
-          assert formal['version']=='1.18.5' and test['version']=='1.18.6-test.1'
+          assert formal['version']=='1.18.6' and test['version']=='1.18.6-test.1'
           assert test['rules']=='recognition-rules-v1184.json'
           assert 'v1186QqProtected' in (preview/'core.html').read_text()
           assert 'v1186-direct-image-save' in (preview/'core.html').read_text()
