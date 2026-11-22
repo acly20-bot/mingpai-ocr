@@ -389,5 +389,22 @@ setTimeout(function(){
   protect();
 })();
 </script>
+<script id="v1186-edge-resume-ack">
+/* Respond to same-origin Edge resume liveness checks. Read-only, no OCR work. */
+(function(){
+  const TYPE='mingpai-v1186-edge-resume-ping';
+  window.addEventListener('message',function(event){
+    if(event.origin!==location.origin||event.source!==window.parent)return;
+    if(event.data?.type!==TYPE)return;
+    try{
+      event.source.postMessage({
+        type:TYPE+'-ack',
+        token:event.data.token,
+        runtime:!!document.querySelector('script[data-mingpai-main]')
+      },event.origin);
+    }catch(e){}
+  });
+})();
+</script>
 </body>
 </html>
