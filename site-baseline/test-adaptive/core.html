@@ -389,5 +389,67 @@ setTimeout(function(){
   protect();
 })();
 </script>
+<script id="mingpai-qq-webgpu-on-demand">
+/* QQ-only, on-demand backend capability probe. No startup GPU work,
+   recurring timers, or automatic change to the OCR engine. */
+(function(){
+  if(!/QQBrowser|MQQBrowser/i.test(navigator.userAgent||''))return;
+  const holder=document.getElementById('modelCacheStatus')?.closest('.advanced-block');
+  if(!holder)return;
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='btn secondary';
+  button.textContent='QQ WebGPU 实际检测';
+  button.style.cssText='margin:8px 0;max-width:100%;font-size:13px';
+  const results=document.createElement('pre');
+  results.style.cssText='display:none;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.55 monospace;background:#f4f8f6;border:1px solid #d2ddd9;border-radius:8px;padding:8px';
+  holder.appendChild(button);
+  holder.appendChild(results);
+  const deadline=(promise,ms,stage)=>Promise.race([
+    Promise.resolve(promise),
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error(stage+' 超时')),ms))
+  ]);
+  button.addEventListener('click',async()=>{
+    if(button.disabled)return;
+    button.disabled=true;
+    results.style.display='block';
+    const lines=[];
+    const say=s=>{lines.push(s);results.textContent=lines.join('\n')};
+    let device=null;
+    try{
+      say('QQ 浏览器 WebGPU 手动检测');
+      say('安全上下文：'+(isSecureContext?'是':'否'));
+      say('跨域隔离：'+(crossOriginIsolated?'是':'否'));
+      say('WASM 多线程条件：'+(crossOriginIsolated&&typeof SharedArrayBuffer!=='undefined'?'基本满足':'不满足'));
+      if(!navigator.gpu){say('WebGPU API：不存在');return}
+      say('WebGPU API：存在（不代表可实际使用）');
+      say('正在请求 GPU 适配器…');
+      const adapter=await deadline(navigator.gpu.requestAdapter({powerPreference:'high-performance'}),6000,'适配器');
+      if(!adapter){say('GPU 适配器：不可用；实际推理无法使用此 WebGPU 设备');return}
+      say('GPU 适配器：已获取');
+      device=await deadline(adapter.requestDevice(),6000,'GPU 设备');
+      say('GPU 设备：创建成功');
+      const module=device.createShaderModule({code:'@compute @workgroup_size(1) fn main() {}'});
+      const pipeline=await deadline(device.createComputePipelineAsync({
+        layout:'auto',compute:{module,entryPoint:'main'}
+      }),6000,'计算管线');
+      const encoder=device.createCommandEncoder();
+      const pass=encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.dispatchWorkgroups(1);
+      pass.end();
+      device.queue.submit([encoder.finish()]);
+      await deadline(device.queue.onSubmittedWorkDone(),6000,'GPU 运算');
+      say('基础 GPU 计算：成功');
+    }catch(e){
+      say('检测失败：'+String(e?.message||e).slice(0,220));
+    }finally{
+      try{device?.destroy?.()}catch(e){}
+      say('说明：该检查仅验证浏览器的 GPU 基础能力，不能证明 PaddleOCR 已选用 WebGPU。');
+      button.disabled=false;
+    }
+  });
+})();
+</script>
 </body>
 </html>
