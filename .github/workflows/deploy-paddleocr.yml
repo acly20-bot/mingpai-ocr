@@ -90,6 +90,38 @@ jobs:
           print('PASS pinned v1.18.5 Pages release, rules, JS syntax; formal/test isolated')
           PY
 
+      - name: Add isolated v1.18.6-test.1 QQ compatibility preview
+        env:
+          PREVIEW_COMMIT: b27bfa312a219d72624d64b3d1faab42bc499bcb
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/test/v1.18.6-test.1:refs/remotes/origin/test/v1.18.6-test.1
+          CURRENT="$(git rev-parse refs/remotes/origin/test/v1.18.6-test.1)"
+          test "$CURRENT" = "$PREVIEW_COMMIT" || { echo "Preview branch moved unexpectedly"; exit 1; }
+          mkdir -p app/test-v1186
+          git archive "$CURRENT":site-baseline/test-adaptive | tar -xf - -C app/test-v1186
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,subprocess
+          root=Path('app')
+          preview=root/'test-v1186'
+          formal=json.loads((root/'version-v118-test.json').read_text())
+          test=json.loads((preview/'version-v118-test.json').read_text())
+          assert formal['version']=='1.18.5' and test['version']=='1.18.6-test.1'
+          assert test['rules']=='recognition-rules-v1184.json'
+          assert 'v1186QqProtected' in (preview/'core.html').read_text()
+          assert 'mingpai-shell-v1186-test1-qq-preview' in (preview/'coi-serviceworker.js').read_text()
+          for name in ('index.html','core.html'):
+            source=(preview/name).read_text()
+            for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',source,re.I|re.S)):
+              if js.strip():
+                f=Path('/tmp')/('mingpai-v1186-'+name+str(i)+'.js')
+                f.write_text(js)
+                subprocess.run(['node','--check',str(f)],check=True)
+          subprocess.run(['node','--check',str(preview/'coi-serviceworker.js')],check=True)
+          print('PASS isolated v1.18.6-test.1 preview; formal and existing test unchanged')
+          PY
+
       - name: Upload verified site
         uses: actions/upload-pages-artifact@v3
         with:
