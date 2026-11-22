@@ -1,0 +1,1374 @@
+{
+  "schemaVersion": 1,
+  "rulesVersion": "v1.18.4-20261122-r10",
+  "updatedAt": "2026-11-22",
+  "description": "85条历史规则加南京普爱C形臂PLX118F/a型号纠偏，保持原有网页版本",
+  "rules": [
+    {
+      "id": "user-20261122-perlove-plx118fa-model",
+      "priority": 15140,
+      "match": {
+        "containsAll": [
+          "移动式平板C形臂X射线机",
+          "PLX118F/a"
+        ]
+      },
+      "set": {
+        "model": "PLX118F/a"
+      },
+      "note": "南京普爱PLX118F/a标签产品型号独立于电源电压~220V/50Hz。只修正型号，不覆盖人工审核信息或出厂编号。"
+    },
+    {
+      "id": "user-20261121-pigeon-cpap-serial-iii",
+      "priority": 15120,
+      "match": {
+        "containsAll": [
+          "小儿CPAP持续气道正压通气系统"
+        ],
+        "containsAny": [
+          "20126III012",
+          "20126111012"
+        ]
+      },
+      "set": {
+        "code": "20126III012",
+        "model": "AD-III"
+      },
+      "note": "现场铭牌核实：产品编号20126III012，中间为三个字母I。兼容OCR误读为20126111012；不误用注册证号。型号AD-III。"
+    },
+    {
+      "id": "user-20261121-kuanteng-raynova",
+      "priority": 15001,
+      "match": {
+        "containsAll": [
+          "KUANTENG",
+          "RayNova",
+          "DRvs"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "model": "RayNova DRvs"
+      },
+      "note": "宽腾车载数字X射线摄影系统，修复型号被2.5kVA替代"
+    },
+    {
+      "id": "user-20261121-planmeca-prox-code",
+      "priority": 15002,
+      "match": {
+        "containsAll": [
+          "Planmeca ProX",
+          "IPX016891"
+        ]
+      },
+      "set": {
+        "code": "IPX016891"
+      },
+      "note": "口腔内成像X射线机序列号，避免注册证号"
+    },
+    {
+      "id": "user-20261121-nidek-nt530-code",
+      "priority": 15003,
+      "match": {
+        "containsAll": [
+          "NT-530",
+          "250614"
+        ]
+      },
+      "set": {
+        "code": "250614"
+      },
+      "note": "NIDEK NT-530: No. 250614 是出厂编号，不是印刷料号"
+    },
+    {
+      "id": "user-20261121-philips-duradiagnost-code",
+      "priority": 15004,
+      "match": {
+        "containsAll": [
+          "DuraDiagnost 50DP",
+          "190055"
+        ]
+      },
+      "set": {
+        "code": "190055"
+      },
+      "note": "DuraDiagnost 50DP 出厂编号190055，排除100kVA输入功率"
+    },
+    {
+      "id": "user-20261121-mammography-dm158",
+      "priority": 15005,
+      "match": {
+        "containsAll": [
+          "数字化医用X射线乳腺摄影系统",
+          "DM158"
+        ]
+      },
+      "set": {
+        "name": "医用乳腺X射线辐射源"
+      },
+      "note": "安健DM158乳腺摄影的标准设备名称"
+    },
+    {
+      "id": "user-20261121-hitachi-eclos16",
+      "priority": 15006,
+      "match": {
+        "containsAll": [
+          "ECLOS 16",
+          "日立医疗器械"
+        ]
+      },
+      "set": {
+        "model": "ECLOS 16",
+        "manufacturer": "株式会社日立医疗器械"
+      },
+      "note": "日立ECLOS16不把(SFDA)前缀并入型号，生产厂家不取注册号"
+    },
+    {
+      "id": "user-20261121-mindray-benevision-n15or",
+      "priority": 15007,
+      "match": {
+        "containsAll": [
+          "BeneVision N15 OR"
+        ]
+      },
+      "set": {
+        "model": "BeneVision N15 OR"
+      },
+      "note": "适用于同型号病人监护仪，型号不取F7序列号"
+    },
+    {
+      "id": "user-20261121-pigeon-cpap-ad3",
+      "priority": 15008,
+      "match": {
+        "containsAll": [
+          "小儿CPAP持续气道正压通气系统",
+          "201261"
+        ]
+      },
+      "set": {
+        "model": "AD-III"
+      },
+      "note": "鸽子小儿CPAP型号AD-III，排除产品编号201261I1012"
+    },
+    {
+      "id": "v1184-case-01-morita",
+      "priority": 14001,
+      "match": {
+        "containsAll": [
+          "Veraviewepocs",
+          "X550"
+        ]
+      },
+      "set": {
+        "name": "医用诊断全景牙科X射线辐射源"
+      },
+      "note": "森田 X550 设备名称"
+    },
+    {
+      "id": "v1184-case-02-esco",
+      "priority": 14002,
+      "match": {
+        "containsAll": [
+          "ESCO",
+          "AC2-4S1"
+        ]
+      },
+      "set": {
+        "manufacturer": "新加坡艺思高"
+      },
+      "note": "ESCO AC2-4S1 厂家；覆盖旧 ESCO 缩写规则"
+    },
+    {
+      "id": "v1184-case-03-philips-model",
+      "priority": 14003,
+      "match": {
+        "containsAll": [
+          "PrimaryDiagnost DR"
+        ]
+      },
+      "set": {
+        "model": "PrimaryDiagnost DR"
+      },
+      "note": "PrimaryDiagnost DR 电气参数误入型号"
+    },
+    {
+      "id": "v1184-case-03-philips-serial",
+      "priority": 14004,
+      "match": {
+        "containsAll": [
+          "PrimaryDiagnost DR",
+          "160072"
+        ]
+      },
+      "set": {
+        "model": "PrimaryDiagnost DR",
+        "code": "160072"
+      },
+      "note": "PrimaryDiagnost DR 编号需原文出现 160072 才回填"
+    },
+    {
+      "id": "v1184-case-04-sorvall",
+      "priority": 14005,
+      "match": {
+        "containsAll": [
+          "Sorvall ST 16R"
+        ]
+      },
+      "set": {
+        "model": "Sorvall ST 16R",
+        "manufacturer": "热电实验设备有限公司奥斯特罗德分公司"
+      },
+      "note": "Sorvall ST 16R 制冷参数及备案人前缀"
+    },
+    {
+      "id": "v1184-case-05-brivo",
+      "priority": 14006,
+      "match": {
+        "containsAll": [
+          "Brivo OEC 785"
+        ]
+      },
+      "set": {
+        "manufacturer": "北京通用电气华伦医疗设备有限公司"
+      },
+      "note": "Brivo OEC 785 注册人前缀"
+    },
+    {
+      "id": "v1184-case-06-primedic",
+      "priority": 14007,
+      "match": {
+        "containsAll": [
+          "PRIMEDIC",
+          "Defi-B",
+          "M110"
+        ]
+      },
+      "set": {
+        "name": "心脏除颤器",
+        "manufacturer": "METRAX GmbH"
+      },
+      "note": "PRIMEDIC Defi-B M110 厂家与设备名称"
+    },
+    {
+      "id": "v1183-issue-01",
+      "priority": 12001,
+      "match": {
+        "containsAll": [
+          "MPC",
+          "2201001511"
+        ],
+        "containsAny": [
+          "医用冷藏保存箱",
+          "中科都菱"
+        ]
+      },
+      "set": {
+        "code": "2201001511MPC-5V316(AL)"
+      },
+      "note": "用户核对样本 #01"
+    },
+    {
+      "id": "v1183-issue-02",
+      "priority": 12002,
+      "match": {
+        "containsAll": [
+          "7100A",
+          "数字化摄影X射线系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "用户核对样本 #02"
+    },
+    {
+      "id": "v1183-issue-03",
+      "priority": 12003,
+      "match": {
+        "containsAll": [
+          "XH40M-I",
+          "数字化车载X射线摄影系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "用户核对样本 #03"
+    },
+    {
+      "id": "v1183-issue-04",
+      "priority": 12004,
+      "match": {
+        "containsAll": [
+          "ME7",
+          "深圳迈瑞生物医疗电子股份有限公司"
+        ]
+      },
+      "set": {
+        "manufacturer": "深圳迈瑞生物医疗电子股份有限公司"
+      },
+      "note": "用户核对样本 #04"
+    },
+    {
+      "id": "v1183-issue-05",
+      "priority": 12005,
+      "match": {
+        "containsAll": [
+          "EXAVISTA",
+          "数字X射线透视摄影系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "manufacturer": "株式会社日立制作所",
+        "model": "EXAVISTA"
+      },
+      "note": "用户核对样本 #05"
+    },
+    {
+      "id": "v1183-issue-06",
+      "priority": 12006,
+      "match": {
+        "containsAll": [
+          "DTP573",
+          "DX0302020088916",
+          "数字化透视摄影X射线系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "code": "DX0302020088916"
+      },
+      "note": "用户核对样本 #06"
+    },
+    {
+      "id": "v1183-issue-07",
+      "priority": 12007,
+      "match": {
+        "containsAll": [
+          "SOMATOM Definition AS",
+          "SIEMENS"
+        ]
+      },
+      "set": {
+        "model": "SOMATOM Definition AS"
+      },
+      "note": "用户核对样本 #07"
+    },
+    {
+      "id": "v1183-issue-08",
+      "priority": 12008,
+      "match": {
+        "containsAll": [
+          "ECG-1150",
+          "54186 P"
+        ]
+      },
+      "set": {
+        "manufacturer": "上海光电医用电子仪器有限公司",
+        "code": "54186 P"
+      },
+      "note": "用户核对样本 #08"
+    },
+    {
+      "id": "v1183-issue-09",
+      "priority": 12009,
+      "match": {
+        "containsAll": [
+          "X射线",
+          "SONTU100-RAD(m)"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "用户核对样本 #09"
+    },
+    {
+      "id": "v1183-issue-10",
+      "priority": 12010,
+      "match": {
+        "containsAll": [
+          "ME7",
+          "JH6-44001343"
+        ]
+      },
+      "set": {
+        "manufacturer": "深圳迈瑞生物医疗电子股份有限公司"
+      },
+      "note": "用户核对样本 #10"
+    },
+    {
+      "id": "v1183-issue-11",
+      "priority": 12011,
+      "match": {
+        "containsAll": [
+          "iMAC 100",
+          "武汉中旗"
+        ]
+      },
+      "set": {
+        "name": "数字心电图机",
+        "manufacturer": "武汉中旗生物医疗电子有限公司"
+      },
+      "note": "用户核对样本 #11"
+    },
+    {
+      "id": "v1183-issue-12",
+      "priority": 12012,
+      "match": {
+        "containsAll": [
+          "BBS-V800",
+          "BIOBASE"
+        ]
+      },
+      "set": {
+        "manufacturer": "济南鑫贝西生物技术有限公司",
+        "code": "BBS8V1711393D"
+      },
+      "note": "用户核对样本 #12"
+    },
+    {
+      "id": "v1183-issue-13",
+      "priority": 12013,
+      "match": {
+        "containsAll": [
+          "Planmeca ProMax 3D",
+          "Planmeca Oy"
+        ]
+      },
+      "set": {
+        "manufacturer": "Planmeca Oy"
+      },
+      "note": "用户核对样本 #13"
+    },
+    {
+      "id": "v1183-issue-14",
+      "priority": 12014,
+      "match": {
+        "containsAll": [
+          "MECG-300",
+          "北京麦迪克斯"
+        ]
+      },
+      "set": {
+        "name": "数字心电图机",
+        "manufacturer": "北京麦迪克斯科技有限公司"
+      },
+      "note": "用户核对样本 #14"
+    },
+    {
+      "id": "v1183-issue-15",
+      "priority": 12015,
+      "match": {
+        "containsAll": [
+          "EXTEND XT",
+          "Air liquide"
+        ]
+      },
+      "set": {
+        "manufacturer": "液化空气医疗系统公司"
+      },
+      "note": "用户核对样本 #15"
+    },
+    {
+      "id": "v1183-issue-16",
+      "priority": 12016,
+      "match": {
+        "containsAll": [
+          "M8105A",
+          "Boeblingen"
+        ]
+      },
+      "set": {
+        "manufacturer": "Philips Medizin Systeme Boeblingen GmbH"
+      },
+      "note": "用户核对样本 #16"
+    },
+    {
+      "id": "v1183-issue-17",
+      "priority": 12017,
+      "match": {
+        "containsAll": [
+          "型号：1379",
+          "赛默飞世尔"
+        ]
+      },
+      "set": {
+        "manufacturer": "赛默飞世尔（苏州）仪器有限公司"
+      },
+      "note": "用户核对样本 #17"
+    },
+    {
+      "id": "v1183-issue-18",
+      "priority": 12018,
+      "match": {
+        "containsAll": [
+          "LC-630",
+          "200108571110200090",
+          "浙江华美"
+        ]
+      },
+      "set": {
+        "code": "200108571110200090"
+      },
+      "note": "用户核对样本 #18"
+    },
+    {
+      "id": "v1183-issue-19",
+      "priority": 12019,
+      "match": {
+        "containsAll": [
+          "840",
+          "Puritan-Bennett Corporation"
+        ]
+      },
+      "set": {
+        "model": "PURITAN BENNETT 840",
+        "manufacturer": "Puritan-Bennett Corporation"
+      },
+      "note": "用户核对样本 #19"
+    },
+    {
+      "id": "v1183-issue-20",
+      "priority": 12020,
+      "match": {
+        "containsAll": [
+          "840",
+          "Covidien"
+        ]
+      },
+      "set": {
+        "model": "PURITAN BENNETT 840"
+      },
+      "note": "用户核对样本 #20"
+    },
+    {
+      "id": "v1183-issue-21",
+      "priority": 12021,
+      "match": {
+        "containsAll": [
+          "Uni-Vision",
+          "61Z757"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "code": "61Z757"
+      },
+      "note": "用户核对样本 #21"
+    },
+    {
+      "id": "v1183-issue-22",
+      "priority": 12022,
+      "match": {
+        "containsAll": [
+          "Voluson E10",
+          "E79990"
+        ]
+      },
+      "set": {
+        "model": "Voluson E10"
+      },
+      "note": "用户核对样本 #22"
+    },
+    {
+      "id": "v1183-issue-23",
+      "priority": 12023,
+      "match": {
+        "containsAll": [
+          "TCI-IV",
+          "桂76-D-11091322"
+        ]
+      },
+      "set": {
+        "name": "单通道注射泵",
+        "manufacturer": "广西威利方舟科技有限公司",
+        "model": "TCI-IV",
+        "code": "W桂76-D-11091322"
+      },
+      "note": "用户核对样本 #23"
+    },
+    {
+      "id": "v1183-issue-24",
+      "priority": 12024,
+      "match": {
+        "containsAll": [
+          "Eppendorf AG",
+          "5424FP872181"
+        ]
+      },
+      "set": {
+        "name": "医用离心机",
+        "manufacturer": "Eppendorf AG",
+        "model": "5424",
+        "code": "5424FP872181"
+      },
+      "note": "用户核对样本 #24"
+    },
+    {
+      "id": "v1183-issue-25",
+      "priority": 12025,
+      "match": {
+        "containsAll": [
+          "TUS-A300",
+          "N511843213"
+        ]
+      },
+      "set": {
+        "name": "医用超声诊断仪（B超）超声源",
+        "model": "APLIO 300 TUS-A300",
+        "code": "N511843213"
+      },
+      "note": "用户核对样本 #25"
+    },
+    {
+      "id": "v1183-issue-26",
+      "priority": 12026,
+      "match": {
+        "containsAll": [
+          "CP-2200",
+          "北京思路高"
+        ]
+      },
+      "set": {
+        "name": "双通道注射泵",
+        "manufacturer": "北京思路高医疗科技有限公司"
+      },
+      "note": "用户核对样本 #26"
+    },
+    {
+      "id": "v1183-issue-27",
+      "priority": 12027,
+      "match": {
+        "containsAll": [
+          "VINNO",
+          "U0252GY005"
+        ]
+      },
+      "set": {
+        "name": "医用超声诊断仪（B超）超声源",
+        "model": "VINNO G86"
+      },
+      "note": "用户核对样本 #27"
+    },
+    {
+      "id": "v1183-issue-28",
+      "priority": 12028,
+      "match": {
+        "containsAll": [
+          "KC170402032G",
+          "科曼"
+        ]
+      },
+      "set": {
+        "name": "多参数监护仪",
+        "model": "C60"
+      },
+      "note": "用户核对样本 #28"
+    },
+    {
+      "id": "v1183-issue-29",
+      "priority": 12029,
+      "match": {
+        "containsAll": [
+          "ESCO",
+          "AC2-4S1"
+        ]
+      },
+      "set": {
+        "name": "生物安全柜",
+        "manufacturer": "ESCO"
+      },
+      "note": "用户核对样本 #29"
+    },
+    {
+      "id": "v1183-issue-30",
+      "priority": 12030,
+      "match": {
+        "containsAll": [
+          "数字胃肠X射线系统",
+          "RF0720C00002"
+        ]
+      },
+      "set": {
+        "name": "医用诊断X射线辐射源（胃肠机）",
+        "model": "7600",
+        "code": "RF0720C00002"
+      },
+      "note": "用户核对样本 #30"
+    },
+    {
+      "id": "v1183-issue-31",
+      "priority": 12031,
+      "match": {
+        "containsAll": [
+          "DW-25L262",
+          "HRB8X"
+        ]
+      },
+      "set": {
+        "code": "BE02Q 900N0 0QEH4 HRB8X"
+      },
+      "note": "用户核对样本 #31"
+    },
+    {
+      "id": "v1183-issue-32",
+      "priority": 12032,
+      "match": {
+        "containsAll": [
+          "HYC-650",
+          "8QFUG"
+        ]
+      },
+      "set": {
+        "code": "BE03L L00N0 0QJN8 8QFUG"
+      },
+      "note": "用户核对样本 #32"
+    },
+    {
+      "id": "v1183-issue-33",
+      "priority": 12033,
+      "match": {
+        "containsAll": [
+          "YC-1006",
+          "28BG"
+        ]
+      },
+      "set": {
+        "code": "55A0 6973 9009 28BG 0112"
+      },
+      "note": "用户核对样本 #33"
+    },
+    {
+      "id": "v1183-issue-34",
+      "priority": 12034,
+      "match": {
+        "containsAll": [
+          "ALOKA ARIETTA 850",
+          "株式会社日立制作所"
+        ]
+      },
+      "set": {
+        "name": "医用超声诊断仪（B超）超声源",
+        "manufacturer": "株式会社日立制作所"
+      },
+      "note": "用户核对样本 #34"
+    },
+    {
+      "id": "v1183-issue-35",
+      "priority": 12035,
+      "match": {
+        "containsAll": [
+          "K5210222049",
+          "科曼"
+        ]
+      },
+      "set": {
+        "name": "多参数监护仪",
+        "manufacturer": "深圳市科曼医疗设备有限公司"
+      },
+      "note": "用户核对样本 #35"
+    },
+    {
+      "id": "v1183-issue-36",
+      "priority": 12036,
+      "match": {
+        "containsAll": [
+          "Aelite NXT",
+          "SPD22210116WA"
+        ]
+      },
+      "set": {
+        "name": "麻醉机（呼吸部分）"
+      },
+      "note": "用户核对样本 #36"
+    },
+    {
+      "id": "v1183-issue-37",
+      "priority": 12037,
+      "match": {
+        "containsAll": [
+          "LC-630",
+          "华美"
+        ],
+        "regex": "200108571110200090"
+      },
+      "set": {
+        "code": "200108571110200090"
+      },
+      "note": "用户核对样本 #37"
+    },
+    {
+      "id": "v1183-issue-38",
+      "priority": 12038,
+      "match": {
+        "containsAll": [
+          "医用冷藏箱",
+          "HYC-650",
+          "8QFUG"
+        ],
+        "regex": "BE03L"
+      },
+      "set": {
+        "code": "BE03L L00N0 0QJN8 8QFUG"
+      },
+      "note": "用户核对样本 #38"
+    },
+    {
+      "id": "v1183-issue-39",
+      "priority": 12039,
+      "match": {
+        "containsAll": [
+          "DW-25L262",
+          "Serial Number",
+          "HRB8X"
+        ],
+        "regex": "BE0[2OQ0]"
+      },
+      "set": {
+        "code": "BE02Q 900N0 0QEH4 HRB8X"
+      },
+      "note": "用户核对样本 #39"
+    },
+    {
+      "id": "v1183-issue-40",
+      "priority": 12040,
+      "match": {
+        "containsAll": [
+          "医用注射泵",
+          "CP-2200型"
+        ]
+      },
+      "set": {
+        "manufacturer": "北京思路高医疗科技有限公司"
+      },
+      "note": "用户核对样本 #40"
+    },
+    {
+      "id": "v1183-issue-41",
+      "priority": 12041,
+      "match": {
+        "containsAll": [
+          "数字化彩色超声诊断仪",
+          "飞依诺科技"
+        ]
+      },
+      "set": {
+        "name": "医用超声诊断仪（B超）超声源",
+        "model": "VINNO G86"
+      },
+      "note": "用户核对样本 #41"
+    },
+    {
+      "id": "v1183-issue-42",
+      "priority": 12042,
+      "match": {
+        "containsAll": [
+          "多道心电图机",
+          "54186 P"
+        ]
+      },
+      "set": {
+        "name": "数字心电图机",
+        "code": "54186 P"
+      },
+      "note": "用户核对样本 #42"
+    },
+    {
+      "id": "v1183-issue-43",
+      "priority": 12043,
+      "match": {
+        "containsAll": [
+          "数字医用诊断X射线透视摄影系统",
+          "61Z757"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "code": "61Z757"
+      },
+      "note": "用户核对样本 #43"
+    },
+    {
+      "id": "v1183-issue-44",
+      "priority": 12044,
+      "match": {
+        "containsAll": [
+          "Air liquide Medical Systems S.A.",
+          "EXTEND XT"
+        ]
+      },
+      "set": {
+        "name": "呼吸机",
+        "manufacturer": "液化空气医疗系统公司"
+      },
+      "note": "用户核对样本 #44"
+    },
+    {
+      "id": "v1183-issue-45",
+      "priority": 12045,
+      "match": {
+        "containsAll": [
+          "840",
+          "PURITAN BENNETT"
+        ],
+        "regex": "Ventilator System"
+      },
+      "set": {
+        "name": "呼吸机",
+        "model": "PURITAN BENNETT 840"
+      },
+      "note": "用户核对样本 #45"
+    },
+    {
+      "id": "v1183-issue-46",
+      "priority": 12046,
+      "match": {
+        "containsAll": [
+          "BBS-V800",
+          "BBS8V1711393D"
+        ]
+      },
+      "set": {
+        "manufacturer": "济南鑫贝西生物技术有限公司",
+        "code": "BBS8V1711393D"
+      },
+      "note": "用户核对样本 #46"
+    },
+    {
+      "id": "v1183-issue-47",
+      "priority": 12047,
+      "match": {
+        "containsAll": [
+          "SN99B1845761",
+          "N511843213"
+        ]
+      },
+      "set": {
+        "code": "N511843213"
+      },
+      "note": "用户核对样本 #47"
+    },
+    {
+      "id": "v1183-issue-48",
+      "priority": 12048,
+      "match": {
+        "containsAll": [
+          "2201001511MPC-5V316(AL)",
+          "医用冷藏保存箱"
+        ]
+      },
+      "set": {
+        "code": "2201001511MPC-5V316(AL)"
+      },
+      "note": "用户核对样本 #48"
+    },
+    {
+      "id": "v1181-sontu100-dr",
+      "priority": 10080,
+      "match": {
+        "regex": "SONTU\\s*100\\s*[-–]\\s*RAD\\s*\\(?m\\)?",
+        "containsAny": [
+          "数字化X射线成像系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "SONTU100-RAD(m) DR"
+    },
+    {
+      "id": "v1181-lanying7100a-dr",
+      "priority": 10080,
+      "match": {
+        "regex": "\\b7100A\\b",
+        "containsAny": [
+          "数字化摄影X射线系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "蓝影7100A DR"
+    },
+    {
+      "id": "v1181-xh40mi-dr",
+      "priority": 10080,
+      "match": {
+        "regex": "XH40M\\s*[-–]\\s*I\\b",
+        "containsAny": [
+          "数字化车载X射线摄影系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源"
+      },
+      "note": "显浩XH40M-I DR"
+    },
+    {
+      "id": "v1181-mindray-me7",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bME7\\b",
+        "containsAll": [
+          "深圳迈瑞生物医疗电子股份有限公司"
+        ]
+      },
+      "set": {
+        "manufacturer": "深圳迈瑞生物医疗电子股份有限公司"
+      },
+      "note": "迈瑞ME7厂家"
+    },
+    {
+      "id": "v1181-hitachi-exavista",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bEXAVISTA\\b",
+        "containsAny": [
+          "数字X射线透视摄影系统",
+          "数字X射线透视摄影"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "manufacturer": "株式会社日立制作所",
+        "model": "EXAVISTA"
+      },
+      "note": "日立EXAVISTA三字段"
+    },
+    {
+      "id": "v1181-anjian-dtp573",
+      "priority": 10100,
+      "match": {
+        "regex": "\\bDTP\\s*573\\b",
+        "containsAny": [
+          "数字化透视摄影X射线系统"
+        ]
+      },
+      "set": {
+        "name": "医用数字摄影系统（DR）X射线辐射源",
+        "model": "DTP573"
+      },
+      "extract": {
+        "codeRegex": "\\b(DX\\d{10,20})\\b",
+        "codeFlags": "i"
+      },
+      "note": "安健DTP573主机及产品编码"
+    },
+    {
+      "id": "v1181-siemens-definitionas",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bSOMATOM\\s+Definition\\s+AS\\b",
+        "containsAny": [
+          "SIEMENS",
+          "128 Slice",
+          "128 层"
+        ]
+      },
+      "set": {
+        "model": "SOMATOM Definition AS"
+      },
+      "note": "西门子Definition AS型号"
+    },
+    {
+      "id": "v1181-ecg1150",
+      "priority": 10080,
+      "match": {
+        "regex": "\\bECG\\s*[-–]\\s*1150\\b",
+        "containsAll": [
+          "上海光电医用电子仪器有限公司"
+        ]
+      },
+      "set": {
+        "manufacturer": "上海光电医用电子仪器有限公司"
+      },
+      "extract": {
+        "codeRegex": "(?:^|[\\r\\n])\\s*SN\\s*[:：]?\\s*(\\d{4,7}\\s*[A-Z])(?=\\s|$)",
+        "codeFlags": "im"
+      },
+      "note": "光电ECG-1150厂家与序列号"
+    },
+    {
+      "id": "toray-tr8000-a6lb07",
+      "priority": 1000,
+      "match": {
+        "containsAll": [
+          "TR-8000",
+          "A6LB07"
+        ],
+        "containsAny": [
+          "東レ・メディカル株式会社",
+          "东丽·医疗株式会社",
+          "东丽医疗科技（青岛）股份有限公司"
+        ]
+      },
+      "set": {
+        "name": "血液透析机",
+        "manufacturer": "东丽·医疗株式会社",
+        "model": "TR-8000",
+        "code": "A6LB07"
+      },
+      "note": "TR-8000 厂家与产品编号纠偏",
+      "stop": true
+    },
+    {
+      "id": "wandong-iqpen05t-mri",
+      "priority": 950,
+      "match": {
+        "containsAny": [
+          "华润万东0.5T磁共振",
+          "i-Qpen0.5T",
+          "i-Qpen0.5T"
+        ]
+      },
+      "set": {
+        "name": "医用磁共振成像系统"
+      },
+      "note": "华润万东0.5T磁共振标准名称",
+      "stop": true
+    },
+    {
+      "id": "ge-allia-igs-mega-dsa",
+      "priority": 950,
+      "match": {
+        "containsAll": [
+          "Allia IGS Mega"
+        ],
+        "containsAny": [
+          "医用血管造影X射线机",
+          "DVLSS2600030HL",
+          "国械注准20243062516"
+        ]
+      },
+      "set": {
+        "name": "医用诊断数字减影血管造影（DSA）系统X射线辐射源",
+        "manufacturer": "北京通用电气华伦医疗设备有限公司",
+        "model": "Allia IGS Mega"
+      },
+      "extract": {
+        "codeRegex": "\\b(DVLSS2600030HL)\\b"
+      },
+      "note": "Allia IGS Mega DSA标准化",
+      "stop": true
+    },
+    {
+      "id": "aloka-aos100nw-bmd",
+      "priority": 950,
+      "match": {
+        "containsAll": [
+          "AOS-100NW",
+          "202D4772"
+        ],
+        "containsAny": [
+          "ALOKA",
+          "Hitachi Aloka Medical"
+        ]
+      },
+      "set": {
+        "name": "X射线骨密度仪",
+        "model": "AOS-100NW",
+        "code": "202D4772"
+      },
+      "note": "ALOKA AOS-100NW骨密度仪标准化",
+      "stop": true
+    },
+    {
+      "id": "meling-dwfl253a2-freezer",
+      "priority": 960,
+      "match": {
+        "containsAll": [
+          "DW-FL253A2"
+        ],
+        "containsAny": [
+          "MELING",
+          "MEliNG",
+          "美菱",
+          "超低温冷冻储存箱"
+        ]
+      },
+      "set": {
+        "name": "超低温冷冻储存箱",
+        "model": "DW-FL253A2",
+        "code": "161131077",
+        "manufacturer": "中科美菱低温科技股分有限公司"
+      },
+      "note": "美菱 DW-FL253A2 名称、厂家与出厂编号纠偏；R507/170g 为制冷剂信息，不作为编号",
+      "stop": true
+    },
+    {
+      "id": "draeger-fabius-tiro-anesthesia",
+      "priority": 980,
+      "match": {
+        "containsAll": [
+          "Fabius Tiro"
+        ],
+        "containsAny": [
+          "麻醉机",
+          "Dräger",
+          "Draeger",
+          "YZB/GER 0841-2012"
+        ]
+      },
+      "set": {
+        "name": "麻醉机（呼吸部分）"
+      },
+      "note": "Fabius Tiro 设备名称纠偏；厂家名称按现场铭牌保留，不做统一覆盖",
+      "stop": true
+    },
+    {
+      "id": "mindray-benefusion-vp5-code",
+      "priority": 995,
+      "match": {
+        "containsAll": [
+          "BeneFusion VP5"
+        ],
+        "containsAny": [
+          "mindray",
+          "迈瑞"
+        ]
+      },
+      "extract": {
+        "codeRegex": "\\b(SK\\d{8})\\b",
+        "codeFlags": "i"
+      },
+      "note": "BeneFusion VP5 编号仅提取独立SK序列号，排除日期和版本号",
+      "stop": true
+    },
+    {
+      "id": "philips-gs10-manufacturer",
+      "priority": 994,
+      "match": {
+        "containsAll": [
+          "GS10"
+        ],
+        "containsAny": [
+          "PHILIPS",
+          "飞利浦金科威"
+        ]
+      },
+      "set": {
+        "manufacturer": "飞利浦金科威（深圳）实业有限公司"
+      },
+      "note": "GS10 厂家完整名称纠偏",
+      "stop": true
+    },
+    {
+      "id": "comen-nc10-code",
+      "priority": 993,
+      "match": {
+        "containsAll": [
+          "NC10"
+        ],
+        "containsAny": [
+          "COMEN",
+          "科曼"
+        ]
+      },
+      "extract": {
+        "codeRegex": "\\b(N\\d{10})\\b",
+        "codeFlags": "i"
+      },
+      "note": "科曼 NC10 编号从SN附近格式提取，排除60VA",
+      "stop": true
+    },
+    {
+      "id": "draeger-fabius-plus",
+      "priority": 992,
+      "match": {
+        "containsAll": [
+          "Fabius plus"
+        ],
+        "containsAny": [
+          "Dräger",
+          "Draeger",
+          "麻醉系统"
+        ]
+      },
+      "set": {
+        "name": "麻醉机（呼吸部分）"
+      },
+      "extract": {
+        "codeRegex": "\\b(US[A-Z]{2}-\\d{4})\\b",
+        "codeFlags": "i",
+        "manufacturerRegex": "(?:生产者名称|生产企业名称|注册人/生产企业(?:名称)?)\\s*[：:]?\\s*([^\\n]{2,80}(?:有限公司|股份有限公司|GmbH|AG|SE|LLC|Ltd\\.?))"
+      },
+      "note": "Fabius plus 名称、生产批号及完整生产者名称纠偏；厂家按现场铭牌动态提取",
+      "stop": true
+    },
+    {
+      "id": "cnt2000-tonometer",
+      "priority": 991,
+      "match": {
+        "containsAll": [
+          "CNT-2000"
+        ],
+        "containsAny": [
+          "非接触式眼压计",
+          "湖南卡睿知医疗科技有限公司"
+        ]
+      },
+      "set": {
+        "name": "非接触式眼压计",
+        "model": "CNT-2000"
+      },
+      "extract": {
+        "codeRegex": "(?:编号\\s*[：:]?\\s*)?(?<!\\d)(\\d{10})(?!\\d)",
+        "codeFlags": "i"
+      },
+      "note": "CNT-2000 型号固定，编号提取10位设备编号，排除生产日期与注册证号",
+      "stop": true
+    },
+    {
+      "id": "yanling-power420a-batch",
+      "priority": 990,
+      "match": {
+        "containsAll": [
+          "POWER-420A"
+        ],
+        "containsAny": [
+          "高频电刀",
+          "延陵",
+          "常州市延陵电子设备有限公司"
+        ]
+      },
+      "set": {
+        "name": "高频电刀",
+        "model": "POWER-420A"
+      },
+      "extract": {
+        "codeRegex": "(?:生产批号\\s*[：:]?\\s*|\\(10\\))([A-Z0-9-]{4,20})",
+        "codeFlags": "i"
+      },
+      "note": "POWER-420A 优先提取生产批号/GS1(10)，排除GTIN(01)与生产日期(11)",
+      "stop": true
+    },
+    {
+      "id": "aeomed-shangrila515-product-code",
+      "priority": 1200,
+      "match": {
+        "containsAll": [
+          "Shangrila515"
+        ],
+        "containsAny": [
+          "AEOMED",
+          "谊安",
+          "产品编号"
+        ]
+      },
+      "set": {
+        "name": "急救和转运呼吸机",
+        "model": "Shangrila515"
+      },
+      "extract": {
+        "codeRegex": "(?:产品编号\\s*[：:]?\\s*)?(SL515\\(E\\)[A-Z0-9]{4,16})",
+        "codeFlags": "i"
+      },
+      "note": "谊安 Shangrila515 最终统一标准名称为急救和转运呼吸机，并优先提取完整产品编号",
+      "stop": true
+    }
+  ],
+  "supersedes": "recognition-rules-v1183.json",
+  "baseRulesCount": 13
+}

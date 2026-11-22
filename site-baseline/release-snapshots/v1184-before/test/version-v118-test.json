@@ -1,0 +1,9 @@
+{
+  "version": "1.18.3-test",
+  "publishedAt": "2026-11-15T00:29:00+08:00",
+  "mainJs": "index-B81hyAdU-v1182-test22.js",
+  "runtimeFiles": [
+    "index-B81hyAdU-v1182-test22.js"
+  ],
+  "rules": "recognition-rules-v1183.json"
+}
