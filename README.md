@@ -1,4 +1,22 @@
-# 铭牌识别｜当前发布状态（2026-11-22）
+# 铭牌识别｜当前发布状态（2026-11-23）
+
+正式版：**v1.18.6** — https://acly20-bot.github.io/mingpai-ocr/
+
+测试基线：**v1.18.6-test.1** — https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
+
+兼容性验证入口：**v1.18.6-test.1** — https://acly20-bot.github.io/mingpai-ocr/test-v1186/
+
+## v1.18.6 基线与下一阶段
+
+- 正式发布基线：`release-baseline/v1186-verified`，固定 SHA `91d795983fd8cd5a01cc758b2d54dbbf742be2c0`。此前 v1.18.5 原始基线 `release-baseline/v1185-plx-r10`（SHA `37de7dee133a36f70e55b65dbd0ca4bac3bf53d6`）保留回滚。
+- 主程序：`index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js`，部署在 COS `assets/`；正式/测试入口引用同一份通过实机测试的主程序，各自独立 Service Worker 缓存。无需覆盖旧 COS 正式版 JS。
+- 已确认：QQ 浏览器原生图片工具不再接管缩略图；双指缩放、拖动、重拍照及重识别正常；WebGPU 不兼容时避免跨批次重复无效初始化；QQ 与 Edge 的“保存图片”直接下载通过实机测试；启动不再不必要地重复刷新。
+- 已知限制：微信内置浏览器可能拦截 H5 文件下载；Edge 后台恢复的浏览器级“预览此页面”快照无法保证由网页脚本自行恢复。按成本/性能优先原则，不为两者增加全局轮询或强制刷新。
+- 正式版额外保留 v1.18.5 的底部快捷栏自恢复保护，避免简单覆盖丢失稳定修复；保留普通审核、温湿度、飞书同步和统计汇总功能。统计中英文括号显示归并及 `~220V/50Hz` 电气提醒已包含在本次基线中。
+- 识别规则保持 86 条，`recognition-rules-v1184.json`，规则号 `v1.18.4-20261122-r10`。
+- **下一阶段**：`v1.18.7-test.1` 设备信息界面精简，仅测试线开发，经过实机回归后合入 `v1.19.0` 正式版。
+
+## 历史记录（2026-11-22）
 
 正式版：**v1.18.5** — https://acly20-bot.github.io/mingpai-ocr/
 
