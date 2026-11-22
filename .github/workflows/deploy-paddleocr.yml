@@ -133,6 +133,41 @@ jobs:
           print('PASS isolated v1.18.6-test.1 preview; formal and existing test unchanged')
           PY
 
+      - name: Add isolated v1.18.7-test.1 compact record layout preview
+        env:
+          COMPACT_PREVIEW_COMMIT: fd900863abd49a7df78418b82fe39aeb8dc12b7c
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/heads/test/v1.18.7-test.1:refs/remotes/origin/test/v1.18.7-test.1
+          CURRENT="$(git rev-parse refs/remotes/origin/test/v1.18.7-test.1)"
+          test "$CURRENT" = "$COMPACT_PREVIEW_COMMIT" || { echo "Record layout preview branch moved unexpectedly"; exit 1; }
+          mkdir -p app/test-v1187
+          git archive "$CURRENT":site-baseline/test-adaptive | tar -xf - -C app/test-v1187
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,subprocess
+          root=Path('app')
+          preview=root/'test-v1187'
+          formal=json.loads((root/'version-v118-test.json').read_text())
+          test=json.loads((preview/'version-v118-test.json').read_text())
+          assert formal['version']=='1.18.6' and test['version']=='1.18.7-test.1'
+          assert formal['mainJs']==test['mainJs']=='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
+          assert formal['rules']==test['rules']=='recognition-rules-v1184.json'
+          assert 'v1187-raw-collapse-test' in (preview/'core.html').read_text()
+          assert 'v1187-card-compact-test' in (preview/'core.html').read_text()
+          assert 'v1186-direct-image-save' in (preview/'core.html').read_text()
+          assert 'mingpai-shell-v1187-test1-card-compact' in (preview/'coi-serviceworker.js').read_text()
+          for name in ('index.html','core.html'):
+            source=(preview/name).read_text()
+            for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',source,re.I|re.S)):
+              if js.strip():
+                f=Path('/tmp')/('mingpai-v1187-'+name+str(i)+'.js')
+                f.write_text(js)
+                subprocess.run(['node','--check',str(f)],check=True)
+          subprocess.run(['node','--check',str(preview/'coi-serviceworker.js')],check=True)
+          print('PASS v1.18.7 isolated record-layout prototype; production v1.18.6 untouched')
+          PY
+
       - name: Upload verified site
         uses: actions/upload-pages-artifact@v3
         with:
