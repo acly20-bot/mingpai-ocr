@@ -12,12 +12,12 @@ assert json.loads((r/'version-v118-test.json').read_text())['version']=='1.18.4.
 assert json.loads((t/'version-v118-test.json').read_text())['version']=='1.18.5-test.3'
 assert len(json.loads((r/'recognition-rules-v1184.json').read_text())['rules'])==85
 assert (r/'recognition-rules-v1184.json').read_bytes()==(t/'recognition-rules-v1184.json').read_bytes()
-def move(start,end):
+def move(formal_start,test_start,end):
     global a
-    assert a.count(start)==b.count(start)==1,(start,'start missing')
+    assert a.count(formal_start)==1 and b.count(test_start)==1,(formal_start,test_start)
     assert a.count(end)==b.count(end)==1,(end,'end missing')
-    i=a.index(start);j=a.index(end,i)
-    x=b.index(start);y=b.index(end,x)
+    i=a.index(formal_start);j=a.index(end,i)
+    x=b.index(test_start);y=b.index(end,x)
     assert i<j and x<y
     a=a[:i]+b[x:y]+a[j:]
 # Remove only orphaned legacy v1.18.2 observer, not boot retry logic.
@@ -27,9 +27,11 @@ assert a.count(legacy)==1 and b.count(legacy)==0
 a=a[:a.index(legacy)]+a[a.index(end,a.index(legacy)):]
 # Promoted risk-checking logic does not rescan all visible cards on every insertion.
 move('  // Only direct record-list replacements trigger a scan;',
+     '  // v1.18.5-test.3: update only new risk-hint cards,',
      "  list.addEventListener('input',e=>{")
 # Promoted card decoration only processes newly inserted cards.
-move('  // v1.18.5-test.1: avoid a full IndexedDB-backed card check',
+move('  let envCardsScheduled=false;',
+     '  // v1.18.5-test.2: only newly inserted cards are decorated.',
      '  // v1.18.2.1-test test: compact field UI + inline statistics')
 assert 'const addedRiskCards=new Set()' in a
 assert 'const addedEnvCards=new Set()' in a
