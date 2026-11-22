@@ -1,9 +1,9 @@
 {
   "version": "1.18.6-test.1",
-  "publishedAt": "2026-11-22T23:04:00+08:00",
-  "mainJs": "index-B81hyAdU-v11832-viewport-test2.js",
+  "publishedAt": "2026-11-23T01:22:00+08:00",
+  "mainJs": "index-B81hyAdU-v1186-test1-qqgpu.js",
   "runtimeFiles": [
-    "index-B81hyAdU-v11832-viewport-test2.js"
+    "index-B81hyAdU-v1186-test1-qqgpu.js"
   ],
   "rules": "recognition-rules-v1184.json"
 }
