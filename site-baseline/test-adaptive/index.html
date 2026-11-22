@@ -2172,7 +2172,8 @@ function v1183InstallFieldReview(d) {
    No startup navigation; no change to records or OCR runtime.
    A browser-owned static tab preview cannot execute this script. */
 (function(){
-  if(!/EdgA?\\/|EdgiOS\\//i.test(navigator.userAgent||''))return;
+  const ua=navigator.userAgent||'';
+  if(!ua.includes('Edg/')&&!ua.includes('EdgA/')&&!ua.includes('EdgiOS/'))return;
   const frame=document.getElementById('app');
   if(!frame)return;
   const TYPE='mingpai-v1186-edge-resume-ping';
