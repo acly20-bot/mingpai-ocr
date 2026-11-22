@@ -28,11 +28,11 @@ jobs:
 
       - name: Restore verified v1.18.5 site (no old version build steps)
         env:
-          PINNED_COMMIT: 4381fe256d288caa734a1bb9b9a576ce8c81b1d2
+          PINNED_COMMIT: 37de7dee133a36f70e55b65dbd0ca4bac3bf53d6
         run: |
           set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1185-formal:refs/remotes/origin/release-baseline/v1185-formal
-          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v1185-formal)"
+          git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1185-plx-r10:refs/remotes/origin/release-baseline/v1185-plx-r10
+          CURRENT="$(git rev-parse refs/remotes/origin/release-baseline/v1185-plx-r10)"
           test "$CURRENT" = "$PINNED_COMMIT" || { echo "Baseline branch moved unexpectedly"; exit 1; }
           mkdir -p app
           git archive "$CURRENT":site-baseline | tar -xf - -C app
@@ -45,8 +45,8 @@ jobs:
           root=Path('app')
           expected={
             'index.html':'ba3628844fd1b670044d9e7f3c90d5d3fdd9d1784469fdfd5c462364bc7a63d1',
-            'test-adaptive/index.html':'17d53e21695970eef7f7a0bd5f6dccca7c076d7d01c75126724ac9ca71e38e89',
-            'recognition-rules-v1184.json':'56387ad6c2bd57ee39186a936e89298605535ef4c8f5702c57b84ebd862eed78'}
+            'test-adaptive/index.html':'d1ebfaddd56e103930f5b81d70d79a97fdf32000cce7dd2518f2b5ead19cfe69',
+            'recognition-rules-v1184.json':'6e59267334fcae53058fad7d307d02ddc0b71ecd6c70ee97030579c67febbb22'}
           for name,sha in expected.items():
             got=hashlib.sha256((root/name).read_bytes()).hexdigest()
             assert got==sha,(name,got,sha)
@@ -55,7 +55,7 @@ jobs:
           assert formal['version']=='1.18.5' and test['version']=='1.18.5-test.3'
           assert formal['mainJs']==test['mainJs']=='index-B81hyAdU-v11832-viewport-test2.js'
           assert formal['rules']==test['rules']=='recognition-rules-v1184.json'
-          assert len(json.loads((root/'recognition-rules-v1184.json').read_text())['rules'])==85
+          assert len(json.loads((root/'recognition-rules-v1184.json').read_text())['rules'])==86
           for entry in ('','test-adaptive/'):
             outer=(root/entry/'index.html').read_text()
             core=(root/entry/'core.html').read_text()
