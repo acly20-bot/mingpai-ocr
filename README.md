@@ -1,24 +1,21 @@
-# 铭牌识别｜当前发布状态
+# 铭牌识别｜当前发布状态（2026-11-22）
 
-正式版：**v1.18.4.5** — https://acly20-bot.github.io/mingpai-ocr/
+正式版：**v1.18.5** — https://acly20-bot.github.io/mingpai-ocr/
 
-性能测试版：**v1.18.5-test.3** — https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
+测试版：**v1.18.5-test.3** — https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
 
-## 固定基线与发布策略
+## 当前完整稳定基线
 
-- 正式版固定基线：[`release-baseline/v11845-boot-closeout`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v11845-boot-closeout)，SHA `ae214f4a11b0c5c107e97fa4b50deb3a562e7200`。
-- 性能测试线基线：[`release-baseline/v1185-test3`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v1185-test3)，SHA `2b845968ed8d4e43ec63e104e63af9c45e9d4f09`。
-- 识别规则：**85 条**，独立 JSON（`recognition-rules-v1184.json`），规则修订号 `v1.18.4-20261121-r9`，保持原有优先级。已包括鸽子小儿CPAP正确产品编号 `20126III012`。
-- 正式版已合入用户在 Edge 上验证的启动恢复及已确认记录隐藏风险提示；两个入口已移除临时启动诊断条。正式版保留底部快捷栏自恢复保护、原生温湿度审核和飞书同步、待审核确认后自动移除及选定的统计布局。
-- 精简部署工作流：[`deploy-paddleocr.yml`](.github/workflows/deploy-paddleocr.yml)，从稳定 SHA 直接恢复完整 Pages 发布产物，不执行旧版本连续补丁。
+- 发布基线：[`release-baseline/v1185-plx-r10`](https://github.com/acly20-bot/mingpai-ocr/tree/release-baseline/v1185-plx-r10)，SHA `37de7dee133a36f70e55b65dbd0ca4bac3bf53d6`。
+- 用户已通过 v1.18.5-test.3 的五项实机回归，相关 DOM 观察器与增量 IndexedDB 读取性能改善已合入正式版 v1.18.5。
+- 独立识别规则 **86 条**（`recognition-rules-v1184.json`，修订号 `v1.18.4-20261122-r10`）；新增南京普爱移动平板 C 形臂型号 `PLX118F/a` 的精确纠偏，已同步正式版和测试版，不改网页版本号。
+- **测试版专用、尚未实机回归**：数据统计分组把中英文括号统一为中文括号；字段黄色电气参数提醒识别以 `~`/`～` 开头的电压频率。统计只归并显示，不修改本地历史记录，也不触发飞书同步。
+- 正式版保留底栏自恢复、原生温湿度审核与飞书同步、待审核确认后自动退出筛选、统计页面用户选定的布局。移除旧版启动耗时监听，不保留临时启动诊断条。
+- QQ 浏览器的 WebGPU 实际后端未选中，以及点击缩略图被浏览器图片功能接管，仍列为**待独立诊断的兼容问题**。优先保证 Edge、微信及正常浏览器稳定。
+- Edge 再次打开旧标签页遇到的“预览此页面”静态快照属已知兼容问题；不再叠加强制刷新。
 
-## 当前性能测试（尚未合入正式版）
+## 发布与回退
 
-`v1.18.5-test.3` 在 test.2 基础上，移除已经废弃的 v1.18.2 启动耗时诊断观察器（最长观察20秒），并将黄色字段提醒改为只检查新加入的卡片，不再因单条插入而重扫全部卡片。此前的增量 IndexedDB 处理继续保留，温湿度审核仍使用原生机制。原生记录保存、IndexedDB 数据格式、OCR、飞书 SCF 均不改变。需要 Edge 上验证列表新增/分页/筛选、温湿度修改确认、批量识别、飞书同步等功能后再继续。Edge 旧标签页静态预览兼容问题单独保留，不作为本阶段性能回归失败依据。
-
-## 开发与回退
-
-- 网页 Bug、性能、UI 变更先更新测试版，用户实机回归通过后再推广正式版、固定新基线；识别规则按约定直接同步正式版与测试版并在发布后实测，网页版本号不随规则修改。
-- 后续记录界面优先使用主程序已验证的原生编辑与审核机制。
-- 回退可将正式版工作流的固定 SHA 恢复至此前通过的完整基线，再重新部署；不会清空任何 IndexedDB 本地记录。
-- 尚未对小米自带浏览器启动进行新的兼容修复；以 Edge 为主要使用目标。
+- 精简正式发布工作流 [`deploy-paddleocr.yml`](.github/workflows/deploy-paddleocr.yml) 从固定完整 Pages 基线 SHA 恢复，主程序及 OCR 模型仍由 COS 提供。
+- 识别规则可以直接同步正式版与测试版，发布后通过重识别进行实机验证，不改变网页版本号；界面、浏览器兼容和功能修复则先在测试版验证后合入正式版。
+- 回滚时将工作流指向上一条已核验的完整基线，重新部署即可；不清除用户现存 IndexedDB 数据。
