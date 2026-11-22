@@ -92,7 +92,7 @@ jobs:
 
       - name: Add isolated v1.18.6-test.1 QQ compatibility preview
         env:
-          PREVIEW_COMMIT: 28c249266dc8c6317af8e6baaa857c8cb5c795b8
+          PREVIEW_COMMIT: 371e540cee07d3c0a29c18e0a39721645a5cfb04
         run: |
           set -euo pipefail
           git fetch --no-tags --depth=1 origin refs/heads/test/v1.18.6-test.1:refs/remotes/origin/test/v1.18.6-test.1
