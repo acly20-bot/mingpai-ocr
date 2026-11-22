@@ -1,5 +1,5 @@
-const APP_VERSION="1.18.5";
-const SHELL_CACHE="mingpai-shell-v1185-formal-rules-r10";
+const APP_VERSION="1.18.6";
+const SHELL_CACHE="mingpai-shell-v1186-formal-qqgpu-thumbfix";
 const RUNTIME_CACHE="mingpai-runtime-long-v1";
 const COS_RUNTIME="https://mingpai-ocr-1387910526.cos.ap-guangzhou.myqcloud.com/assets/";
 const scopeUrl=new URL(self.registration.scope);
