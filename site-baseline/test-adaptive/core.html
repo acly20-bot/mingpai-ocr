@@ -160,6 +160,13 @@
     reg.update().catch(err=>console.debug('SW background update',err));
     await deadline(navigator.serviceWorker.ready,4200,'Service Worker ready');
     const ctl=navigator.serviceWorker.controller;
+    // QQ Browser sometimes obtains a SW controller after first paint.
+    // Avoid a second visible navigation: start with the direct COS module
+    // while the newly registered worker takes control on a future visit.
+    if(/QQBrowser|MQQBrowser/i.test(navigator.userAgent||'')&&!ctl){
+      await loadMain();
+      return;
+    }
     if(!ctl||!ctl.scriptURL.includes('v=1.153.4.4')){
       if(!sessionStorage.getItem(FLAG)){
         sessionStorage.setItem(FLAG,'1');
