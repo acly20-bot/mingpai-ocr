@@ -379,6 +379,10 @@ setTimeout(function(){
     if(!img||img.dataset.v1186QqProtected==='1')return;
     img.dataset.v1186QqProtected='1';
     img.draggable=false;
+    // QQ native image tools are bound to the image hit target, even on a short tap.
+    // Route pointer/touch hit testing to the existing preview stage, which owns
+    // the application's pan/zoom gestures and buttons.
+    img.style.setProperty('pointer-events','none','important');
     img.style.setProperty('-webkit-touch-callout','none','important');
     img.style.setProperty('-webkit-user-select','none','important');
     img.style.setProperty('user-select','none','important');
