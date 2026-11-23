@@ -176,6 +176,29 @@ jobs:
           print('PASS v1.18.7 isolated record-layout prototype; production v1.18.6 untouched')
           PY
 
+      - name: Add independent Edge restore diagnostic page
+        run: |
+          set -euo pipefail
+          mkdir -p app/edge-lab
+          cp edge-lab/index.html app/edge-lab/index.html
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          p=Path('app/edge-lab/index.html')
+          s=p.read_text(encoding='utf-8')
+          assert 'Edge 恢复旧标签专项测试' in s
+          assert 'setInterval(' not in s and 'location.reload(' not in s
+          assert 'navigator.serviceWorker.register(' not in s
+          assert 'index-B81hy' not in s
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
+          assert len(scripts)==1,len(scripts)
+          for i,body in enumerate(scripts):
+            f=Path('/tmp/edge-lab-script-'+str(i)+'.js')
+            f.write_text(body)
+            subprocess.run(['node','--check',str(f)],check=True)
+          print('PASS isolated Edge A/B restore diagnostic')
+          PY
+
       - name: Upload verified site
         uses: actions/upload-pages-artifact@v3
         with:
