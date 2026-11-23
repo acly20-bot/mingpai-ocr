@@ -95,3 +95,43 @@ for mode in ("ui", "direct"):
             temp.write_text(body,encoding="utf-8")
             subprocess.run(["node","--check",str(temp)],check=True)
     print("PASS Edge",mode,"full UI",len(index),"core",len(core))
+
+
+# E/F: introduce test-scoped SW behavior without touching the root site.
+# E is the same heavy app with local worker/proxy, but no background updater.
+# F restores the original version checker and background updater as well.
+for mode in ("worker", "full"):
+    dest=lab / mode
+    dest.mkdir(parents=True,exist_ok=True)
+    core=core_source
+    index=index_source
+    if mode=="worker":
+        index=version_tag.sub("<!-- version check intentionally disabled in Edge E -->",index)
+        first="async function run(){if(running||!navigator.onLine)return;"
+        assert index.count(first)==1
+        index=index.replace(first,"async function run(){return; /* Edge E no background upgrade */ if(running||!navigator.onLine)return;")
+    badge=diagnostic.replace(
+        "function refresh(ev){status.textContent='Edge '+MODE+'：'+ev+'；点击 '+count+' 次';}",
+        "function refresh(ev){const sw=navigator.serviceWorker?.controller?.scriptURL||'无';const name=sw.split('/').slice(-2).join('/');status.textContent='Edge '+MODE+'：'+ev+'；点击 '+count+' 次；SW='+name+'；隔离='+!!crossOriginIsolated;}"
+    )
+    assert "；SW=" in badge
+    index=index.replace("</body>",badge.replace("MODE",repr(mode))+"</body>")
+    index=index.replace(
+        "<title>设备铭牌识别｜v1.18.6 正式版</title>",
+        "<title>Edge 恢复对照 "+mode+"</title>"
+    )
+    (dest/"index.html").write_text(index,encoding="utf-8")
+    (dest/"core.html").write_text(core,encoding="utf-8")
+    shutil.copy2(app/"coi-serviceworker.js",dest/"coi-serviceworker.js")
+    shutil.copy2(app/"version-v118-test.json",dest/"version-v118-test.json")
+    assert "async function run(){return;" in index if mode=="worker" else "async function run(){if(running" in index
+    for page in ("index.html","core.html"):
+        source=(dest/page).read_text(encoding="utf-8")
+        scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',source,re.S|re.I)
+        for n,body in enumerate(scripts):
+            if not body.strip():continue
+            temp=Path("/tmp")/("edge-"+mode+"-"+page+"-"+str(n)+".js")
+            temp.write_text(body,encoding="utf-8")
+            subprocess.run(["node","--check",str(temp)],check=True)
+    subprocess.run(["node","--check",str(dest/"coi-serviceworker.js")],check=True)
+    print("PASS Edge",mode,"full boot",mode=="full","worker",True)
