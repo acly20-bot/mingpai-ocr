@@ -28,7 +28,7 @@ jobs:
 
       - name: Restore verified v1.18.6 site (no old version build steps)
         env:
-          PINNED_COMMIT: 91d795983fd8cd5a01cc758b2d54dbbf742be2c0
+          PINNED_COMMIT: dae642c745d64c8c5f131ad316b6a974b851788b
         run: |
           set -euo pipefail
           git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1186-verified:refs/remotes/origin/release-baseline/v1186-verified
@@ -75,6 +75,12 @@ jobs:
               assert 'scheduleHiddenDockRecovery' in outer
             assert "attributeFilter:['hidden','style','class','aria-hidden']" in outer
             assert 'recognition-rules-v1184.json' in core
+            # Excel data detail layout: exact 13 columns, fixed one-line rows.
+            assert 'width="20.44140625"' in outer
+            assert 'width="33.6640625"' in outer
+            assert 'width="8.88671875"' in outer
+            assert 'wrapText="0"' in outer
+            assert 'const ht=summary?Math.min(75,Math.max(26,24+Math.floor(maxLen/18)*15)):19.2;' in outer
             assert 'v1186-direct-image-save' in core
             assert 'v1186QqProtected' in core
             assert 'setTimeout(reload,1300)' not in core
@@ -96,7 +102,7 @@ jobs:
 
       - name: Add isolated v1.18.6-test.1 QQ compatibility preview
         env:
-          PREVIEW_COMMIT: 78870bff355aa59b86c01bc5f8d756a800b01be7
+          PREVIEW_COMMIT: a914d2f0888f5e18457be906f22a5e509fa15f53
         run: |
           set -euo pipefail
           git fetch --no-tags --depth=1 origin refs/heads/test/v1.18.6-test.1:refs/remotes/origin/test/v1.18.6-test.1
@@ -115,6 +121,8 @@ jobs:
           assert test['rules']=='recognition-rules-v1184.json'
           assert 'v1186QqProtected' in (preview/'core.html').read_text()
           assert 'v1186-direct-image-save' in (preview/'core.html').read_text()
+          assert 'width="20.44140625"' in (preview/'index.html').read_text()
+          assert 'wrapText="0"' in (preview/'index.html').read_text()
           assert '保存图片' in (preview/'core.html').read_text()
           assert '保存/转发' not in (preview/'core.html').read_text()
           assert test['mainJs']=='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
@@ -135,7 +143,7 @@ jobs:
 
       - name: Add isolated v1.18.7-test.1 compact record layout preview
         env:
-          COMPACT_PREVIEW_COMMIT: fd900863abd49a7df78418b82fe39aeb8dc12b7c
+          COMPACT_PREVIEW_COMMIT: 6e496845b17917b7c57bdce52bc83bb37732e7a7
         run: |
           set -euo pipefail
           git fetch --no-tags --depth=1 origin refs/heads/test/v1.18.7-test.1:refs/remotes/origin/test/v1.18.7-test.1
