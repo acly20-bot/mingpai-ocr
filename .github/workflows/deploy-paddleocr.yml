@@ -199,6 +199,24 @@ jobs:
           print('PASS isolated Edge A/B restore diagnostic')
           PY
 
+      - name: Add isolated Edge full-app restore comparators (C/D)
+        run: |
+          set -euo pipefail
+          cp edge-lab/build_variants.py app/edge-lab/build_variants.py
+          python app/edge-lab/build_variants.py app
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('app/edge-lab')
+          assert (root/'ui/index.html').is_file()
+          assert (root/'direct/index.html').is_file()
+          assert not (root/'ui/coi-serviceworker.js').exists()
+          assert not (root/'direct/coi-serviceworker.js').exists()
+          for mode in ('ui','direct'):
+            assert 'v1186-direct-image-save' in (root/mode/'core.html').read_text()
+            assert 'edge-lab-lifecycle' in (root/mode/'index.html').read_text()
+          print('PASS Edge C/D isolated comparators')
+          PY
+
       - name: Upload verified site
         uses: actions/upload-pages-artifact@v3
         with:
