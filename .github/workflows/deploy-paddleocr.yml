@@ -209,12 +209,18 @@ jobs:
           root=Path('app/edge-lab')
           assert (root/'ui/index.html').is_file()
           assert (root/'direct/index.html').is_file()
+          assert (root/'worker/index.html').is_file()
+          assert (root/'full/index.html').is_file()
+          assert (root/'worker/coi-serviceworker.js').is_file()
+          assert (root/'full/coi-serviceworker.js').is_file()
           assert not (root/'ui/coi-serviceworker.js').exists()
           assert not (root/'direct/coi-serviceworker.js').exists()
           for mode in ('ui','direct'):
             assert 'v1186-direct-image-save' in (root/mode/'core.html').read_text()
             assert 'edge-lab-lifecycle' in (root/mode/'index.html').read_text()
-          print('PASS Edge C/D isolated comparators')
+          assert 'async function run(){return;' in (root/'worker/index.html').read_text()
+          assert 'mingpai-open-version-check' in (root/'full/index.html').read_text()
+          print('PASS Edge C/D/E/F isolated comparators')
           PY
 
       - name: Upload verified site
