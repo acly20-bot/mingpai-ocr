@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Edge 旧标签恢复专项对照｜轻量页面</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}body{font:15px/1.6 system-ui,-apple-system,"Microsoft YaHei",sans-serif;margin:0;background:#eef5f2;color:#17362f}
+main{max-width:620px;margin:auto;padding:20px 14px 52px}.panel{background:white;border:1px solid #cbded6;border-radius:13px;padding:16px;margin:12px 0}
+h1{font-size:21px;margin:0 0 8px}h2{font-size:17px;margin:0 0 8px}.hint{color:#48665d;font-size:13px}
+strong{color:#075a47}button,a.choose{font:inherit;background:#078c73;color:white;border:0;border-radius:8px;padding:11px 14px;text-decoration:none;display:inline-block;cursor:pointer}
+a.choose.muted{background:#e4f1eb;color:#075a47}.row{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+#eventLog{white-space:pre-wrap;overflow-wrap:anywhere;min-height:55px;background:#f2f7f4;padding:10px;border-radius:6px;font:12px/1.65 monospace}
+#innerFrame{border:1px solid #bfd8cc;width:100%;height:150px;background:#e9f6f0;border-radius:8px}
+code{font-family:monospace} .mark{font-size:23px;font-weight:750;color:#007a61}
+</style>
+</head>
+<body><main>
+<h1>Edge 恢复旧标签专项测试</h1>
+<p class="hint">此页面只用于区别浏览器原生预览与网页负载问题，不加载 OCR、不读写设备记录、不注册新的 Service Worker。</p>
+<section class="panel">
+<h2>对照模式</h2>
+<div class="row"><a class="choose" id="plainLink" href="?mode=plain">A · 纯静态页面</a><a class="choose muted" id="frameLink" href="?mode=iframe">B · 轻量 iframe</a></div>
+<div id="modeLabel" class="hint">正在读取模式…</div>
+</section>
+<section class="panel">
+<h2>网页是否真的恢复了 JavaScript？</h2>
+<div class="hint">页面脚本启动时间</div><div id="started" class="mark">脚本尚未运行</div>
+<div class="hint">最近一次页面事件</div><div id="last" class="mark">未触发</div>
+<div class="row"><button type="button" id="tap">点击测试响应</button><button type="button" id="clear">清空事件记录</button></div>
+<div>点击响应次数：<strong id="count">0</strong></div>
+<pre id="eventLog">等待脚本启动…</pre>
+</section>
+<section id="innerHolder" class="panel" hidden>
+<h2>模拟内页 iframe</h2>
+<iframe id="innerFrame" title="轻量内页"></iframe>
+</section>
+<section class="panel">
+<h2>怎样测试</h2>
+<p>① 在 Edge 依次打开 A 和 B，每一种模式都从最近任务界面划掉 Edge，再重新进入，至少试 3 次。</p>
+<p>② 返回后先等待 5 秒，看时间及事件是否变化，再点击“点击测试响应”。</p>
+<p>③ 若画面无法点击，试着先切换其他标签再切回本标签，观察是否恢复。</p>
+<p class="hint">此页面不会主动刷新，也没有常驻轮询。如果 Edge 显示静态快照，页面脚本不会执行，日志也不会增加。请告诉我 A/B 各出现几次卡住及切标签能否恢复。</p>
+</section>
+</main>
+<script>
+(function(){
+  "use strict";
+  const doc=document;
+  const q=new URLSearchParams(location.search), mode=q.get('mode')==='iframe'?'iframe':'plain';
+  const $=id=>doc.getElementById(id);
+  const showTime=()=>new Date().toLocaleTimeString('zh-CN',{hour12:false});
+  let n=0,lines=[];
+  function log(label){
+    const value=showTime()+' '+label;
+    lines.unshift(value);if(lines.length>18)lines.length=18;
+    $('last').textContent=value;
+    $('eventLog').textContent=lines.join('\n');
+  }
+  $('started').textContent=showTime();
+  $('modeLabel').textContent=mode==='iframe'?'当前：B · 一层轻量 iframe（无 OCR）':'当前：A · 纯静态页面（无 iframe、无 OCR）';
+  $('plainLink').className='choose'+(mode==='plain'?'':' muted');
+  $('frameLink').className='choose'+(mode==='iframe'?'':' muted');
+  if(mode==='iframe'){
+    $('innerHolder').hidden=false;
+    $('innerFrame').srcdoc='<!doctype html><html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font:15px sans-serif;padding:12px;color:#135441">轻量内页已经加载。没有 OCR、IndexedDB 或网络请求。<p>加载时间：<b id="now"></b></p><script>document.getElementById("now").textContent=new Date().toLocaleTimeString("zh-CN",{hour12:false});<\/script></body></html>';
+  }
+  log('脚本启动 ('+mode+')');
+  $('tap').addEventListener('click',()=>{n++;$('count').textContent=String(n);log('点击有效，第 '+n+' 次')});
+  $('clear').addEventListener('click',()=>{lines=[];log('清空日志')});
+  document.addEventListener('visibilitychange',()=>log('visibilitychange '+(document.hidden?'隐藏':'可见')));
+  window.addEventListener('pageshow',e=>log('pageshow persisted='+!!e.persisted));
+  window.addEventListener('pagehide',e=>log('pagehide persisted='+!!e.persisted));
+  window.addEventListener('focus',()=>log('focus'));
+  window.addEventListener('freeze',()=>log('freeze'));
+  window.addEventListener('resume',()=>log('resume'));
+  if(doc.wasDiscarded)log('wasDiscarded=true');
+  // Only lifecycle events and user taps; no interval, navigation, reload or OCR.
+})();
+</script>
+</body></html>
