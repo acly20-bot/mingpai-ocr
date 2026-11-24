@@ -818,6 +818,14 @@ function v1183InstallFieldReview(d) {
   #recordList .cardhead{
     align-items:stretch!important;
   }
+  /* v1186-sync-status-fix: a newly inserted native badge must not stretch
+     while asynchronous card decoration is still pending. */
+  #recordList .cardhead > .badge{
+    align-self:flex-start!important;flex:0 0 auto!important;height:auto!important;
+    white-space:nowrap!important;
+  }
+  #recordList .cardtitle > small{display:none!important}
+
   #recordList .cardtitle{
     align-self:stretch!important;
     display:flex!important;
@@ -1557,6 +1565,25 @@ function v1183InstallFieldReview(d) {
     const s=rec?.syncStatus;
     return s==='synced'?'已同步':s==='syncing'?'同步中':s==='error'?'失败待重试':s==='pending'?'有修改待同步':s==='local-only'?'仅本机保存':rec?.status==='confirmed'?'尚未同步':'待确认';
   }
+  // Keep the native status source alive: core's v11713PatchCard updates
+  // .cardtitle small after the real persistence/sync result, including errors.
+  // Observe that element only; no polling, database scans or sync requests.
+  function bindLiveSyncStatus(source,target,initial){
+    if(!target)return;
+    if(!source){target.textContent='飞书：'+initial;return}
+    const paint=()=>{
+      const raw=String(source.textContent||'');
+      const marker='飞书：';
+      const pos=raw.lastIndexOf(marker);
+      const label=pos>=0?raw.slice(pos+marker.length).trim():'';
+      const next='飞书：'+(label||initial);
+      if(target.textContent!==next)target.textContent=next;
+    };
+    paint();
+    if(source.dataset.v1186SyncMirrorBound==='1')return;
+    source.dataset.v1186SyncMirrorBound='1';
+    new MutationObserver(paint).observe(source,{childList:true,subtree:true,characterData:true});
+  }
   async function decorateCard(card){
     if(card.dataset.envDecorating==='1')return;
     const id=card.querySelector('[data-select-id]')?.getAttribute('data-select-id')||card.querySelector('[data-id]')?.getAttribute('data-id');
@@ -1579,7 +1606,7 @@ function v1183InstallFieldReview(d) {
 
       const title=card.querySelector('.cardtitle');
       if(title){
-        const small=title.querySelector('small'); if(small)small.remove();
+        // Retain the hidden native status node for live sync updates.
         const old=title.querySelector('.env-summary');if(old)old.remove();
         let env=title.querySelector('.env-inline');
         if(!env){
@@ -1690,7 +1717,7 @@ function v1183InstallFieldReview(d) {
       if(head&&badge){
         let stack=head.querySelector('.card-status-stack');
         if(!stack){stack=d.createElement('div');stack.className='card-status-stack';badge.replaceWith(stack);stack.appendChild(badge);const sm=d.createElement('div');sm.className='sync-mini';stack.appendChild(sm);}
-        stack.querySelector('.sync-mini').textContent='飞书：'+syncLabel(rec);
+        bindLiveSyncStatus(title?.querySelector('small'),stack.querySelector('.sync-mini'),syncLabel(rec));
       }
 
 
