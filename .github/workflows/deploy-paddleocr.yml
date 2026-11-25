@@ -223,6 +223,68 @@ jobs:
           print('PASS Edge C/D/E/F isolated comparators')
           PY
 
+      - name: Add independent v1.18.7 photo-quality test
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,re,shutil,subprocess
+          from pathlib import Path
+          root=Path('app')
+          dest=root/'test-photoquality'
+          shutil.copytree(root/'test-adaptive',dest)
+          old='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
+          new='index-B81hyAdU-v1187-photoquality-test1.js'
+          version='1.18.7-test.2'
+          old_rev='1.18.6-test.1-qqgpu-thumbfix'
+          new_rev=version+'-photoquality'
+          def replace_one(s,a,b):
+              assert s.count(a)==1,(a,s.count(a))
+              return s.replace(a,b)
+          p=dest/'core.html'
+          s=p.read_text()
+          assert s.count(old)==2 and s.count(old_rev)==4
+          s=s.replace(old,new).replace(old_rev,new_rev)
+          s=replace_one(s,'版本：v1.18.6-test.1 兼容性测试版','版本：v'+version+' 图片质量专项测试版')
+          p.write_text(s)
+          p=dest/'index.html'
+          s=p.read_text()
+          s=replace_one(s,'<title>设备铭牌识别｜v1.18.6-test.1 QQ兼容性测试版</title>','<title>设备铭牌识别｜v'+version+' 图片质量专项测试版</title>')
+          s=replace_one(s,'const CLIENT_VERSION="1.18.6-test.1";','const CLIENT_VERSION="'+version+'";')
+          # Separate the test version's persisted update marker from production.
+          s=s.replace('mingpai-v118-manifest-version','mingpai-photoquality-manifest-version')
+          p.write_text(s)
+          p=dest/'coi-serviceworker.js'
+          s=p.read_text()
+          s=replace_one(s,'const APP_VERSION="1.18.6-test.1";','const APP_VERSION="'+version+'";')
+          s=replace_one(s,'mingpai-shell-v1186-test1-qqgpu-thumbfix','mingpai-shell-v1187-test2-photoquality')
+          p.write_text(s)
+          p=dest/'version-v118-test.json'
+          m=json.loads(p.read_text())
+          m.update(version=version,mainJs=new,runtimeFiles=[new],publishedAt='2026-11-25T22:17:00+08:00')
+          p.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
+          assert json.loads((root/'version-v118-test.json').read_text())['mainJs']==old
+          assert json.loads((root/'test-adaptive/version-v118-test.json').read_text())['mainJs']==old
+          assert json.loads((root/'test-v1187/version-v118-test.json').read_text())['mainJs']==old
+          assert m['rules']=='recognition-rules-v1184.json'
+          outer=(dest/'index.html').read_text()
+          core=(dest/'core.html').read_text()
+          assert 'bindLiveSyncStatus' in outer and 'v1186-sync-status-fix' in outer
+          assert 'wrapText="0"' in outer and 'width="20.44140625"' in outer
+          assert 'v1186-direct-image-save' in core and 'v1186QqProtected' in core
+          assert 'v1187-raw-collapse-test' not in core
+          assert 'setTimeout(reload,1300)' not in core
+          assert new in core and old not in core
+          for name in ('index.html','core.html'):
+              source=(dest/name).read_text()
+              for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',source,re.I|re.S)):
+                  if js.strip():
+                      f=Path('/tmp')/('mingpai-photoquality-'+name+str(i)+'.js')
+                      f.write_text(js)
+                      subprocess.run(['node','--check',str(f)],check=True)
+          subprocess.run(['node','--check',str(dest/'coi-serviceworker.js')],check=True)
+          print('PASS independent photo-quality test; stable and UI test unchanged')
+          PY
+
       - name: Upload verified site
         uses: actions/upload-pages-artifact@v3
         with:
