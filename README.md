@@ -1,20 +1,12 @@
-# 铭牌识别｜当前发布状态（2026-11-23）
+# 铭牌识别｜当前发布状态（2026-11-25）
 
-正式版：**v1.18.6** — https://acly20-bot.github.io/mingpai-ocr/
+- 正式稳定版 **v1.18.6**：https://acly20-bot.github.io/mingpai-ocr/
+- 唯一测试版 **v1.18.7-test.2 图片质量专项**：https://acly20-bot.github.io/mingpai-ocr/test-photoquality/
 
-测试基线：**v1.18.6-test.1** — https://acly20-bot.github.io/mingpai-ocr/test-adaptive/
-
-兼容性验证入口：**v1.18.6-test.1** — https://acly20-bot.github.io/mingpai-ocr/test-v1186/
-
-## v1.18.6 基线与下一阶段
-
-- 正式发布基线：`release-baseline/v1186-verified`，固定 SHA `91d795983fd8cd5a01cc758b2d54dbbf742be2c0`。此前 v1.18.5 原始基线 `release-baseline/v1185-plx-r10`（SHA `37de7dee133a36f70e55b65dbd0ca4bac3bf53d6`）保留回滚。
-- 主程序：`index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js`，部署在 COS `assets/`；正式/测试入口引用同一份通过实机测试的主程序，各自独立 Service Worker 缓存。无需覆盖旧 COS 正式版 JS。
-- 已确认：QQ 浏览器原生图片工具不再接管缩略图；双指缩放、拖动、重拍照及重识别正常；WebGPU 不兼容时避免跨批次重复无效初始化；QQ 与 Edge 的“保存图片”直接下载通过实机测试；启动不再不必要地重复刷新。
-- 已知限制：微信内置浏览器可能拦截 H5 文件下载；Edge 后台恢复的浏览器级“预览此页面”快照无法保证由网页脚本自行恢复。按成本/性能优先原则，不为两者增加全局轮询或强制刷新。
-- 正式版额外保留 v1.18.5 的底部快捷栏自恢复保护，避免简单覆盖丢失稳定修复；保留普通审核、温湿度、飞书同步和统计汇总功能。统计中英文括号显示归并及 `~220V/50Hz` 电气提醒已包含在本次基线中。
-- 识别规则保持 86 条，`recognition-rules-v1184.json`，规则号 `v1.18.4-20261122-r10`。
-- **下一阶段**：`v1.18.7-test.1` 设备信息界面精简原型 — https://acly20-bot.github.io/mingpai-ocr/test-v1187/ 。仅测试新记录卡片布局：OCR 原文默认收起、备注标题精简、字段间距缩小；不修改 COS JS、识别规则或记录结构。保持 v1.18.6 正式及 v1.18.6-test.1 测试基线不动，实机回归后再考虑是否进入 `v1.19.0`。
+正式基线固定为 `047c22ec7ee7fa6c7058eea0c666aa9c4e97b1d6`，保留 Git 历史及 v1.18.5 回滚基线。测试版直接从正式版网页生成，仅替换图片质量主程序、版本标识和测试缓存标识，保留正式版的底栏自恢复、审核、同步状态实时更新、温湿度、Excel 导出和 86 条识别规则（r10）。
+正式 COS 主程序为 `index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js`，测试主程序为 `index-B81hyAdU-v1187-photoquality-test1.js`。微信导出 SCF v1.0.9 已实机通过。
+停止发布旧稳定测试入口、已否定的 v1.18.7-test.1 界面原型及 Edge 临时诊断入口；保留历史分支，不删除浏览器数据或 COS 资源。
+先完成图片质量专项回归，再进行设备信息界面优化；待审核铭牌文本按正式版逻辑展开、确认后收起。Edge 偶发静态预览接受手动刷新；微信图片下载限制暂缓。
 
 ## 历史记录（2026-11-22）
 
