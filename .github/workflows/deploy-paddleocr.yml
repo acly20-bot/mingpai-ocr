@@ -100,178 +100,79 @@ jobs:
           print('PASS pinned v1.18.6 Pages release, rules, JS syntax; formal/test isolated')
           PY
 
-      - name: Add isolated v1.18.6-test.1 QQ compatibility preview
-        env:
-          PREVIEW_COMMIT: 2fada2cb8ecf2683b3699eefa1316d4e9c69f730
-        run: |
-          set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/test/v1.18.6-test.1:refs/remotes/origin/test/v1.18.6-test.1
-          CURRENT="$(git rev-parse refs/remotes/origin/test/v1.18.6-test.1)"
-          test "$CURRENT" = "$PREVIEW_COMMIT" || { echo "Preview branch moved unexpectedly"; exit 1; }
-          mkdir -p app/test-v1186
-          git archive "$CURRENT":site-baseline/test-adaptive | tar -xf - -C app/test-v1186
-          python - <<'PY'
-          from pathlib import Path
-          import json,re,subprocess
-          root=Path('app')
-          preview=root/'test-v1186'
-          formal=json.loads((root/'version-v118-test.json').read_text())
-          test=json.loads((preview/'version-v118-test.json').read_text())
-          assert formal['version']=='1.18.6' and test['version']=='1.18.6-test.1'
-          assert test['rules']=='recognition-rules-v1184.json'
-          assert 'v1186QqProtected' in (preview/'core.html').read_text()
-          assert 'v1186-direct-image-save' in (preview/'core.html').read_text()
-          assert 'width="20.44140625"' in (preview/'index.html').read_text()
-          assert 'wrapText="0"' in (preview/'index.html').read_text()
-          assert '保存图片' in (preview/'core.html').read_text()
-          assert '保存/转发' not in (preview/'core.html').read_text()
-          assert test['mainJs']=='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
-          assert test['runtimeFiles']==[test['mainJs']]
-          assert test['mainJs'] in (preview/'core.html').read_text()
-          assert 'v=1.18.6-test.1-qqgpu-thumbfix' in (preview/'core.html').read_text()
-          assert 'mingpai-shell-v1186-test1-qqgpu-thumbfix' in (preview/'coi-serviceworker.js').read_text()
-          for name in ('index.html','core.html'):
-            source=(preview/name).read_text()
-            for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',source,re.I|re.S)):
-              if js.strip():
-                f=Path('/tmp')/('mingpai-v1186-'+name+str(i)+'.js')
-                f.write_text(js)
-                subprocess.run(['node','--check',str(f)],check=True)
-          subprocess.run(['node','--check',str(preview/'coi-serviceworker.js')],check=True)
-          print('PASS isolated v1.18.6-test.1 preview; formal and existing test unchanged')
-          PY
-
-      - name: Add isolated v1.18.7-test.1 compact record layout preview
-        env:
-          COMPACT_PREVIEW_COMMIT: b078051fc33a8d09c7c6b6c45c19b7e908c22f26
-        run: |
-          set -euo pipefail
-          git fetch --no-tags --depth=1 origin refs/heads/test/v1.18.7-test.1:refs/remotes/origin/test/v1.18.7-test.1
-          CURRENT="$(git rev-parse refs/remotes/origin/test/v1.18.7-test.1)"
-          test "$CURRENT" = "$COMPACT_PREVIEW_COMMIT" || { echo "Record layout preview branch moved unexpectedly"; exit 1; }
-          mkdir -p app/test-v1187
-          git archive "$CURRENT":site-baseline/test-adaptive | tar -xf - -C app/test-v1187
-          python - <<'PY'
-          from pathlib import Path
-          import json,re,subprocess
-          root=Path('app')
-          preview=root/'test-v1187'
-          formal=json.loads((root/'version-v118-test.json').read_text())
-          test=json.loads((preview/'version-v118-test.json').read_text())
-          assert formal['version']=='1.18.6' and test['version']=='1.18.7-test.1'
-          assert formal['mainJs']==test['mainJs']=='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
-          assert formal['rules']==test['rules']=='recognition-rules-v1184.json'
-          assert 'v1187-raw-collapse-test' in (preview/'core.html').read_text()
-          assert 'v1187-card-compact-test' in (preview/'core.html').read_text()
-          assert 'v1186-direct-image-save' in (preview/'core.html').read_text()
-          assert 'mingpai-shell-v1187-test1-card-compact' in (preview/'coi-serviceworker.js').read_text()
-          for name in ('index.html','core.html'):
-            source=(preview/name).read_text()
-            for i,js in enumerate(re.findall(r'<script[^>]*>(.*?)</script>',source,re.I|re.S)):
-              if js.strip():
-                f=Path('/tmp')/('mingpai-v1187-'+name+str(i)+'.js')
-                f.write_text(js)
-                subprocess.run(['node','--check',str(f)],check=True)
-          subprocess.run(['node','--check',str(preview/'coi-serviceworker.js')],check=True)
-          print('PASS v1.18.7 isolated record-layout prototype; production v1.18.6 untouched')
-          PY
-
-      - name: Add independent Edge restore diagnostic page
-        run: |
-          set -euo pipefail
-          mkdir -p app/edge-lab
-          cp edge-lab/index.html app/edge-lab/index.html
-          python - <<'PY'
-          from pathlib import Path
-          import re, subprocess
-          p=Path('app/edge-lab/index.html')
-          s=p.read_text(encoding='utf-8')
-          assert 'Edge 恢复旧标签专项测试' in s
-          assert 'setInterval(' not in s and 'location.reload(' not in s
-          assert 'navigator.serviceWorker.register(' not in s
-          assert 'index-B81hy' not in s
-          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
-          assert len(scripts)==1,len(scripts)
-          for i,body in enumerate(scripts):
-            f=Path('/tmp/edge-lab-script-'+str(i)+'.js')
-            f.write_text(body)
-            subprocess.run(['node','--check',str(f)],check=True)
-          print('PASS isolated Edge A/B restore diagnostic')
-          PY
-
-      - name: Add isolated Edge full-app restore comparators (C/D)
-        run: |
-          set -euo pipefail
-          cp edge-lab/build_variants.py app/edge-lab/build_variants.py
-          python app/edge-lab/build_variants.py app
-          python - <<'PY'
-          from pathlib import Path
-          root=Path('app/edge-lab')
-          assert (root/'ui/index.html').is_file()
-          assert (root/'direct/index.html').is_file()
-          assert (root/'worker/index.html').is_file()
-          assert (root/'full/index.html').is_file()
-          assert (root/'worker/coi-serviceworker.js').is_file()
-          assert (root/'full/coi-serviceworker.js').is_file()
-          assert not (root/'ui/coi-serviceworker.js').exists()
-          assert not (root/'direct/coi-serviceworker.js').exists()
-          for mode in ('ui','direct'):
-            assert 'v1186-direct-image-save' in (root/mode/'core.html').read_text()
-            assert 'edge-lab-lifecycle' in (root/mode/'index.html').read_text()
-          assert 'async function run(){return;' in (root/'worker/index.html').read_text()
-          assert 'mingpai-open-version-check' in (root/'full/index.html').read_text()
-          print('PASS Edge C/D/E/F isolated comparators')
-          PY
-
-      - name: Add independent v1.18.7 photo-quality test
+      - name: Publish sole photo-quality test from exact formal baseline
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json,re,shutil,subprocess
+          import json,re,shutil,subprocess,hashlib
           from pathlib import Path
           root=Path('app')
           dest=root/'test-photoquality'
-          shutil.copytree(root/'test-adaptive',dest)
+          dest.mkdir()
+          # Archive all historic branches in Git; publish only the current
+          # formal shell and a single experimental candidate, not old previews.
+          formal_files=('index.html','core.html','coi-serviceworker.js','version-v118-test.json','recognition-rules-v1184.json','recognition-rules-v1183.json')
+          before={name:(root/name).read_bytes() for name in formal_files}
+          for name in formal_files:
+              shutil.copy2(root/name,dest/name)
           old='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
           new='index-B81hyAdU-v1187-photoquality-test1.js'
           version='1.18.7-test.2'
           old_rev='1.18.6-test.1-qqgpu-thumbfix'
-          new_rev=version+'-photoquality'
+          new_rev=version+'-photoquality-r2'
           def replace_one(s,a,b):
               assert s.count(a)==1,(a,s.count(a))
               return s.replace(a,b)
+          def edit_exact(name,changes):
+              original=before[name].decode()
+              s=original
+              for a,b in changes:
+                  s=replace_one(s,a,b)
+              (dest/name).write_text(s,encoding='utf-8')
+              # Reverse the explicitly allowed substitutions to demonstrate
+              # that no other UI, business logic or SW algorithm has changed.
+              for a,b in reversed(changes):
+                  s=replace_one(s,b,a)
+              assert s==original,name
           p=dest/'core.html'
-          s=p.read_text()
-          assert s.count(old)==2 and s.count(old_rev)==4
-          s=s.replace(old,new).replace(old_rev,new_rev)
-          s=replace_one(s,'版本：v1.18.6-test.1 兼容性测试版','版本：v'+version+' 图片质量专项测试版')
-          p.write_text(s)
+          original=before['core.html'].decode()
+          assert original.count(old)==2 and original.count(old_rev)==4
+          s=original.replace(old,new).replace(old_rev,new_rev)
+          s=replace_one(s,'版本：v1.18.6 正式版','版本：v'+version+' 图片质量专项测试版')
+          s=replace_one(s,"const FLAG='mingpai-v1186-formal-coi-reload'","const FLAG='mingpai-photoquality-coi-reload'")
+          p.write_text(s,encoding='utf-8')
+          assert s.replace(new,old).replace(new_rev,old_rev).replace('版本：v'+version+' 图片质量专项测试版','版本：v1.18.6 正式版').replace("const FLAG='mingpai-photoquality-coi-reload'","const FLAG='mingpai-v1186-formal-coi-reload'")==original
           p=dest/'index.html'
-          s=p.read_text()
-          s=replace_one(s,'<title>设备铭牌识别｜v1.18.6-test.1 QQ兼容性测试版</title>','<title>设备铭牌识别｜v'+version+' 图片质量专项测试版</title>')
-          s=replace_one(s,'const CLIENT_VERSION="1.18.6-test.1";','const CLIENT_VERSION="'+version+'";')
-          # Separate the test version's persisted update marker from production.
+          original=before['index.html'].decode()
+          changes=[
+              ('<title>设备铭牌识别｜v1.18.6 正式版</title>','<title>设备铭牌识别｜v'+version+' 图片质量专项测试版</title>'),
+              ('const CLIENT_VERSION="1.18.6";','const CLIENT_VERSION="'+version+'";'),
+              ("const ATTEMPT_PREFIX='mingpai-open-upgrade-'","const ATTEMPT_PREFIX='mingpai-photoquality-open-upgrade-'"),
+          ]
+          s=original
+          for a,b in changes:s=replace_one(s,a,b)
           s=s.replace('mingpai-v118-manifest-version','mingpai-photoquality-manifest-version')
-          p.write_text(s)
-          p=dest/'coi-serviceworker.js'
-          s=p.read_text()
-          s=replace_one(s,'const APP_VERSION="1.18.6-test.1";','const APP_VERSION="'+version+'";')
-          s=replace_one(s,'mingpai-shell-v1186-test1-qqgpu-thumbfix','mingpai-shell-v1187-test2-photoquality')
-          p.write_text(s)
+          p.write_text(s,encoding='utf-8')
+          check=s.replace('mingpai-photoquality-manifest-version','mingpai-v118-manifest-version')
+          for a,b in reversed(changes):check=replace_one(check,b,a)
+          assert check==original
+          edit_exact('coi-serviceworker.js',[
+              ('const APP_VERSION="1.18.6";','const APP_VERSION="'+version+'";'),
+              ('mingpai-shell-v1186-formal-qqgpu-thumbfix','mingpai-shell-v1187-test2-photoquality-r2'),
+          ])
           p=dest/'version-v118-test.json'
           m=json.loads(p.read_text())
           m.update(version=version,mainJs=new,runtimeFiles=[new],publishedAt='2026-11-25T22:17:00+08:00')
-          p.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
-          assert json.loads((root/'version-v118-test.json').read_text())['mainJs']==old
-          assert json.loads((root/'test-adaptive/version-v118-test.json').read_text())['mainJs']==old
-          assert json.loads((root/'test-v1187/version-v118-test.json').read_text())['mainJs']==old
+          p.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           assert m['rules']=='recognition-rules-v1184.json'
+          assert (dest/m['rules']).read_bytes()==before[m['rules']]
           outer=(dest/'index.html').read_text()
           core=(dest/'core.html').read_text()
+          assert 'scheduleHiddenDockRecovery' in outer
           assert 'bindLiveSyncStatus' in outer and 'v1186-sync-status-fix' in outer
           assert 'wrapText="0"' in outer and 'width="20.44140625"' in outer
           assert 'v1186-direct-image-save' in core and 'v1186QqProtected' in core
-          assert 'v1187-raw-collapse-test' not in core
+          assert 'v1187-raw-collapse-test' not in core and 'v1187-card-compact-test' not in core
           assert 'setTimeout(reload,1300)' not in core
           assert new in core and old not in core
           for name in ('index.html','core.html'):
@@ -282,7 +183,16 @@ jobs:
                       f.write_text(js)
                       subprocess.run(['node','--check',str(f)],check=True)
           subprocess.run(['node','--check',str(dest/'coi-serviceworker.js')],check=True)
-          print('PASS independent photo-quality test; stable and UI test unchanged')
+          # Only remove historical routes from the generated artifact, never
+          # from Git history, browser data, COS or the pinned baseline itself.
+          for child in root.iterdir():
+              if child.is_dir() and child!=dest:
+                  shutil.rmtree(child)
+          (root/'paddle-performance-test.html').unlink(missing_ok=True)
+          assert {p.name for p in root.iterdir() if p.is_dir()}=={dest.name}
+          for name,data in before.items():
+              assert (root/name).read_bytes()==data,name
+          print('PASS formal files unchanged; sole test derived from formal with only approved substitutions')
           PY
 
       - name: Upload verified site
