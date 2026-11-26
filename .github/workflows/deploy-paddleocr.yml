@@ -28,7 +28,7 @@ jobs:
 
       - name: Restore verified v1.18.6 site (no old version build steps)
         env:
-          PINNED_COMMIT: 047c22ec7ee7fa6c7058eea0c666aa9c4e97b1d6
+          PINNED_COMMIT: de9c5e8f3d6a42ace9e192a739383a9d8bc53cad
         run: |
           set -euo pipefail
           git fetch --no-tags --depth=1 origin refs/heads/release-baseline/v1186-verified:refs/remotes/origin/release-baseline/v1186-verified
