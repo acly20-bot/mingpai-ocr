@@ -825,6 +825,7 @@ function v1183InstallFieldReview(d) {
     white-space:nowrap!important;
   }
   #recordList .cardtitle > small{display:none!important}
+  #recordList button.v118-hide-unconfirm{display:none!important}
 
   #recordList .cardtitle{
     align-self:stretch!important;
@@ -1734,7 +1735,7 @@ function v1183InstallFieldReview(d) {
       }
 
       // 已确认记录不再显示“取消确认”
-      card.querySelectorAll('button').forEach(btn=>{if((btn.textContent||'').trim()==='取消确认')btn.remove();});
+      updateConfirmButtons(card);
       card.dataset.envInitialized='1';
     }catch(e){console.warn('decorate env card failed',e)}
     finally{card.dataset.envDecorating='0'}
@@ -1834,11 +1835,27 @@ function v1183InstallFieldReview(d) {
   // v1.18.5-test.2: only newly inserted cards are decorated.
   // The prior observer re-fetched every visible card from IndexedDB whenever
   // just one new card was inserted. Preserve the native persistence code.
+  // Hide only the native reverse-confirm action, including in-place text
+  // changes after confirmation. Do not re-decorate cards or read IndexedDB.
+  function updateConfirmButton(btn){
+    if(!btn?.matches?.('button[data-action="toggle"]'))return;
+    const hide=(btn.textContent||'').trim()==='取消确认';
+    if(btn.classList.contains('v118-hide-unconfirm')!==hide)
+      btn.classList.toggle('v118-hide-unconfirm',hide);
+  }
+  function updateConfirmButtons(node){
+    if(node?.nodeType!==1)return;
+    updateConfirmButton(node.closest('button[data-action="toggle"]'));
+    node.querySelectorAll('button[data-action="toggle"]').forEach(updateConfirmButton);
+  }
   const addedEnvCards=new Set();
   let envCardsScheduled=false;
   const cardsObserver=new MutationObserver(records=>{
     for(const mutation of records){
+      const target=mutation.target.nodeType===1?mutation.target:mutation.target.parentElement;
+      updateConfirmButton(target?.closest('button[data-action="toggle"]'));
       for(const node of mutation.addedNodes){
+        updateConfirmButtons(node);
         if(node.nodeType!==1)continue;
         if(node.matches?.('article.card,.card'))addedEnvCards.add(node);
         node.querySelectorAll?.('article.card,.card').forEach(card=>addedEnvCards.add(card));
@@ -1854,7 +1871,10 @@ function v1183InstallFieldReview(d) {
     },80);
   });
   const list=d.getElementById('recordList');
-  if(list)cardsObserver.observe(list,{childList:true,subtree:true});
+  if(list){
+    updateConfirmButtons(list);
+    cardsObserver.observe(list,{childList:true,subtree:true,characterData:true});
+  }
   // First load still initializes all visible cards, as before.
   decorateCards();
   // v1.18.2.1-test test: compact field UI + inline statistics
