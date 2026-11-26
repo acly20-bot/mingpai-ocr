@@ -19,12 +19,12 @@
   window.fetch=(input,init)=>{
     const url=typeof input==='string'?input:(input&&input.url)||'';
     if(url===oldUrl||url.startsWith(oldUrl+'?')){
-      return originalFetch(new URL('./recognition-rules-v1184.json?r=20261122-r10',location.href).href,{...init,cache:'no-cache'});
+      return originalFetch(new URL('./recognition-rules-v1184.json?r=20261127-r11',location.href).href,{...init,cache:'no-cache'});
     }
     return originalFetch(input,init);
   };
   const oldKey='mingpai-recognition-rules-v1181-cache';
-  const newKey='mingpai-recognition-rules-v1184-test-cache-r10';
+  const newKey='mingpai-recognition-rules-v1184-test-cache-r11';
   const realGet=Storage.prototype.getItem,realSet=Storage.prototype.setItem;
   Storage.prototype.getItem=function(k){return realGet.call(this,k===oldKey?newKey:k);};
   Storage.prototype.setItem=function(k,v){return realSet.call(this,k===oldKey?newKey:k,v);};
