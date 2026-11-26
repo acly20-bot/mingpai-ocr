@@ -1,9 +1,79 @@
 {
   "schemaVersion": 1,
-  "rulesVersion": "v1.18.4-20261122-r10",
-  "updatedAt": "2026-11-22",
-  "description": "85条历史规则加南京普爱C形臂PLX118F/a型号纠偏，保持原有网页版本",
+  "rulesVersion": "v1.18.4-20261127-r11",
+  "updatedAt": "2026-11-27",
+  "description": "86条既有规则加AED铭牌名称优先及LIFEPAK 20e通用纠偏",
   "rules": [
+    {
+      "id": "v1184-aed-name-1",
+      "priority": 16010,
+      "match": {
+        "regex": "半自动体外除颤器"
+      },
+      "set": {
+        "name": "半自动体外除颤器"
+      },
+      "note": "保留铭牌明确的AED产品名称，优先于普通除颤器统一名称",
+      "stop": true
+    },
+    {
+      "id": "v1184-aed-name-2",
+      "priority": 16009,
+      "match": {
+        "regex": "全自动体外除颤器"
+      },
+      "set": {
+        "name": "全自动体外除颤器"
+      },
+      "note": "保留铭牌明确的AED产品名称，优先于普通除颤器统一名称",
+      "stop": true
+    },
+    {
+      "id": "v1184-aed-name-3",
+      "priority": 16008,
+      "match": {
+        "regex": "(?<![半全])自动体外除颤器"
+      },
+      "set": {
+        "name": "自动体外除颤器"
+      },
+      "note": "保留铭牌明确的AED产品名称，优先于普通除颤器统一名称",
+      "stop": true
+    },
+    {
+      "id": "v1184-aed-name-4",
+      "priority": 16007,
+      "match": {
+        "regex": "体外自动除颤器"
+      },
+      "set": {
+        "name": "体外自动除颤器"
+      },
+      "note": "保留铭牌明确的AED产品名称，优先于普通除颤器统一名称",
+      "stop": true
+    },
+    {
+      "id": "v1184-lifepak20e",
+      "priority": 16000,
+      "match": {
+        "regex": "[Ll][Ii][Ff][Ee][Pp][Aa][Kk][\\s'’*°®™·]*20[eE]\\b",
+        "containsAny": [
+          "Physio-Control",
+          "physio-control",
+          "PHYSIO-CONTROL"
+        ]
+      },
+      "set": {
+        "name": "心脏除颤器",
+        "model": "LIFEPAK 20e"
+      },
+      "extract": {
+        "codeRegex": "\\bSN\\s*[:：]?\\s*(\\d{8})(?!\\d)",
+        "codeFlags": "i"
+      },
+      "note": "兼容品牌符号误识，型号不取REF/PN，SN动态提取",
+      "stop": true
+    },
     {
       "id": "user-20261122-perlove-plx118fa-model",
       "priority": 15140,
