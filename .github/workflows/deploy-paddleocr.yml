@@ -117,10 +117,10 @@ jobs:
           for name in formal_files:
               shutil.copy2(root/name,dest/name)
           old='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
-          new='index-B81hyAdU-v1187-photoquality-test3.js'
-          version='1.18.7-test.3'
+          new='index-B81hyAdU-v1187-photoquality-test4.js'
+          version='1.18.7-test.4'
           old_rev='1.18.6-test.1-qqgpu-thumbfix'
-          new_rev=version+'-photoquality-r3'
+          new_rev=version+'-photoquality-r4'
           def replace_one(s,a,b):
               assert s.count(a)==1,(a,s.count(a))
               return s.replace(a,b)
@@ -168,10 +168,18 @@ jobs:
           s=replace_one(s,'        updateConfirmButtons(node);\n','')
           s=replace_one(s,'  if(list){\n    updateConfirmButtons(list);\n    cardsObserver.observe(list,{childList:true,subtree:true,characterData:true});\n  }','  if(list)cardsObserver.observe(list,{childList:true,subtree:true});')
           assert 'updateConfirmButton' not in s and 'v118-hide-unconfirm' not in s
+          # Bind Done to the four dynamically created environment inputs.
+          for anchor,inputs in [
+              ("      inline.querySelectorAll('input').forEach(inp=>{",None),
+              ("          ti.addEventListener('blur',persist);hi.addEventListener('blur',persist);",None),
+          ]:
+              assert s.count(anchor)==1
+          s=replace_one(s,"      inline.querySelectorAll('input').forEach(inp=>{","      inline.querySelectorAll('input').forEach(inp=>{\n        inp.setAttribute('enterkeyhint','done');\n        inp.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key==='NumpadEnter')&&!e.isComposing&&e.keyCode!==229){e.preventDefault();inp.blur();}});")
+          s=replace_one(s,"          ti.addEventListener('blur',persist);hi.addEventListener('blur',persist);","          [ti,hi].forEach(inp=>{inp.setAttribute('enterkeyhint','done');inp.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key==='NumpadEnter')&&!e.isComposing&&e.keyCode!==229){e.preventDefault();inp.blur();}});});\n          ti.addEventListener('blur',persist);hi.addEventListener('blur',persist);")
           p.write_text(s,encoding='utf-8')
           edit_exact('coi-serviceworker.js',[
               ('const APP_VERSION="1.18.6";','const APP_VERSION="'+version+'";'),
-              ('mingpai-shell-v1186-formal-qqgpu-thumbfix','mingpai-shell-v1187-test3-photoquality-r3'),
+              ('mingpai-shell-v1186-formal-qqgpu-thumbfix','mingpai-shell-v1187-test4-photoquality-r4'),
           ])
           p=dest/'version-v118-test.json'
           m=json.loads(p.read_text())
@@ -205,7 +213,49 @@ jobs:
           assert {p.name for p in root.iterdir() if p.is_dir()}=={dest.name}
           for name,data in before.items():
               assert (root/name).read_bytes()==data,name
-          print('PASS formal files unchanged; sole test derived from formal with only approved substitutions')
+          # Shared rule-only update, independent of the formal runtime version.
+          pack=json.loads(before['recognition-rules-v1184.json'])
+          assert pack['rulesVersion']=='v1.18.4-20261127-r12'
+          serial=r'(?:\(21\)\s*|\bSN\s*[:：]?\s*)([A-Z0-9]{6,20})\b'
+          explicit=r'\bM\s*Series\b'
+          fallback=r'^(?![\s\S]*\b(?:R|X|E|C|Z)\s*Series\b)(?=[\s\S]*\bSeries\b)(?=[\s\S]*\(21\)\s*T\d{2}[A-L]\d{6}\b)[\s\S]*
+          PY
+
+      - name: Upload verified site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+          rules=[
+              dict(id='user-20261127-zoll-m-series',priority=16005,match=dict(containsAll=['ZOLL'],regex=explicit),set=dict(name='心脏除颤器',manufacturer='卓尔医疗（美国）',model='M Series'),extract=dict(codeRegex=serial,codeFlags='i'),stop=True,note='明确M Series型号，动态提取SN或UDI(21)'),
+              dict(id='user-20261127-zoll-m-series-logo-ocr',priority=16004,match=dict(containsAll=['ZOLL Medical Corporation','269 Mill Road','Series'],regex=fallback),set=dict(name='心脏除颤器',manufacturer='卓尔医疗（美国）',model='M Series'),extract=dict(codeRegex=serial,codeFlags='i'),stop=True,note='现场样本M标志漏识别；仅匹配地址、Series及观察到的T系列编号结构；待更多样本验证，不固定序列号'),
+          ]
+          sample='ZOLL\nSN\n(21) T19K142317\nSeries®\nZOLL Medical Corporation\n269 Mill Road'
+          assert re.search(fallback,sample,re.I)
+          assert re.search(serial,sample,re.I).group(1)=='T19K142317'
+          assert not re.search(fallback,sample.replace('Series®','R Series'),re.I)
+          assert not re.search(fallback,sample.replace('T19K142317','AF19K142317'),re.I)
+          assert re.search(explicit,'ZOLL MSeries',re.I)
+          pack['rules']=rules+pack['rules']
+          pack['rulesVersion']='v1.18.4-20261127-r13'
+          pack['updatedAt']='2026-11-27'
+          assert len(pack['rules'])==94
+          payload=json.dumps(pack,ensure_ascii=False,indent=2)+'\n'
+          for folder in (root,dest):
+              (folder/'recognition-rules-v1184.json').write_text(payload,encoding='utf-8')
+          print('PASS formal shell unchanged; test.4 isolated; shared r13 rules verified')
           PY
 
       - name: Upload verified site
