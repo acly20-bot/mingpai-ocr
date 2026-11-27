@@ -1,9 +1,30 @@
 {
   "schemaVersion": 1,
-  "rulesVersion": "v1.18.4-20261127-r11",
+  "rulesVersion": "v1.18.4-20261127-r12",
   "updatedAt": "2026-11-27",
-  "description": "86条既有规则加AED铭牌名称优先及LIFEPAK 20e通用纠偏",
+  "description": "86条既有规则加AED铭牌名称优先及LIFEPAK 20e通用纠偏；新增GRASEBY单通道注射泵纠偏",
   "rules": [
+    {
+      "id": "user-20261127-graseby-21b1t100-syringe-pump",
+      "priority": 15150,
+      "match": {
+        "containsAll": [
+          "GRASEBY",
+          "21B1T100"
+        ]
+      },
+      "set": {
+        "name": "单通道注射泵",
+        "manufacturer": "浙江史密斯医学仪器有限公司",
+        "model": "GRASEBY"
+      },
+      "extract": {
+        "codeRegex": "(?:\\bSN\\s*[:：]?\\s*|\\(21\\)\\s*)(\\d{9})(?!\\d)",
+        "codeFlags": "i"
+      },
+      "note": "现场铭牌纠偏：GRASEBY REF 21B1T100；优先提取SN或UDI(21)的9位编号，不固定其他设备序列号；电源参数不作为型号。",
+      "stop": true
+    },
     {
       "id": "v1184-aed-name-1",
       "priority": 16010,
