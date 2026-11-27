@@ -218,26 +218,7 @@ jobs:
           assert pack['rulesVersion']=='v1.18.4-20261127-r12'
           serial=r'(?:\(21\)\s*|\bSN\s*[:：]?\s*)([A-Z0-9]{6,20})\b'
           explicit=r'\bM\s*Series\b'
-          fallback=r'^(?![\s\S]*\b(?:R|X|E|C|Z)\s*Series\b)(?=[\s\S]*\bSeries\b)(?=[\s\S]*\(21\)\s*T\d{2}[A-L]\d{6}\b)[\s\S]*
-          PY
-
-      - name: Upload verified site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: app
-
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
+          fallback=r'^(?![\s\S]*\b(?:R|X|E|C|Z)\s*Series\b)(?=[\s\S]*\bSeries\b)(?=[\s\S]*\(21\)\s*T\d{2}[A-L]\d{6}\b)[\s\S]*$'
           rules=[
               dict(id='user-20261127-zoll-m-series',priority=16005,match=dict(containsAll=['ZOLL'],regex=explicit),set=dict(name='心脏除颤器',manufacturer='卓尔医疗（美国）',model='M Series'),extract=dict(codeRegex=serial,codeFlags='i'),stop=True,note='明确M Series型号，动态提取SN或UDI(21)'),
               dict(id='user-20261127-zoll-m-series-logo-ocr',priority=16004,match=dict(containsAll=['ZOLL Medical Corporation','269 Mill Road','Series'],regex=fallback),set=dict(name='心脏除颤器',manufacturer='卓尔医疗（美国）',model='M Series'),extract=dict(codeRegex=serial,codeFlags='i'),stop=True,note='现场样本M标志漏识别；仅匹配地址、Series及观察到的T系列编号结构；待更多样本验证，不固定序列号'),
