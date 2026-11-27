@@ -117,10 +117,10 @@ jobs:
           for name in formal_files:
               shutil.copy2(root/name,dest/name)
           old='index-B81hyAdU-v1186-test1-qqgpu-thumbfix.js'
-          new='index-B81hyAdU-v1187-photoquality-test4.js'
+          new='index-B81hyAdU-v1187-photoquality-test4-queuefix.js'
           version='1.18.7-test.4'
           old_rev='1.18.6-test.1-qqgpu-thumbfix'
-          new_rev=version+'-photoquality-r4'
+          new_rev=version+'-queuefix-r5'
           def replace_one(s,a,b):
               assert s.count(a)==1,(a,s.count(a))
               return s.replace(a,b)
@@ -179,7 +179,7 @@ jobs:
           p.write_text(s,encoding='utf-8')
           edit_exact('coi-serviceworker.js',[
               ('const APP_VERSION="1.18.6";','const APP_VERSION="'+version+'";'),
-              ('mingpai-shell-v1186-formal-qqgpu-thumbfix','mingpai-shell-v1187-test4-photoquality-r4'),
+              ('mingpai-shell-v1186-formal-qqgpu-thumbfix','mingpai-shell-v1187-test4-queuefix-r5'),
           ])
           p=dest/'version-v118-test.json'
           m=json.loads(p.read_text())
@@ -245,7 +245,7 @@ jobs:
               promoted=promoted.replace('mingpai-photoquality-manifest-version','mingpai-v118-manifest-version')
               promoted=promoted.replace('mingpai-photoquality-open-upgrade-','mingpai-open-upgrade-')
               promoted=promoted.replace('mingpai-photoquality-coi-reload','mingpai-v1187-formal-coi-reload')
-              promoted=promoted.replace('mingpai-shell-v1187-test4-photoquality-r4','mingpai-shell-v1187-formal-r4')
+              promoted=promoted.replace('mingpai-shell-v1187-test4-queuefix-r5','mingpai-shell-v1187-formal-queuefix-r5')
               assert '1.18.7-test.4' not in promoted
               (root/name).write_text(promoted,encoding='utf-8')
               scripts=[promoted] if name.endswith('.js') else re.findall(r'<script[^>]*>(.*?)</script>',promoted,re.I|re.S)
