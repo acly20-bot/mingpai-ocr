@@ -1,4 +1,4 @@
-name: Deploy Mingpai OCR (v1.18.7 formal and v1.19.0 test.3)
+name: Deploy Mingpai OCR (v1.18.7 formal and v1.19.0 test.3.1)
 
 # v1.18.6: publish one pinned, user-verified stable baseline; retain v1.18.5 branch for rollback.
 # When publishing future changes, create a NEW reviewed baseline branch and
@@ -274,12 +274,12 @@ jobs:
           dest=root/'test-photoquality'
           stable={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.iterdir() if p.is_file()}
           old='index-B81hyAdU-v1187-photoquality-test4-queuefix.js'
-          new='index-B81hyAdU-v1190-cardattrs-test3.js'
+          new='index-B81hyAdU-v1190-cardattrs-test3.1.js'
           for name in ('index.html','core.html','coi-serviceworker.js'):
               p=dest/name
               s=p.read_text()
-              s=s.replace(old,new).replace('1.18.7-test.4-queuefix-r5','1.19.0-test.3-cardattrs-r3').replace('1.18.7-test.4','1.19.0-test.3')
-              s=s.replace('图片质量专项测试版','设备信息优化测试版').replace('mingpai-shell-v1187-test4-queuefix-r5','mingpai-shell-v1190-test3-cardattrs-r3')
+              s=s.replace(old,new).replace('1.18.7-test.4-queuefix-r5','1.19.0-test.3.1-cardattrs-r31').replace('1.18.7-test.4','1.19.0-test.3.1')
+              s=s.replace('图片质量专项测试版','设备信息优化测试版').replace('mingpai-shell-v1187-test4-queuefix-r5','mingpai-shell-v1190-test31-cardattrs-r31')
               assert '1.18.7-test.4' not in s
               p.write_text(s,encoding='utf-8')
               scripts=[s] if name.endswith('.js') else re.findall(r'<script[^>]*>(.*?)</script>',s,re.I|re.S)
@@ -290,14 +290,14 @@ jobs:
                       subprocess.run(['node','--check',str(f)],check=True)
           p=dest/'version-v118-test.json'
           m=json.loads(p.read_text())
-          m.update(version='1.19.0-test.3',mainJs=new,runtimeFiles=[new],publishedAt='2026-11-28')
+          m.update(version='1.19.0-test.3.1',mainJs=new,runtimeFiles=[new],publishedAt='2026-11-28')
           p.write_text(json.dumps(m,ensure_ascii=False,indent=2)+chr(10),encoding='utf-8')
           assert new in (dest/'core.html').read_text()
           assert old not in (dest/'core.html').read_text()
-          assert 'const CLIENT_VERSION="1.19.0-test.3";' in (dest/'index.html').read_text()
-          assert 'const APP_VERSION="1.19.0-test.3";' in (dest/'coi-serviceworker.js').read_text()
+          assert 'const CLIENT_VERSION="1.19.0-test.3.1";' in (dest/'index.html').read_text()
+          assert 'const APP_VERSION="1.19.0-test.3.1";' in (dest/'coi-serviceworker.js').read_text()
           assert stable=={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.iterdir() if p.is_file()}
-          print('PASS v1.19.0-test.3 candidate; formal v1.18.7 unchanged byte for byte')
+          print('PASS v1.19.0-test.3.1 candidate; formal v1.18.7 unchanged byte for byte')
           PY
 
       - name: Upload verified site
